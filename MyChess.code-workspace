@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "CChessLib"
+		},
+		{
+			"path": "CChessLibUnitTest"
+		}
+	],
+	"settings": {}
+}
