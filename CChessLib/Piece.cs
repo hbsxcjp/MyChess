@@ -1,13 +1,13 @@
 namespace CChess;
 
-internal enum PieceColor
+public enum PieceColor
 {
     Red,
     Black,
     NoColor = -1
 }
 
-internal enum PieceKind
+public enum PieceKind
 {
     King,
     Advisor,
@@ -19,7 +19,7 @@ internal enum PieceKind
     NoKind = -1
 }
 
-internal abstract class Piece: IComparable
+public abstract class Piece: IComparable
 {
     public static readonly Piece Null = new NullPiece();
     public const char FENSplitChar = '/';
@@ -127,9 +127,9 @@ internal abstract class Piece: IComparable
         return CompareTo((Piece)obj);
     }
 
-    internal int CompareTo(Piece piece) => Coord.CompareTo(piece.Coord);
+    public int CompareTo(Piece piece) => Coord.CompareTo(piece.Coord);
 
-    internal class NullPiece: Piece
+    public class NullPiece: Piece
     {
         public NullPiece() : base(PieceColor.NoColor) { }
         override public PieceKind Kind { get { return PieceKind.NoKind; } }
@@ -141,7 +141,7 @@ internal abstract class Piece: IComparable
 
 }
 
-internal class King: Piece
+public class King: Piece
 {
     public King(PieceColor color) : base(color) { }
 
@@ -179,7 +179,7 @@ internal class King: Piece
     }
 }
 
-internal class Advisor: Piece
+public class Advisor: Piece
 {
     public Advisor(PieceColor color) : base(color) { }
 
@@ -220,7 +220,7 @@ internal class Advisor: Piece
     }
 }
 
-internal class Bishop: Piece
+public class Bishop: Piece
 {
     public Bishop(PieceColor color) : base(color) { }
 
@@ -275,7 +275,7 @@ internal class Bishop: Piece
     }
 }
 
-internal class Knight: Piece
+public class Knight: Piece
 {
     public Knight(PieceColor color) : base(color) { }
 
@@ -310,7 +310,7 @@ internal class Knight: Piece
     }
 }
 
-internal class Rook: Piece
+public class Rook: Piece
 {
     public Rook(PieceColor color) : base(color) { }
 
@@ -350,7 +350,7 @@ internal class Rook: Piece
     }
 }
 
-internal class Cannon: Piece
+public class Cannon: Piece
 {
     public Cannon(PieceColor color) : base(color) { }
 
@@ -407,7 +407,7 @@ internal class Cannon: Piece
     }
 }
 
-internal class Pawn: Piece
+public class Pawn: Piece
 {
     public Pawn(PieceColor color) : base(color) { }
 

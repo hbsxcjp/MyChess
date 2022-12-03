@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace CChess;
 
-internal class Board
+public class Board
 {
     // [Color][Kind][Index]
     private readonly Piece[][][] _pieces;

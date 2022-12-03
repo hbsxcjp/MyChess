@@ -1,6 +1,6 @@
 namespace CChess;
 
-internal class Seat
+public class Seat
 {
     public static readonly Seat Null = new(Coord.Null);
     private Piece _piece;

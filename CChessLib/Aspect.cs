@@ -3,7 +3,7 @@ using System.Text;
 
 namespace CChess;
 
-internal class Aspects
+public class Aspects
 {
     private readonly Dictionary<string, Dictionary<string, List<int>>> _aspectDict;
 

@@ -26,7 +26,7 @@
 
 namespace CChess;
 
-internal class Utility
+public class Utility
 {
     public delegate string Show<T>(T t);
     public static string GetString<T>(List<T> items, Show<T> show, string split = "")

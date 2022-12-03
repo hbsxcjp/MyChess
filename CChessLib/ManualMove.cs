@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace CChess;
 
-internal class ManualMove: IEnumerable
+public class ManualMove: IEnumerable
 {
     private readonly Board _board;
     private readonly Move _rootMove;
@@ -368,7 +368,7 @@ internal class ManualMove: IEnumerable
         };
 }
 
-internal class ManualMoveEnum: IEnumerator
+public class ManualMoveEnum: IEnumerator
 {
     private readonly Queue<Move> _moveQueue;
     private readonly ManualMove _manualMove;

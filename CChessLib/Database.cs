@@ -6,12 +6,12 @@ using Microsoft.Data.Sqlite;
 
 namespace CChess;
 
-internal enum ManualField
+public enum ManualField
 {
     Source, Title, Event, Date, Site, Black, RowCols, Red, EccoSn, EccoName, Win,
     Opening, Writer, Author, Type, Version, FEN, MoveString
 }
-internal class Database
+public class Database
 {
     private static readonly string[] _infoKeys = {
             "source", "title", "event", "date", "site", "black", "rowCols", "red", "eccoSn", "eccoName", "win",

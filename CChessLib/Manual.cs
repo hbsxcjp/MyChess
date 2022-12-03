@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace CChess;
 
-internal enum FileExtType
+public enum FileExtType
 {
     Xqf,
     Cm,
@@ -14,7 +14,7 @@ internal enum FileExtType
     PGNZh,
 }
 
-internal class Manual
+public class Manual
 {
     private readonly static List<string> FileExtName = new() { ".XQF", ".cm", ".text", ".pgnrc", ".pgniccs", ".pgnzh" };
     private const string FEN = "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR";

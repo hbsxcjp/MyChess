@@ -1,6 +1,6 @@
 namespace CChess;
 
-enum ChangeType
+public enum ChangeType
 {
     Exchange,
     Rotate,
@@ -9,7 +9,7 @@ enum ChangeType
     NoChange = -1,
 }
 
-internal class Coord: IComparable
+public class Coord: IComparable
 {
     public const string ColChars = "ABCDEFGHI";
     public const int RowCount = 10;
@@ -98,7 +98,7 @@ internal class Coord: IComparable
     private static int SymmetryCol(int col) => ColCount - 1 - col;    
 }
 
-internal class CoordPair
+public class CoordPair
 {
     public static readonly CoordPair Null = new(Coord.Null, Coord.Null);
     public const int RowColICCSLength = 4;

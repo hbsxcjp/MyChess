@@ -1,12 +1,12 @@
 namespace CChess;
-internal enum VisibleType
+public enum VisibleType
 {
     All,
     True,
     False
 }
 
-internal class Move
+public class Move
 {
     private List<Move>? _afterMoves;
 
