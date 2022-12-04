@@ -19,7 +19,7 @@ public enum PieceKind
     NoKind = -1
 }
 
-public abstract class Piece: IComparable
+public abstract class Piece : IComparable
 {
     public static readonly Piece Null = new NullPiece();
     public const char FENSplitChar = '/';
@@ -76,8 +76,8 @@ public abstract class Piece: IComparable
         {
             var kindPieces = new Piece[num];
             var constructorInfo = type.GetConstructor(new Type[] { typeof(PieceColor) });
-            if(constructorInfo != null)
-                for(int i = 0;i < num;i++)
+            if (constructorInfo != null)
+                for (int i = 0; i < num; i++)
                     kindPieces[i] = (Piece)constructorInfo.Invoke(new object[] { color });
 
             return kindPieces;
@@ -89,22 +89,21 @@ public abstract class Piece: IComparable
                     typeof(Knight), typeof(Rook), typeof(Cannon), typeof(Pawn) };
             int[] KindNums = { 1, 2, 2, 2, 2, 2, 5 };
             Piece[][] pieces = new Piece[KindNum][];
-            for(int k = 0;k < KindNum;k++)
+            for (int k = 0; k < KindNum; k++)
                 pieces[k] = getKindPieces(color, pieceType[k], KindNums[k]);
 
             return pieces;
         }
 
         var pieces = new Piece[ColorNum][][];
-        for(int c = 0;c < ColorNum;c++)
+        for (int c = 0; c < ColorNum; c++)
             pieces[c] = getColorPieces((PieceColor)c);
 
         return pieces;
     }
 
     override public string ToString()
-        => $"{(Color == PieceColor.Red ? "红" : (Color == PieceColor.Black ? "黑" : "无"))}{PrintName}{Char}{Coord.ToString()}";
-
+        => $"{(Color == PieceColor.Red ? "红" : (Color == PieceColor.Black ? "黑" : "无"))}{PrintName}{Char}{Coord}";
 
     public static int GetColorIndex(char ch) => char.IsUpper(ch) ? 0 : 1;
     public static int GetKindIndex(char ch) => ("KABNRCPkabnrcp".IndexOf(ch)) % KindNum;
@@ -121,7 +120,7 @@ public abstract class Piece: IComparable
 
     int IComparable.CompareTo(object? obj)
     {
-        if(obj is not Piece)
+        if (obj is not Piece)
             return 0;
 
         return CompareTo((Piece)obj);
@@ -129,7 +128,7 @@ public abstract class Piece: IComparable
 
     public int CompareTo(Piece piece) => Coord.CompareTo(piece.Coord);
 
-    public class NullPiece: Piece
+    public class NullPiece : Piece
     {
         public NullPiece() : base(PieceColor.NoColor) { }
         override public PieceKind Kind { get { return PieceKind.NoKind; } }
@@ -141,7 +140,7 @@ public abstract class Piece: IComparable
 
 }
 
-public class King: Piece
+public class King : Piece
 {
     public King(PieceColor color) : base(color) { }
 
@@ -154,8 +153,8 @@ public class King: Piece
         List<(int row, int col)> rowCols = new();
         int minRow = isBottomColor ? 0 : 7,
             maxRow = isBottomColor ? 2 : 9;
-        for(int row = minRow;row <= maxRow;++row)
-            for(int col = 3;col <= 5;++col)
+        for (int row = minRow; row <= maxRow; ++row)
+            for (int col = 3; col <= 5; ++col)
                 rowCols.Add((row, col));
 
         return rowCols;
@@ -166,20 +165,20 @@ public class King: Piece
         List<(int row, int col)> rowCols = new();
         bool isBottom = Coord.IsBottom;
         int Row = Coord.row, Col = Coord.col;
-        if(Col > 3)
+        if (Col > 3)
             rowCols.Add((Row, Col - 1));
-        if(Col < 5)
+        if (Col < 5)
             rowCols.Add((Row, Col + 1));
-        if(Row < (isBottom ? 2 : 9))
+        if (Row < (isBottom ? 2 : 9))
             rowCols.Add((Row + 1, Col));
-        if(Row > (isBottom ? 0 : 7))
+        if (Row > (isBottom ? 0 : 7))
             rowCols.Add((Row - 1, Col));
 
         return rowCols;
     }
 }
 
-public class Advisor: Piece
+public class Advisor : Piece
 {
     public Advisor(PieceColor color) : base(color) { }
 
@@ -193,8 +192,8 @@ public class Advisor: Piece
         int minRow = isBottomColor ? 0 : 7,
             maxRow = isBottomColor ? 2 : 9;
 
-        for(int row = minRow;row <= maxRow;row += 2)
-            for(int col = 3;col <= 5;col += 2)
+        for (int row = minRow; row <= maxRow; row += 2)
+            for (int col = 3; col <= 5; col += 2)
                 rowCols.Add((row, col));
 
         rowCols.Add((minRow + 1, 4));
@@ -206,7 +205,7 @@ public class Advisor: Piece
         List<(int row, int col)> rowCols = new();
         bool isBottom = Coord.IsBottom;
         int Row = Coord.row, Col = Coord.col;
-        if(Col != 4)
+        if (Col != 4)
             rowCols.Add((isBottom ? 1 : 8, 4));
         else
         {
@@ -220,7 +219,7 @@ public class Advisor: Piece
     }
 }
 
-public class Bishop: Piece
+public class Bishop : Piece
 {
     public Bishop(PieceColor color) : base(color) { }
 
@@ -234,10 +233,10 @@ public class Bishop: Piece
         int minRow = isBottomColor ? 0 : 5,
             midRow = isBottomColor ? 2 : 7,
             maxRow = isBottomColor ? 4 : 9;
-        for(int row = minRow;row <= maxRow;row += 4)
-            for(int col = 2;col < Coord.ColCount;col += 4)
+        for (int row = minRow; row <= maxRow; row += 4)
+            for (int col = 2; col < Coord.ColCount; col += 4)
                 rowCols.Add((row, col));
-        for(int col = 0;col < Coord.ColCount;col += 4)
+        for (int col = 0; col < Coord.ColCount; col += 4)
             rowCols.Add((midRow, col));
 
         return rowCols;
@@ -252,22 +251,22 @@ public class Bishop: Piece
         int maxRow = isBottom ? (Coord.RowCount - 1) / 2 : Coord.RowCount - 1;
         void AddRowCol(int row, int col)
         {
-            if(board[(row + Row) / 2, (col + Col) / 2].HasNullPiece)
+            if (board[(row + Row) / 2, (col + Col) / 2].HasNullPiece)
                 rowCols.Add((row, col));
         }
 
-        if(Row < maxRow)
+        if (Row < maxRow)
         {
-            if(Col > 0)
+            if (Col > 0)
                 AddRowCol(Row + 2, Col - 2);
-            if(Col < Coord.ColCount - 1)
+            if (Col < Coord.ColCount - 1)
                 AddRowCol(Row + 2, Col + 2);
         }
-        if(Row > 0)
+        if (Row > 0)
         {
-            if(Col > 0)
+            if (Col > 0)
                 AddRowCol(Row - 2, Col - 2);
-            if(Col < Coord.ColCount - 1)
+            if (Col < Coord.ColCount - 1)
                 AddRowCol(Row - 2, Col + 2);
         }
 
@@ -275,7 +274,7 @@ public class Bishop: Piece
     }
 }
 
-public class Knight: Piece
+public class Knight : Piece
 {
     public Knight(PieceColor color) : base(color) { }
 
@@ -300,9 +299,9 @@ public class Knight: Piece
                 ((Row + 2, Col - 1), (Row + 1, Col)),
                 ((Row + 2, Col + 1), (Row + 1, Col))
             };
-        foreach(var (to, leg) in allToLegRowCols)
+        foreach (var (to, leg) in allToLegRowCols)
         {
-            if(Coord.IsValid(to.row, to.col) && (board[leg.row, leg.col].HasNullPiece))
+            if (Coord.IsValid(to.row, to.col) && (board[leg.row, leg.col].HasNullPiece))
                 rowCols.Add((to.row, to.col));
         }
 
@@ -310,7 +309,7 @@ public class Knight: Piece
     }
 }
 
-public class Rook: Piece
+public class Rook : Piece
 {
     public Rook(PieceColor color) : base(color) { }
 
@@ -330,27 +329,27 @@ public class Rook: Piece
             return board[row, col].HasNullPiece;
         }
 
-        for(int r = Row - 1;r >= 0;--r)
-            if(!AddRowCol(r, Col))
+        for (int r = Row - 1; r >= 0; --r)
+            if (!AddRowCol(r, Col))
                 break;
 
-        for(int r = Row + 1;r < Coord.RowCount;++r)
-            if(!AddRowCol(r, Col))
+        for (int r = Row + 1; r < Coord.RowCount; ++r)
+            if (!AddRowCol(r, Col))
                 break;
 
-        for(int c = Col - 1;c >= 0;--c)
-            if(!AddRowCol(Row, c))
+        for (int c = Col - 1; c >= 0; --c)
+            if (!AddRowCol(Row, c))
                 break;
 
-        for(int c = Col + 1;c < Coord.ColCount;++c)
-            if(!AddRowCol(Row, c))
+        for (int c = Col + 1; c < Coord.ColCount; ++c)
+            if (!AddRowCol(Row, c))
                 break;
 
         return rowCols;
     }
 }
 
-public class Cannon: Piece
+public class Cannon : Piece
 {
     public Cannon(PieceColor color) : base(color) { }
 
@@ -368,14 +367,14 @@ public class Cannon: Piece
         bool AddCoordToBreak(int row, int col)
         {
             bool isNull = board[row, col].HasNullPiece;
-            if(!skiped)
+            if (!skiped)
             {
-                if(isNull)
+                if (isNull)
                     rowCols.Add((row, col));
                 else
                     skiped = true;
             }
-            else if(!isNull)
+            else if (!isNull)
             {
                 rowCols.Add((row, col));
                 return true;
@@ -384,30 +383,30 @@ public class Cannon: Piece
             return false;
         }
 
-        for(int r = Row - 1;r >= 0;--r)
-            if(AddCoordToBreak(r, Col))
+        for (int r = Row - 1; r >= 0; --r)
+            if (AddCoordToBreak(r, Col))
                 break;
 
         skiped = false;
-        for(int r = Row + 1;r < Coord.RowCount;++r)
-            if(AddCoordToBreak(r, Col))
+        for (int r = Row + 1; r < Coord.RowCount; ++r)
+            if (AddCoordToBreak(r, Col))
                 break;
 
         skiped = false;
-        for(int c = Col - 1;c >= 0;--c)
-            if(AddCoordToBreak(Row, c))
+        for (int c = Col - 1; c >= 0; --c)
+            if (AddCoordToBreak(Row, c))
                 break;
 
         skiped = false;
-        for(int c = Col + 1;c < Coord.ColCount;++c)
-            if(AddCoordToBreak(Row, c))
+        for (int c = Col + 1; c < Coord.ColCount; ++c)
+            if (AddCoordToBreak(Row, c))
                 break;
 
         return rowCols;
     }
 }
 
-public class Pawn: Piece
+public class Pawn : Piece
 {
     public Pawn(PieceColor color) : base(color) { }
 
@@ -420,14 +419,14 @@ public class Pawn: Piece
         List<(int row, int col)> rowCols = new();
         int minRow = isBottomColor ? 3 : 5,
             maxRow = isBottomColor ? 4 : 6;
-        for(int row = minRow;row <= maxRow;++row)
-            for(int col = 0;col < Coord.ColCount;col += 2)
+        for (int row = minRow; row <= maxRow; ++row)
+            for (int col = 0; col < Coord.ColCount; col += 2)
                 rowCols.Add((row, col));
 
         minRow = isBottomColor ? 5 : 0;
         maxRow = isBottomColor ? 9 : 4;
-        for(int row = minRow;row <= maxRow;++row)
-            for(int col = 0;col < Coord.ColCount;++col)
+        for (int row = minRow; row <= maxRow; ++row)
+            for (int col = 0; col < Coord.ColCount; ++col)
                 rowCols.Add((row, col));
 
         return rowCols;
@@ -440,17 +439,17 @@ public class Pawn: Piece
             isBottomColor = board.IsBottomColor(Color);
         int Row = Coord.row, Col = Coord.col;
         // 已过河
-        if(isBottomColor != isBottom)
+        if (isBottomColor != isBottom)
         {
-            if(Col > 0)
+            if (Col > 0)
                 rowCols.Add((Row, Col - 1));
-            if(Col < Coord.ColCount - 1)
+            if (Col < Coord.ColCount - 1)
                 rowCols.Add((Row, Col + 1));
         }
 
-        if(isBottomColor && Row < Coord.RowCount - 1)
+        if (isBottomColor && Row < Coord.RowCount - 1)
             rowCols.Add((Row + 1, Col));
-        else if(!isBottomColor && Row > 0)
+        else if (!isBottomColor && Row > 0)
             rowCols.Add((Row - 1, Col));
 
         return rowCols;

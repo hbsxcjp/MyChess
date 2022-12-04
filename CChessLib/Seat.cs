@@ -42,7 +42,7 @@ public class Seat
         return seats;
     }
 
-    public override string ToString() => $"{Coord}:{_piece}";
+    public override string ToString() => $"{Coord}:{Piece}";
 }
 
 
