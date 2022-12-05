@@ -21,7 +21,7 @@ public class ManualMove: IEnumerable
     public string? CurRemark { get { return CurMove.Remark; } set { CurMove.Remark = value?.Trim(); } }
     public bool EnumMoveDone { get; set; }
 
-    public List<Coord> GetCanPutCoords(Piece piece) => piece.PutCoord(_board, _board.IsBottomColor(piece.Color));
+    public List<Coord> GetCanPutCoords(Piece piece) => piece.PutCoord(_board, _board.IsBottom(piece.Color));
     public List<Coord> GetCanMoveCoords(Coord fromCoord) => _board.CanMoveCoord(fromCoord);
 
     public bool AcceptCoordPair(CoordPair coordPair)
@@ -293,7 +293,7 @@ public class ManualMove: IEnumerable
 
     public string AspectFEN
     {
-        get => Board.GetFEN(_board.GetFEN(), _board.IsBottomColor(PieceColor.Red) ? ChangeType.NoChange : ChangeType.Exchange);
+        get => Board.GetFEN(_board.GetFEN(), _board.IsBottom(PieceColor.Red) ? ChangeType.NoChange : ChangeType.Exchange);
     }
 
     public void ClearError()

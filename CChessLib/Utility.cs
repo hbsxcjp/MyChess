@@ -28,15 +28,15 @@ namespace CChess;
 
 public class Utility
 {
-    public delegate string Show<T>(T t);
-    public static string GetString<T>(List<T> items, Show<T> show, string split = "")
-    {
-        System.Text.StringBuilder builder = new();
-        foreach(T item in items)
-            builder.Append(show(item)).Append(split);
+    // public delegate string Show<T>(T t);
+    // public static string GetString<T>(List<T> items, Show<T> show, string split = "")
+    // {
+    //     System.Text.StringBuilder builder = new();
+    //     foreach(T item in items)
+    //         builder.Append(show(item)).Append(split);
 
-        builder.Append($"【{items.Count}】");
-        return builder.ToString();
-    }
+    //     builder.Append($"【{items.Count}】");
+    //     return builder.ToString();
+    // }
 }
 

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 //using System.Text.Encoding.CodePages;
@@ -327,17 +328,17 @@ public class Manual
             bool hasNext = (tag & 0x80) != 0, hasOther = (tag & 0x40) != 0;
 
             var curCoordPair = _manualMove.CurMove.CoordPair;
-            if(curCoordPair.FromCoord.row == frow && curCoordPair.FromCoord.col == fcol
-                && curCoordPair.ToCoord.row == trow && curCoordPair.ToCoord.col == tcol)
+            if(curCoordPair.FromCoord.Row == frow && curCoordPair.FromCoord.Col == fcol
+                && curCoordPair.ToCoord.Row == trow && curCoordPair.ToCoord.Col == tcol)
             {
-                Console.WriteLine("Error: " + fileName + coordPair.ToString() + _manualMove.CurRemark);
+                Debug.WriteLine("Error: " + fileName + coordPair.ToString() + _manualMove.CurRemark);
             }
             else
             {
                 if(isOther)
                     _manualMove.Back();
                 _manualMove.AddMove(coordPair, remark, true);
-                //Console.WriteLine("_manualMove.CurMove: " + _manualMove.CurMove.ToString());
+                //Debug.WriteLine("_manualMove.CurMove: " + _manualMove.CurMove.ToString());
 
                 if(hasNext && hasOther)
                     beforeMoves.Push(_manualMove.CurMove);

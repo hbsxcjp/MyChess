@@ -32,7 +32,7 @@ public abstract class Piece : IComparable
     private const int ColorNum = 2;
     private const int KindNum = 7;
 
-    public Piece(PieceColor color)
+    protected Piece(PieceColor color)
     {
         Color = color;
         Seat = Seat.Null;
@@ -67,7 +67,7 @@ public abstract class Piece : IComparable
         => MoveRowCols(board).Where(rowCol => board[rowCol.row, rowCol.col].Piece.Color != Color).
                 Select(rowCol => board[rowCol.row, rowCol.col].Coord).ToList();
 
-    abstract protected List<(int row, int col)> PutRowCols(bool isBottomColor);
+    virtual protected List<(int row, int col)> PutRowCols(bool isBottomColor) => new();
     abstract protected List<(int row, int col)> MoveRowCols(Board board);
 
     public static Piece[][][] CreatPieces()
@@ -164,7 +164,7 @@ public class King : Piece
     {
         List<(int row, int col)> rowCols = new();
         bool isBottom = Coord.IsBottom;
-        int Row = Coord.row, Col = Coord.col;
+        int Row = Coord.Row, Col = Coord.Col;
         if (Col > 3)
             rowCols.Add((Row, Col - 1));
         if (Col < 5)
@@ -204,7 +204,7 @@ public class Advisor : Piece
     {
         List<(int row, int col)> rowCols = new();
         bool isBottom = Coord.IsBottom;
-        int Row = Coord.row, Col = Coord.col;
+        int Row = Coord.Row, Col = Coord.Col;
         if (Col != 4)
             rowCols.Add((isBottom ? 1 : 8, 4));
         else
@@ -247,7 +247,7 @@ public class Bishop : Piece
         List<(int row, int col)> rowCols = new();
         List<Coord> coords = new();
         bool isBottom = Coord.IsBottom;
-        int Row = Coord.row, Col = Coord.col;
+        int Row = Coord.Row, Col = Coord.Col;
         int maxRow = isBottom ? (Coord.RowCount - 1) / 2 : Coord.RowCount - 1;
         void AddRowCol(int row, int col)
         {
@@ -283,11 +283,10 @@ public class Knight : Piece
     override public char Name { get { return '马'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '馬'; } }
 
-    override protected List<(int row, int col)> PutRowCols(bool isBottomColor) => new();
     override protected List<(int row, int col)> MoveRowCols(Board board)
     {
         List<(int row, int col)> rowCols = new();
-        int Row = Coord.row, Col = Coord.col;
+        int Row = Coord.Row, Col = Coord.Col;
         ((int row, int col) to, (int row, int col) leg)[] allToLegRowCols =
         {
                 ((Row - 2, Col - 1), (Row - 1, Col))  ,
@@ -318,11 +317,10 @@ public class Rook : Piece
     override public char Name { get { return '车'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '車'; } }
 
-    override protected List<(int row, int col)> PutRowCols(bool isBottomColor) => new();
     override protected List<(int row, int col)> MoveRowCols(Board board)
     {
         List<(int row, int col)> rowCols = new();
-        int Row = Coord.row, Col = Coord.col;
+        int Row = Coord.Row, Col = Coord.Col;
         bool AddRowCol(int row, int col)
         {
             rowCols.Add((row, col));
@@ -358,11 +356,10 @@ public class Cannon : Piece
     override public char Name { get { return '炮'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '砲'; } }
 
-    override protected List<(int row, int col)> PutRowCols(bool isBottomColor) => new();
     override protected List<(int row, int col)> MoveRowCols(Board board)
     {
         List<(int row, int col)> rowCols = new();
-        int Row = Coord.row, Col = Coord.col;
+        int Row = Coord.Row, Col = Coord.Col;
         bool skiped = false;
         bool AddCoordToBreak(int row, int col)
         {
@@ -436,8 +433,8 @@ public class Pawn : Piece
     {
         List<(int row, int col)> rowCols = new();
         bool isBottom = Coord.IsBottom,
-            isBottomColor = board.IsBottomColor(Color);
-        int Row = Coord.row, Col = Coord.col;
+            isBottomColor = board.IsBottom(Color);
+        int Row = Coord.Row, Col = Coord.Col;
         // 已过河
         if (isBottomColor != isBottom)
         {

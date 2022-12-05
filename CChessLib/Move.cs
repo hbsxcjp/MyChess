@@ -10,7 +10,7 @@ public class Move
 {
     private List<Move>? _afterMoves;
 
-    public Move(CoordPair coordPair, string? remark = null, bool visible = true)
+    private Move(CoordPair coordPair, string? remark = null, bool visible = true)
     {
         Before = null;
         CoordPair = coordPair;
@@ -23,7 +23,7 @@ public class Move
 
     public int Id { get; set; }
     public Move? Before { get; set; }
-    public CoordPair CoordPair { get; set; }
+    public CoordPair CoordPair { get; }
     public string? Remark { get; set; }
     public bool Visible { get; set; }
     public int BeforeNum

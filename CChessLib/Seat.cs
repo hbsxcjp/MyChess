@@ -5,7 +5,7 @@ public class Seat
     public static readonly Seat Null = new(Coord.Null);
     private Piece _piece;
 
-    public Seat(Coord coord)
+    private Seat(Coord coord)
     {
         Coord = coord;
         _piece = Piece.Null;
@@ -18,26 +18,27 @@ public class Seat
         set
         {
             _piece.Seat = Null;
-
             value.Seat = this;
+
             _piece = value;
         }
     }
     public bool IsNull { get { return this == Null; } }
     public bool HasNullPiece { get { return Piece == Piece.Null; } }
 
-    public void MoveTo(Seat toSeat, Piece fromPiece)
+    public void MoveTo(Seat toSeat, Piece fillPiece)
     {
-        Piece piece = Piece;
-        Piece = fromPiece;
-        toSeat.Piece = piece;
+        Piece fromPiece = Piece;
+        Piece = fillPiece;
+
+        toSeat.Piece = fromPiece;
     }
 
     public static Seat[,] CreatSeats()
     {
         var seats = new Seat[Coord.RowCount, Coord.ColCount];
         foreach(Coord coord in Coord.CreatCoords())
-            seats[coord.row, coord.col] = new(coord);
+            seats[coord.Row, coord.Col] = new(coord);
 
         return seats;
     }
