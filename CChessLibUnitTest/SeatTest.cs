@@ -4,8 +4,7 @@ namespace CChessTest;
 
 public class SeatTest
 {
-    private Piece pie = Piece.Null; // 静态对象，需要设置一下，避免空引用？
-    private Seat st = Seat.Null; // 静态对象，需要设置一下，避免空引用或其他异常情况？
+    private Piece pie = Piece.Null; // 静态对象，需要初始化设置一下，避免空引用
 
     [Fact]
     public void TestToString()

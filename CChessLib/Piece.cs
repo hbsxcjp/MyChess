@@ -46,6 +46,7 @@ public abstract class Piece : IComparable
     abstract public char Char { get; }
     abstract public char Name { get; }
     virtual public char PrintName { get { return Name; } }
+    public bool IsNull { get { return this == Null; } }
 
     /// <summary>
     /// 初始棋盘布局面时，棋子可放置的位置
@@ -127,17 +128,6 @@ public abstract class Piece : IComparable
     }
 
     public int CompareTo(Piece piece) => Coord.CompareTo(piece.Coord);
-
-    public class NullPiece : Piece
-    {
-        public NullPiece() : base(PieceColor.NoColor) { }
-        override public PieceKind Kind { get { return PieceKind.NoKind; } }
-        override public char Char { get { return '_'; } }
-        override public char Name { get { return '空'; } }
-        override protected List<(int row, int col)> PutRowCols(bool isBottomColor) => new();
-        override protected List<(int row, int col)> MoveRowCols(Board board) => new();
-    }
-
 }
 
 public class King : Piece
@@ -251,7 +241,7 @@ public class Bishop : Piece
         int maxRow = isBottom ? (Coord.RowCount - 1) / 2 : Coord.RowCount - 1;
         void AddRowCol(int row, int col)
         {
-            if (board[(row + Row) / 2, (col + Col) / 2].HasNullPiece)
+            if (board.IsNull((row + Row) / 2, (col + Col) / 2))
                 rowCols.Add((row, col));
         }
 
@@ -285,7 +275,7 @@ public class Knight : Piece
 
     override protected List<(int row, int col)> MoveRowCols(Board board)
     {
-        List<(int row, int col)> rowCols = new();
+        // List<(int row, int col)> rowCols = new();
         int Row = Coord.Row, Col = Coord.Col;
         ((int row, int col) to, (int row, int col) leg)[] allToLegRowCols =
         {
@@ -298,13 +288,16 @@ public class Knight : Piece
                 ((Row + 2, Col - 1), (Row + 1, Col)),
                 ((Row + 2, Col + 1), (Row + 1, Col))
             };
-        foreach (var (to, leg) in allToLegRowCols)
-        {
-            if (Coord.IsValid(to.row, to.col) && (board[leg.row, leg.col].HasNullPiece))
-                rowCols.Add((to.row, to.col));
-        }
+        // foreach (var (to, leg) in allToLegRowCols)
+        // {
+        //     if (Coord.IsValid(to.row, to.col) && (board[leg.row, leg.col].Piece.IsNull))
+        //         rowCols.Add((to.row, to.col));
+        // }
 
-        return rowCols;
+        // return rowCols;
+        return allToLegRowCols.Where(
+            toLeg => Coord.IsValid(toLeg.to.row, toLeg.to.col) && (board.IsNull(toLeg.leg.row, toLeg.leg.col)))
+            .Select(toLeg => (toLeg.to.row, toLeg.to.col)).ToList();
     }
 }
 
@@ -324,7 +317,7 @@ public class Rook : Piece
         bool AddRowCol(int row, int col)
         {
             rowCols.Add((row, col));
-            return board[row, col].HasNullPiece;
+            return board.IsNull(row, col);
         }
 
         for (int r = Row - 1; r >= 0; --r)
@@ -363,7 +356,7 @@ public class Cannon : Piece
         bool skiped = false;
         bool AddCoordToBreak(int row, int col)
         {
-            bool isNull = board[row, col].HasNullPiece;
+            bool isNull = board.IsNull(row, col);
             if (!skiped)
             {
                 if (isNull)
@@ -453,3 +446,13 @@ public class Pawn : Piece
     }
 }
 
+public class NullPiece : Piece
+{
+    public NullPiece() : base(PieceColor.NoColor) { }
+
+    override public PieceKind Kind { get { return PieceKind.NoKind; } }
+    override public char Char { get { return '_'; } }
+    override public char Name { get { return '空'; } }
+    override protected List<(int row, int col)> PutRowCols(bool isBottomColor) => new();
+    override protected List<(int row, int col)> MoveRowCols(Board board) => new();
+}

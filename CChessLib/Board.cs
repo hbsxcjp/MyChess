@@ -31,6 +31,7 @@ public class Board
 
     private Seat GetKingSeat(PieceColor color) => _pieces[(int)color][(int)PieceKind.King][0].Seat;
 
+    public bool IsNull(int row, int col) => this[row, col].Piece.IsNull;
     public bool IsBottom(PieceColor color)
     {
         Seat kingSeat = GetKingSeat(PieceColor.Red);
@@ -49,7 +50,7 @@ public class Board
         {
             int thisRow = kingCoord.Row, otherRow = otherKingCoord.Row,
                 lowRow = Math.Min(thisRow, otherRow) + 1, count = Math.Abs(thisRow - otherRow) - 1;
-            if (Enumerable.Range(lowRow, count).Select(row => this[row, col]).All(seat => seat.HasNullPiece))
+            if (Enumerable.Range(lowRow, count).All(row => this.IsNull(row, col)))
                 return true;
         }
 
@@ -80,7 +81,7 @@ public class Board
     public bool CanMove(Coord fromCoord, Coord toCoord)
     {
         Seat fromSeat = this[fromCoord];
-        Debug.Assert(!fromSeat.HasNullPiece);
+        Debug.Assert(!fromSeat.Piece.IsNull);
 
         var color = fromSeat.Piece.Color;
         Seat toSeat = this[toCoord];
@@ -104,20 +105,23 @@ public class Board
 
     public string GetFEN()
     {
-        string pieceChars = "";
+        StringBuilder pieceChars = new();
         foreach (var seat in _seats)
-            pieceChars += seat.Piece.Char;
+            pieceChars.Append(seat.Piece.Char);
 
-        return GetFEN(pieceChars);
+        return GetFEN(pieceChars.ToString());
     }
     public static string GetFEN(string pieceChars)
     {
-        string fen = "";
+        StringBuilder fen = new();
         for (int row = Coord.RowCount - 1; row >= 0; --row)
-            fen += pieceChars[(row * Coord.ColCount)..((row + 1) * Coord.ColCount)] + Piece.FENSplitChar;
+        {
+            fen.Append(pieceChars[(row * Coord.ColCount)..((row + 1) * Coord.ColCount)]);
+            if (row > 0)
+                fen.Append(Piece.FENSplitChar);
+        }
 
-        return Regex.Replace(fen.Remove(fen.Length - 1), $"{Piece.Null.Char}+",
-            (Match match) => match.Value.Length.ToString());
+        return Regex.Replace(fen.ToString(), $"{Piece.Null.Char}+", (Match match) => match.Value.Length.ToString());
     }
     public static string GetFEN(string fen, ChangeType ct)
     {
@@ -125,35 +129,24 @@ public class Board
             return fen;
 
         if (ct == ChangeType.Exchange)
-        {
-            string resultFen = "";
-            foreach (var ch in fen)
-                resultFen += char.IsLetter(ch) ? (char.IsLower(ch) ? char.ToUpper(ch) : char.ToLower(ch)) : ch;
-            return resultFen;
-        }
+            return string.Concat(fen.Select(ch => char.IsLower(ch) ? char.ToUpper(ch) : char.ToLower(ch)));
 
         string[] fenArray = fen.Split(Piece.FENSplitChar);
         if (fenArray.Length != Coord.RowCount)
             return fen;
 
-        IEnumerable<string> result;
         IEnumerable<string> ReverseRow(IEnumerable<string> fenArray) => fenArray.Reverse();
-        IEnumerable<string> ReverseCol(IEnumerable<string> fenArray)
-        {
-            List<string> lines = new();
-            foreach (var line in fenArray)
-                lines.Add(string.Concat(line.Reverse()));
-            return lines;
-        }
+        IEnumerable<string> ReverseCol(IEnumerable<string> fenArray) => fenArray.Select(line => string.Concat(line.Reverse()));
 
+        IEnumerable<string> values;
         if (ct == ChangeType.Symmetry_H)
-            result = ReverseCol(fenArray);
+            values = ReverseCol(fenArray);
         else if (ct == ChangeType.Symmetry_V)
-            result = ReverseRow(fenArray);
+            values = ReverseRow(fenArray);
         else // if(ct == ChangeType.Rotate)
-            result = ReverseCol(ReverseRow(fenArray));
+            values = ReverseCol(ReverseRow(fenArray));
 
-        return string.Join(Piece.FENSplitChar, result);
+        return string.Join(Piece.FENSplitChar, values);
     }
     public bool SetFEN(string fen)
     {
@@ -194,7 +187,7 @@ public class Board
         string zhStr;
         Seat fromSeat = this[coordPair.FromCoord],
             toSeat = this[coordPair.ToCoord];
-        Debug.Assert(!fromSeat.HasNullPiece);
+        Debug.Assert(!fromSeat.Piece.IsNull);
 
         Piece fromPiece = fromSeat.Piece;
         PieceColor color = fromPiece.Color;
@@ -303,6 +296,8 @@ public class Board
     public CoordPair GetCoordPairFromIccs(string iccs)
     => GetCoordPair(int.Parse(iccs[1].ToString()), Coord.ColChars.IndexOf(iccs[0]),
             int.Parse(iccs[3].ToString()), Coord.ColChars.IndexOf(iccs[2]));
+    private CoordPair GetCoordPair(int frow, int fcol, int trow, int tcol)
+        => new(this[frow, fcol].Coord, this[trow, tcol].Coord);
 
     public List<Piece> Pieces(PieceColor color)
     {
@@ -318,6 +313,9 @@ public class Board
         => LivePieces(_pieces[(int)color][(int)kind]);
     private List<Piece> LivePieces(PieceColor color, PieceKind kind, int col)
         => LivePieces(color, kind).Where(piece => piece.Coord.Col == col).ToList();
+    private static List<Piece> LivePieces(IEnumerable<Piece> pieces)
+        => pieces.Where(piece => !piece.Seat.IsNull).ToList();
+
     private List<Piece> LivePieces_MultiColPawns(PieceColor color)
     {
         List<Piece> pawnPieces = new();
@@ -337,12 +335,6 @@ public class Board
 
         return pawnPieces;
     }
-
-    private static List<Piece> LivePieces(IEnumerable<Piece> pieces)
-        => pieces.Where(piece => !piece.Seat.IsNull).ToList();
-
-    private CoordPair GetCoordPair(int frow, int fcol, int trow, int tcol)
-        => new(this[frow, fcol].Coord, this[trow, tcol].Coord);
 
     override public string ToString()
     {
@@ -385,7 +377,7 @@ public class Board
         // 边框粗线
 
         foreach (var seat in _seats)
-            if (!seat.HasNullPiece)
+            if (!seat.Piece.IsNull)
                 textBlankBoard[Coord.GetDoubleIndex(seat.Coord)] = seat.Piece.PrintName;
 
         int index = IsBottom(PieceColor.Red) ? 0 : 1;

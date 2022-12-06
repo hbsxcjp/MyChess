@@ -56,8 +56,8 @@ public class Manual
         }
     }
 
-    public ManualMove ManualMove { get { return _manualMove; } }
     public Dictionary<string, string> Info { get { return _info; } }
+    public ManualMove ManualMove { get { return _manualMove; } }
 
     public void Write(string fileName)
     {

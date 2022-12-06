@@ -18,8 +18,12 @@ public class ManualMove: IEnumerable
     }
 
     public Move CurMove { get; set; }
-    public string? CurRemark { get { return CurMove.Remark; } set { CurMove.Remark = value?.Trim(); } }
     public bool EnumMoveDone { get; set; }
+    public string? CurRemark { get { return CurMove.Remark; } set { CurMove.Remark = value?.Trim(); } }
+    public string AspectFEN
+    {
+        get => Board.GetFEN(_board.GetFEN(), _board.IsBottom(PieceColor.Red) ? ChangeType.NoChange : ChangeType.Exchange);
+    }
 
     public List<Coord> GetCanPutCoords(Piece piece) => piece.PutCoord(_board, _board.IsBottom(piece.Color));
     public List<Coord> GetCanMoveCoords(Coord fromCoord) => _board.CanMoveCoord(fromCoord);
@@ -29,7 +33,7 @@ public class ManualMove: IEnumerable
     public bool SetBoard(string fen) => _board.SetFEN(fen.Split(' ')[0]);
 
     public void AddMove(CoordPair coordPair, string? remark = null, bool visible = true)
-        => GoMove(CurMove.AddAfterMove(coordPair, remark, visible));
+        => GoMove(CurMove.AddMove(coordPair, remark, visible));
     public bool AddMove(string zhStr)
     {
         var coordPair = _board.GetCoordPairFromZhstr(zhStr);
@@ -103,6 +107,7 @@ public class ManualMove: IEnumerable
         CurMove = move;
         return true;
     }
+    private void GoMove(Move move) => (CurMove = move).Done(_board);
 
     public void ReadCM(BinaryReader reader)
     {
@@ -130,7 +135,7 @@ public class ManualMove: IEnumerable
                 CoordPair coordPair = _board.GetCoordPairFromRowCol(reader.ReadString());
                 var (remark, afterNum) = readRemarkAfterNum(reader);
 
-                var move = beforeMove.AddAfterMove(coordPair, remark, visible);
+                var move = beforeMove.AddMove(coordPair, remark, visible);
                 if(afterNum > 0)
                     moveAfterNumQueue.Enqueue((move, afterNum));
             }
@@ -186,7 +191,7 @@ public class ManualMove: IEnumerable
                     CoordPair coordPair = _board.GetCoordPairFromRowCol(match.Groups[2].Value);
                     string remark = match.Groups[3].Value, afterNumStr = match.Groups[4].Value;
 
-                    var move = beforeMove.AddAfterMove(coordPair, remark.Length > 0 ? remark : null, visible);
+                    var move = beforeMove.AddMove(coordPair, remark.Length > 0 ? remark : null, visible);
                     if(afterNumStr.Length > 0)
                         moveAfterNumQueue.Enqueue((move, Convert.ToInt32(afterNumStr)));
                 }
@@ -217,7 +222,7 @@ public class ManualMove: IEnumerable
             if(fileExtType == FileExtType.PGNZh)
                 GoTo(allMoves[id]);
 
-            allMoves.Add(allMoves[id].AddAfterMove(GetCoordPair(pgnText, fileExtType), remark, visible));
+            allMoves.Add(allMoves[id].AddMove(GetCoordPair(pgnText, fileExtType), remark, visible));
         }
     }
 
@@ -263,7 +268,7 @@ public class ManualMove: IEnumerable
         int lenght = rowCols.Length;
         Move move = _rootMove;
         for(int i = 0;i < lenght;i += CoordPair.RowColICCSLength)
-            move = move.AddAfterMove(GetCoordPair(rowCols[i..(i + CoordPair.RowColICCSLength)], FileExtType.PGNRowCol));
+            move = move.AddMove(GetCoordPair(rowCols[i..(i + CoordPair.RowColICCSLength)], FileExtType.PGNRowCol));
     }
 
     public string GetRowCols()
@@ -289,11 +294,6 @@ public class ManualMove: IEnumerable
         EnumMoveDone = oldEnumMoveDone;
 
         return aspects;
-    }
-
-    public string AspectFEN
-    {
-        get => Board.GetFEN(_board.GetFEN(), _board.IsBottom(PieceColor.Red) ? ChangeType.NoChange : ChangeType.Exchange);
     }
 
     public void ClearError()
@@ -346,11 +346,6 @@ public class ManualMove: IEnumerable
         return _board.ToString() + moveString;
     }
 
-    IEnumerator IEnumerable.GetEnumerator() => (IEnumerator)GetEnumerator();
-    public ManualMoveEnum GetEnumerator() => new(this);
-
-    private void GoMove(Move move) => (CurMove = move).Done(_board);
-
     private CoordPair GetCoordPair(string pgnText, FileExtType fileExtType)
         => fileExtType switch
         {
@@ -366,6 +361,9 @@ public class ManualMove: IEnumerable
             FileExtType.PGNRowCol => coordPair.RowCol,
             _ => _board.GetZhStrFromCoordPair(coordPair),
         };
+
+    IEnumerator IEnumerable.GetEnumerator() => (IEnumerator)GetEnumerator();
+    public ManualMoveEnum GetEnumerator() => new(this);
 }
 
 public class ManualMoveEnum: IEnumerator

@@ -18,13 +18,13 @@ public class Seat
         set
         {
             _piece.Seat = Null;
-            value.Seat = this;
+            if (value != Piece.Null)
+                value.Seat = this;
 
             _piece = value;
         }
     }
     public bool IsNull { get { return this == Null; } }
-    public bool HasNullPiece { get { return Piece == Piece.Null; } }
 
     public void MoveTo(Seat toSeat, Piece fillPiece)
     {
@@ -37,7 +37,7 @@ public class Seat
     public static Seat[,] CreatSeats()
     {
         var seats = new Seat[Coord.RowCount, Coord.ColCount];
-        foreach(Coord coord in Coord.CreatCoords())
+        foreach (Coord coord in Coord.CreatCoords())
             seats[coord.Row, coord.Col] = new(coord);
 
         return seats;
@@ -45,5 +45,3 @@ public class Seat
 
     public override string ToString() => $"{Coord}:{Piece}";
 }
-
-
