@@ -56,6 +56,7 @@ public class DatabaseTest
             Assert.Equal(expectManualStrings[index++], result);
         }
 
-        EccoData.InitEccoData();
+
+        new EccoData().InitEccoData();
     }
 }
