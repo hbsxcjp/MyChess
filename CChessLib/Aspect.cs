@@ -10,23 +10,23 @@ public class Aspects
     public Aspects() { _aspectDict = new(); }
     public Aspects(string fileName) : this()
     {
-        if(!File.Exists(fileName))
+        if (!File.Exists(fileName))
             return;
 
         using var stream = File.Open(fileName, FileMode.Open);
         using var reader = new BinaryReader(stream, Encoding.UTF8, false);
         int fenCount = reader.ReadInt32();
-        for(int i = 0;i < fenCount;i++)
+        for (int i = 0; i < fenCount; i++)
         {
             string fen = reader.ReadString();
             int rowColCount = reader.ReadInt32();
             Dictionary<string, List<int>> aspectData = new();
-            for(int j = 0;j < rowColCount;j++)
+            for (int j = 0; j < rowColCount; j++)
             {
                 string rowCol = reader.ReadString();
                 int valueCount = reader.ReadInt32();
                 List<int> valueList = new();
-                for(int k = 0;k < valueCount;k++)
+                for (int k = 0; k < valueCount; k++)
                     valueList.Add(reader.ReadInt32());
 
                 aspectData.TryAdd(rowCol, valueList);
@@ -39,15 +39,15 @@ public class Aspects
         using var stream = File.Open(fileName, FileMode.Create);
         using var writer = new BinaryWriter(stream, Encoding.UTF8, false);
         writer.Write(_aspectDict.Count);
-        foreach(var fenData in _aspectDict)
+        foreach (var fenData in _aspectDict)
         {
             writer.Write(fenData.Key);
             writer.Write(fenData.Value.Count);
-            foreach(var aspectData in fenData.Value)
+            foreach (var aspectData in fenData.Value)
             {
                 writer.Write(aspectData.Key);
                 writer.Write(aspectData.Value.Count);
-                foreach(var x in aspectData.Value)
+                foreach (var x in aspectData.Value)
                     writer.Write(x);
             }
         }
@@ -56,7 +56,7 @@ public class Aspects
     public void Add(string fileName)
     {
         Manual manual = new(fileName);
-        foreach(var aspect in manual.GetAspects())
+        foreach (var aspect in manual.GetAspects())
             Join(aspect);
 
         // 以下同步方式与非同步方式的耗时基本相同，同步字典并行运行时被锁定？
@@ -71,7 +71,7 @@ public class Aspects
     public List<(string rowCol, List<int> valueList)>? GetAspectData(string fen)
     {
         var (finded, findCt, findFen) = FindCtFens(fen);
-        if(!finded)
+        if (!finded)
             return null;
 
         return _aspectDict[findFen].Select(
@@ -83,7 +83,7 @@ public class Aspects
         var (fen, rowCol) = aspect;
         Dictionary<string, List<int>> aspectData;
         var (finded, findCt, findFen) = FindCtFens(fen);
-        if(finded)
+        if (finded)
             aspectData = _aspectDict[findFen];
         else
         {
@@ -91,10 +91,10 @@ public class Aspects
             _aspectDict.Add(fen, aspectData);
         }
 
-        if(findCt != ChangeType.NoChange)
+        if (findCt != ChangeType.NoChange)
             rowCol = Coord.GetRowCol(rowCol, findCt);
 
-        if(aspectData.ContainsKey(rowCol))
+        if (aspectData.ContainsKey(rowCol))
         {
             aspectData[rowCol][0]++; // 第一项计数，列表可添加功能
         }
@@ -106,12 +106,12 @@ public class Aspects
 
     private (bool finded, ChangeType findCt, string findFen) FindCtFens(string fen)
     {
-        if(_aspectDict.ContainsKey(fen))
+        if (_aspectDict.ContainsKey(fen))
             return (true, ChangeType.NoChange, fen);
 
         ChangeType ct = ChangeType.Symmetry_H;
-        fen = Board.GetFEN(fen, ct);
-        if(_aspectDict.ContainsKey(fen))
+        fen = Seats.GetFEN(fen, ct);
+        if (_aspectDict.ContainsKey(fen))
             return (true, ct, fen);
 
         return (false, ChangeType.NoChange, fen);
@@ -123,10 +123,10 @@ public class Aspects
               ParallelLoopState loop, string subString)
         {
             subString += fenData.Key + " [";
-            foreach(var aspectData in fenData.Value)
+            foreach (var aspectData in fenData.Value)
             {
                 subString += aspectData.Key + "(";
-                foreach(var value in aspectData.Value)
+                foreach (var value in aspectData.Value)
                     subString += value.ToString() + ' ';
 
                 subString = subString.TrimEnd() + ") ";

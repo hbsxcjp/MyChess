@@ -22,15 +22,13 @@ public enum PieceKind
 public abstract class Piece : IComparable
 {
     public static readonly Piece Null = new NullPiece();
+    public const int KindNum = 7;
     public const char FENSplitChar = '/';
 
     private const string NameChars = "帅仕相马车炮兵将士象马车炮卒";
     private static readonly string[] NumChars = { "一二三四五六七八九", "１２３４５６７８９" };
     private const string PositionChars = "前中后";
     private const string MoveChars = "退平进";
-
-    private const int ColorNum = 2;
-    private const int KindNum = 7;
 
     protected Piece(PieceColor color)
     {
@@ -70,38 +68,6 @@ public abstract class Piece : IComparable
 
     virtual protected List<(int row, int col)> PutRowCols(bool isBottomColor) => new();
     abstract protected List<(int row, int col)> MoveRowCols(Board board);
-
-    public static Piece[][][] CreatPieces()
-    {
-        static Piece[] getKindPieces(PieceColor color, Type type, int num)
-        {
-            var kindPieces = new Piece[num];
-            var constructorInfo = type.GetConstructor(new Type[] { typeof(PieceColor) });
-            if (constructorInfo != null)
-                for (int i = 0; i < num; i++)
-                    kindPieces[i] = (Piece)constructorInfo.Invoke(new object[] { color });
-
-            return kindPieces;
-        }
-
-        static Piece[][] getColorPieces(PieceColor color)
-        {
-            Type[] pieceType = { typeof(King), typeof(Advisor), typeof(Bishop),
-                    typeof(Knight), typeof(Rook), typeof(Cannon), typeof(Pawn) };
-            int[] KindNums = { 1, 2, 2, 2, 2, 2, 5 };
-            Piece[][] pieces = new Piece[KindNum][];
-            for (int k = 0; k < KindNum; k++)
-                pieces[k] = getKindPieces(color, pieceType[k], KindNums[k]);
-
-            return pieces;
-        }
-
-        var pieces = new Piece[ColorNum][][];
-        for (int c = 0; c < ColorNum; c++)
-            pieces[c] = getColorPieces((PieceColor)c);
-
-        return pieces;
-    }
 
     override public string ToString()
         => $"{(Color == PieceColor.Red ? "红" : (Color == PieceColor.Black ? "黑" : "无"))}{PrintName}{Char}{Coord}";
@@ -455,4 +421,97 @@ public class NullPiece : Piece
     override public char Name { get { return '空'; } }
     override protected List<(int row, int col)> PutRowCols(bool isBottomColor) => new();
     override protected List<(int row, int col)> MoveRowCols(Board board) => new();
+}
+
+public class Pieces
+{
+
+    private Piece[][][] _pieces;
+    private const int ColorNum = 2;
+
+    public Pieces()
+    {
+        static Piece[] getKindPieces(PieceColor color, Type type, int num)
+        {
+            var kindPieces = new Piece[num];
+            var constructorInfo = type.GetConstructor(new Type[] { typeof(PieceColor) });
+            if (constructorInfo != null)
+                for (int i = 0; i < num; i++)
+                    kindPieces[i] = (Piece)constructorInfo.Invoke(new object[] { color });
+
+            return kindPieces;
+        }
+
+        static Piece[][] getColorPieces(PieceColor color)
+        {
+            Type[] pieceType = { typeof(King), typeof(Advisor), typeof(Bishop),
+                    typeof(Knight), typeof(Rook), typeof(Cannon), typeof(Pawn) };
+            int[] KindNums = { 1, 2, 2, 2, 2, 2, 5 };
+            Piece[][] pieces = new Piece[Piece.KindNum][];
+            for (int k = 0; k < Piece.KindNum; k++)
+                pieces[k] = getKindPieces(color, pieceType[k], KindNums[k]);
+
+            return pieces;
+        }
+
+        _pieces = new Piece[ColorNum][][];
+        for (int c = 0; c < ColorNum; c++)
+            _pieces[c] = getColorPieces((PieceColor)c);
+    }
+
+    public Piece GetNotAtSeatPiece(char ch)
+    {
+        foreach (var piece in _pieces[Piece.GetColorIndex(ch)][Piece.GetKindIndex(ch)])
+            if (piece.Seat.IsNull)
+                return piece;
+
+        return Piece.Null;
+    }
+
+    public bool IsBottom(PieceColor color)
+    {
+        Seat kingSeat = GetKing(PieceColor.Red).Seat;
+        return ((kingSeat.IsNull || kingSeat.Coord.IsBottom) ? PieceColor.Red : PieceColor.Black) == color;
+    }
+    public Piece GetKing(PieceColor color) => _pieces[(int)color][(int)PieceKind.King][0];
+
+    public List<Piece> GetPieces(PieceColor color)
+    {
+        List<Piece> pieces = new();
+        foreach (var kindPieces in _pieces[(int)color])
+            pieces.AddRange(kindPieces);
+
+        return pieces;
+    }
+
+    public List<Piece> GetLivePieces(PieceColor color) => LivePieces(GetPieces(color));
+
+    public List<Piece> LivePieces(PieceColor color, PieceKind kind)
+        => LivePieces(_pieces[(int)color][(int)kind]);
+    public List<Piece> LivePieces(PieceColor color, PieceKind kind, int col)
+        => LivePieces(color, kind).Where(piece => piece.Coord.Col == col).ToList();
+    private static List<Piece> LivePieces(IEnumerable<Piece> pieces)
+        => pieces.Where(piece => !piece.Seat.IsNull).ToList();
+
+    public List<Piece> LivePieces_MultiColPawns(PieceColor color)
+    {
+        List<Piece> pawnPieces = new();
+        Dictionary<int, List<Piece>> colPieces = new();
+        foreach (Piece piece in LivePieces(color, PieceKind.Pawn))
+        {
+            int col = piece.Coord.Col;
+            if (!colPieces.ContainsKey(col))
+                colPieces[col] = new();
+
+            colPieces[col].Add(piece);
+        }
+
+        foreach (var pieces in colPieces.Values)
+            if (pieces.Count > 1)
+                pawnPieces.AddRange(pieces);
+
+        return pawnPieces;
+    }
+
+
 }

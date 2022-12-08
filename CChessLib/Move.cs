@@ -52,15 +52,8 @@ public class Move
         return move;
     }
 
-    public void Done(Board board)
-    {
-        Seat toSeat = board[CoordPair.ToCoord];
-        ToPiece = toSeat.Piece;
-
-        board[CoordPair.FromCoord].MoveTo(toSeat, Piece.Null);
-    }
-    public void Undo(Board board)
-        => board[CoordPair.ToCoord].MoveTo(board[CoordPair.FromCoord], ToPiece);
+    public void Done(Board board) => ToPiece = board.Done(CoordPair);
+    public void Undo(Board board) => board.Undo(CoordPair, ToPiece);
 
     // 前置着法列表，不含根节点、含自身this
     public List<Move> BeforeMoves()
