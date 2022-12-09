@@ -21,23 +21,16 @@ public class Board
 
     public List<Coord> GetAllCoords() => seats.GetAllCoords();
 
-    private Seat GetKingSeat(PieceColor color) => pieces.GetKing(color).Seat;
-
     public bool IsNull(int row, int col) => seats[row, col].Piece.IsNull;
-    public bool IsBottom(PieceColor color)
-    {
-        Seat kingSeat = GetKingSeat(PieceColor.Red);
-        return ((kingSeat.IsNull || kingSeat.Coord.IsBottom) ? PieceColor.Red : PieceColor.Black) == color;
-    }
-
+    public bool IsBottom(PieceColor color) => pieces.IsBottom(color);
     public bool IsKilled(PieceColor color)
     {
-        Coord kingCoord = GetKingSeat(color).Coord;
+        Coord kingCoord = GetKing(color);
         var otherColor = color == PieceColor.Red ? PieceColor.Black : PieceColor.Red;
 
         // 将帅是否对面
         int col = kingCoord.Col;
-        Coord otherKingCoord = GetKingSeat(otherColor).Coord;
+        Coord otherKingCoord = GetKing(otherColor);
         if (col == otherKingCoord.Col)
         {
             int thisRow = kingCoord.Row, otherRow = otherKingCoord.Row,
@@ -49,6 +42,8 @@ public class Board
         // 是否正被将军
         return LivePieces(otherColor).Any(piece => piece.MoveCoord(this).Contains(kingCoord));
     }
+    private Coord GetKing(PieceColor color) => pieces.GetKing(color).Seat.Coord;
+
     public bool IsFailed(PieceColor color)
         => LivePieces(color).All(piece => CanMoveCoord(piece.Coord).Count == 0);
 

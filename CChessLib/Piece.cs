@@ -425,7 +425,6 @@ public class NullPiece : Piece
 
 public class Pieces
 {
-
     private Piece[][][] _pieces;
     private const int ColorNum = 2;
 
@@ -475,7 +474,14 @@ public class Pieces
     }
     public Piece GetKing(PieceColor color) => _pieces[(int)color][(int)PieceKind.King][0];
 
-    public List<Piece> GetPieces(PieceColor color)
+    public List<Piece> GetPieces()
+    {
+        List<Piece> pieces = GetPieces(PieceColor.Red);
+        pieces.AddRange(GetPieces(PieceColor.Black));
+
+        return pieces;
+    }
+    private List<Piece> GetPieces(PieceColor color)
     {
         List<Piece> pieces = new();
         foreach (var kindPieces in _pieces[(int)color])
@@ -484,6 +490,7 @@ public class Pieces
         return pieces;
     }
 
+    public List<Piece> GetLivePieces() => LivePieces(GetPieces());
     public List<Piece> GetLivePieces(PieceColor color) => LivePieces(GetPieces(color));
 
     public List<Piece> LivePieces(PieceColor color, PieceKind kind)
