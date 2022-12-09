@@ -52,22 +52,22 @@ public abstract class Piece : IComparable
     /// <param name="board"></param>
     /// <param name="isBottomColor"></param>
     /// <returns>棋盘位置坐标的列表</returns>
-    public List<Coord> PutCoord(Board board, bool isBottomColor)
+    public List<Coord> PutCoord(Seats seats, bool isBottomColor)
         => (Kind == PieceKind.Rook || Kind == PieceKind.Cannon || Kind == PieceKind.Knight)
-                ? board.GetAllCoords()
-                : PutRowCols(isBottomColor).Select(rowCol => board[rowCol.row, rowCol.col].Coord).ToList();
+                ? seats.GetAllCoords()
+                : PutRowCols(isBottomColor).Select(rowCol => seats[rowCol.row, rowCol.col].Coord).ToList();
 
     /// <summary>
     /// 当前棋盘局面下，棋子可移动位置, 已排除规则不允许行走的位置、同色棋子的位置
     /// </summary>
     /// <param name="board">棋盘对象</param>
     /// <returns>棋盘位置坐标的列表</returns>
-    public List<Coord> MoveCoord(Board board)
-        => MoveRowCols(board).Where(rowCol => board[rowCol.row, rowCol.col].Piece.Color != Color).
-                Select(rowCol => board[rowCol.row, rowCol.col].Coord).ToList();
+    public List<Coord> MoveCoord(Seats seats, bool isBottomColor)
+        => MoveRowCols(seats, isBottomColor).Where(rowCol => seats[rowCol.row, rowCol.col].Piece.Color != Color).
+                Select(rowCol => seats[rowCol.row, rowCol.col].Coord).ToList();
 
     virtual protected List<(int row, int col)> PutRowCols(bool isBottomColor) => new();
-    abstract protected List<(int row, int col)> MoveRowCols(Board board);
+    abstract protected List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor);
 
     override public string ToString()
         => $"{(Color == PieceColor.Red ? "红" : (Color == PieceColor.Black ? "黑" : "无"))}{PrintName}{Char}{Coord}";
@@ -116,7 +116,7 @@ public class King : Piece
         return rowCols;
     }
 
-    override protected List<(int row, int col)> MoveRowCols(Board board)
+    override protected List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
     {
         List<(int row, int col)> rowCols = new();
         bool isBottom = Coord.IsBottom;
@@ -156,7 +156,7 @@ public class Advisor : Piece
         return rowCols;
     }
 
-    override protected List<(int row, int col)> MoveRowCols(Board board)
+    override protected List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
     {
         List<(int row, int col)> rowCols = new();
         bool isBottom = Coord.IsBottom;
@@ -198,7 +198,7 @@ public class Bishop : Piece
         return rowCols;
     }
 
-    override protected List<(int row, int col)> MoveRowCols(Board board)
+    override protected List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
     {
         List<(int row, int col)> rowCols = new();
         List<Coord> coords = new();
@@ -207,7 +207,7 @@ public class Bishop : Piece
         int maxRow = isBottom ? (Coord.RowCount - 1) / 2 : Coord.RowCount - 1;
         void AddRowCol(int row, int col)
         {
-            if (board.IsNull((row + Row) / 2, (col + Col) / 2))
+            if (seats.IsNull((row + Row) / 2, (col + Col) / 2))
                 rowCols.Add((row, col));
         }
 
@@ -239,7 +239,7 @@ public class Knight : Piece
     override public char Name { get { return '马'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '馬'; } }
 
-    override protected List<(int row, int col)> MoveRowCols(Board board)
+    override protected List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
     {
         // List<(int row, int col)> rowCols = new();
         int Row = Coord.Row, Col = Coord.Col;
@@ -262,7 +262,7 @@ public class Knight : Piece
 
         // return rowCols;
         return allToLegRowCols.Where(
-            toLeg => Coord.IsValid(toLeg.to.row, toLeg.to.col) && (board.IsNull(toLeg.leg.row, toLeg.leg.col)))
+            toLeg => Coord.IsValid(toLeg.to.row, toLeg.to.col) && (seats.IsNull(toLeg.leg.row, toLeg.leg.col)))
             .Select(toLeg => (toLeg.to.row, toLeg.to.col)).ToList();
     }
 }
@@ -276,14 +276,14 @@ public class Rook : Piece
     override public char Name { get { return '车'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '車'; } }
 
-    override protected List<(int row, int col)> MoveRowCols(Board board)
+    override protected List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
     {
         List<(int row, int col)> rowCols = new();
         int Row = Coord.Row, Col = Coord.Col;
         bool AddRowCol(int row, int col)
         {
             rowCols.Add((row, col));
-            return board.IsNull(row, col);
+            return seats.IsNull(row, col);
         }
 
         for (int r = Row - 1; r >= 0; --r)
@@ -315,14 +315,14 @@ public class Cannon : Piece
     override public char Name { get { return '炮'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '砲'; } }
 
-    override protected List<(int row, int col)> MoveRowCols(Board board)
+    override protected List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
     {
         List<(int row, int col)> rowCols = new();
         int Row = Coord.Row, Col = Coord.Col;
         bool skiped = false;
         bool AddCoordToBreak(int row, int col)
         {
-            bool isNull = board.IsNull(row, col);
+            bool isNull = seats.IsNull(row, col);
             if (!skiped)
             {
                 if (isNull)
@@ -388,11 +388,10 @@ public class Pawn : Piece
         return rowCols;
     }
 
-    override protected List<(int row, int col)> MoveRowCols(Board board)
+    override protected List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
     {
         List<(int row, int col)> rowCols = new();
-        bool isBottom = Coord.IsBottom,
-            isBottomColor = board.IsBottom(Color);
+        bool isBottom = Coord.IsBottom;
         int Row = Coord.Row, Col = Coord.Col;
         // 已过河
         if (isBottomColor != isBottom)
@@ -420,7 +419,7 @@ public class NullPiece : Piece
     override public char Char { get { return '_'; } }
     override public char Name { get { return '空'; } }
     override protected List<(int row, int col)> PutRowCols(bool isBottomColor) => new();
-    override protected List<(int row, int col)> MoveRowCols(Board board) => new();
+    override protected List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor) => new();
 }
 
 public class Pieces

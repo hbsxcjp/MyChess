@@ -258,4 +258,68 @@ public class Seats
 
         return new(fromCoord, this[toRow, toCol].Coord);
     }
+
+    public bool IsNull(int row, int col) => _seats[row, col].Piece.IsNull;
+    public bool IsKilled(PieceColor color, Pieces pieces)
+    {
+        Coord kingCoord = GetKing(color, pieces);
+        var otherColor = color == PieceColor.Red ? PieceColor.Black : PieceColor.Red;
+
+        // 将帅是否对面
+        int col = kingCoord.Col;
+        Coord otherKingCoord = GetKing(otherColor, pieces);
+        if (col == otherKingCoord.Col)
+        {
+            int thisRow = kingCoord.Row, otherRow = otherKingCoord.Row,
+                lowRow = Math.Min(thisRow, otherRow) + 1, count = Math.Abs(thisRow - otherRow) - 1;
+            if (Enumerable.Range(lowRow, count).All(row => IsNull(row, col)))
+                return true;
+        }
+
+        // 是否正被将军
+        return pieces.GetLivePieces(otherColor).Any(
+            piece => piece.MoveCoord(this, pieces.IsBottom(piece.Color)).Contains(kingCoord));
+    }
+    private Coord GetKing(PieceColor color, Pieces pieces) => pieces.GetKing(color).Seat.Coord;
+
+    public bool IsFailed(PieceColor color, Pieces pieces)
+        => pieces.GetLivePieces(color).All(piece => CanMoveCoord(piece.Coord, pieces).Count == 0);
+
+    /// <summary>
+    /// 可移动位置, 排除将帅对面、被将军的位置
+    /// </summary>
+    /// <param name="fromCoord"></param>
+    /// <returns></returns>
+    public List<Coord> CanMoveCoord(Coord fromCoord, Pieces pieces)
+    {
+        Piece piece = _seats[fromCoord.Row, fromCoord.Col].Piece;
+        List<Coord> coords = piece.MoveCoord(this, pieces.IsBottom(piece.Color));
+        coords.RemoveAll(toCoord => !CanMove(fromCoord, toCoord, pieces));
+        return coords;
+    }
+
+    /// <summary>
+    /// 检测是否可移动, 包括直接杀将、移动后将帅未对面、未被将军
+    /// </summary>
+    /// <param name="fromCoord"></param>
+    /// <param name="toCoord"></param>
+    /// <returns></returns>
+    public bool CanMove(Coord fromCoord, Coord toCoord, Pieces pieces)
+    {
+        Seat fromSeat = _seats[fromCoord.Row, fromCoord.Col];
+        Debug.Assert(!fromSeat.Piece.IsNull);
+
+        var color = fromSeat.Piece.Color;
+        Seat toSeat = _seats[toCoord.Row, toCoord.Col];
+        Piece toPiece = toSeat.Piece;
+
+        // 如是对方将帅的位置则直接可走，不用判断是否被将军（如加以判断，则会直接走棋吃将帅）
+        if (toPiece.Kind == PieceKind.King)
+            return true;
+
+        fromSeat.MoveTo(toSeat, Piece.Null);
+        bool killed = IsKilled(color, pieces);
+        toSeat.MoveTo(fromSeat, toPiece);
+        return !killed;
+    }
 }
