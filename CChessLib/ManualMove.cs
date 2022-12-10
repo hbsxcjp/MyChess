@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace CChess;
 
@@ -26,7 +27,7 @@ public class ManualMove : IEnumerable
     }
 
     // public List<Coord> GetCanPutCoords(Piece piece) => piece.PutCoord(_board, _board.IsBottom(piece.Color));
-    // public List<Coord> GetCanMoveCoords(Coord fromCoord) => _board.CanMoveCoord(fromCoord);
+    public List<Coord> GetCanMoveCoords(Coord fromCoord) => _board.CanMoveCoord(fromCoord);
 
     public bool AcceptCoordPair(CoordPair coordPair)
         => _board.CanMoveCoord(coordPair.FromCoord).Contains(coordPair.ToCoord);
@@ -221,7 +222,7 @@ public class ManualMove : IEnumerable
             if (fileExtType == FileExtType.PGNZh)
                 GoTo(allMoves[id]);
 
-            allMoves.Add(allMoves[id].AddMove(GetCoordPair(pgnText, fileExtType), remark, visible));
+            allMoves.Add(allMoves[id].AddMove(_board.GetCoordPair(pgnText, fileExtType), remark, visible));
         }
     }
 
@@ -267,20 +268,19 @@ public class ManualMove : IEnumerable
         int lenght = rowCols.Length;
         Move move = _rootMove;
         for (int i = 0; i < lenght; i += CoordPair.RowColICCSLength)
-            move = move.AddMove(GetCoordPair(rowCols[i..(i + CoordPair.RowColICCSLength)], FileExtType.PGNRowCol));
+            move = move.AddMove(_board.GetCoordPair(rowCols[i..(i + CoordPair.RowColICCSLength)], FileExtType.PGNRowCol));
     }
-
     public string GetRowCols()
     {
-        string rowCols = "";
+        StringBuilder rowCols = new();
         var afterMoves = _rootMove.AfterMoves();
         while (afterMoves != null && afterMoves.Count > 0)
         {
-            rowCols += afterMoves[0].CoordPair.RowCol;
+            rowCols.Append(afterMoves[0].CoordPair.RowCol);
             afterMoves = afterMoves[0].AfterMoves();
         }
 
-        return rowCols;
+        return rowCols.ToString();
     }
 
     public List<(string fen, string rowCol)> GetAspects()
@@ -344,14 +344,6 @@ public class ManualMove : IEnumerable
 
         return _board.ToString() + moveString;
     }
-
-    private CoordPair GetCoordPair(string pgnText, FileExtType fileExtType)
-        => fileExtType switch
-        {
-            FileExtType.PGNIccs => _board.GetCoordPairFromIccs(pgnText),
-            FileExtType.PGNRowCol => _board.GetCoordPairFromRowCol(pgnText),
-            _ => _board.GetCoordPairFromZhstr(pgnText),
-        };
 
     private string GetPGNText(CoordPair coordPair, FileExtType fileExtType)
         => fileExtType switch

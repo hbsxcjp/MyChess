@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text;
 
 namespace CChess;
@@ -10,8 +9,8 @@ public class Board
 
     public Board()
     {
-        pieces = new Pieces();
-        seats = new Seats();
+        pieces = new();
+        seats = new();
     }
 
     public Piece Done(CoordPair coordPair) => seats.Done(coordPair);
@@ -45,7 +44,13 @@ public class Board
     public CoordPair GetCoordPair(int frow, int fcol, int trow, int tcol)
         => new(seats[frow, fcol].Coord, seats[trow, tcol].Coord);
 
-    // public List<Piece> Pieces(PieceColor color) => pieces.GetPieces(color);
+    public CoordPair GetCoordPair(string pgnText, FileExtType fileExtType)
+        => fileExtType switch
+        {
+            FileExtType.PGNIccs => GetCoordPairFromIccs(pgnText),
+            FileExtType.PGNRowCol => GetCoordPairFromRowCol(pgnText),
+            _ => GetCoordPairFromZhstr(pgnText),
+        };
 
     public List<Piece> LivePieces(PieceColor color) => pieces.GetLivePieces(color);
 

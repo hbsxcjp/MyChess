@@ -44,7 +44,7 @@ public class Move
     public Piece ToPiece { get; set; }
     public bool HasAfter { get { return _afterMoves != null; } }
 
-    public static Move CreateRootMove() { return new(CoordPair.Null); }
+    public static Move CreateRootMove() => new(CoordPair.Null);
     public Move AddMove(CoordPair coordPair, string? remark = null, bool visible = true)
     {
         Move move = new(coordPair, this, remark, visible);
@@ -91,4 +91,3 @@ public class Move
     override public string ToString()
         => $"{new string('\t', BeforeNum)}{Before?.Id}-{CoordPair}.{Id} {Remark}\n";
 }
-
