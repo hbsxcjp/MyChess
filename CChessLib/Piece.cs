@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace CChess;
 
 public enum PieceColor
@@ -457,7 +459,7 @@ public class Pieces
             _pieces[c] = getColorPieces((PieceColor)c);
     }
 
-    public Piece GetNotAtSeatPiece(char ch)
+    public Piece GetPiece_SeatNull(char ch)
     {
         foreach (var piece in _pieces[Piece.GetColorIndex(ch)][Piece.GetKindIndex(ch)])
             if (piece.Seat.IsNull)
@@ -482,7 +484,7 @@ public class Pieces
         return pieces;
     }
 
-    private List<Piece> GetPieces(PieceColor color)
+    public List<Piece> GetPieces(PieceColor color)
     {
         List<Piece> pieces = new();
         foreach (var kindPieces in _pieces[(int)color])
@@ -491,12 +493,14 @@ public class Pieces
         return pieces;
     }
 
-    public List<Piece> GetLivePieces() => LivePieces(GetPieces());
+    public List<Piece> GetPieces(PieceColor color, PieceKind kind)
+        => _pieces[(int)color][(int)kind].ToList();
 
-    public List<Piece> GetLivePieces(PieceColor color) => LivePieces(GetPieces(color));
+    public List<Piece> GetLivePieces(PieceColor color)
+        => LivePieces(GetPieces(color));
 
     public List<Piece> GetLivePieces(PieceColor color, PieceKind kind)
-        => LivePieces(_pieces[(int)color][(int)kind]);
+         => LivePieces(GetPieces(color, kind));
 
     public List<Piece> GetLivePieces(PieceColor color, PieceKind kind, int col)
         => GetLivePieces(color, kind).Where(piece => piece.Coord.Col == col).ToList();
@@ -529,22 +533,25 @@ public class Pieces
         // return pawnPieces;
 
         List<Piece> pieces = GetLivePieces(color, PieceKind.Pawn), result = new();
+        Debug.Assert(pieces.Count > 1);
+
         pieces.Sort();
-        
-        Piece prePiece = Piece.Null;
-        for (int i = 0; i < pieces.Count; i++)
+        Piece prePiece = pieces[0];
+        bool preAdded = false;
+        for (int i = 1; i < pieces.Count; i++)
         {
             Piece piece = pieces[i];
-            if (prePiece.Coord.Col == piece.Coord.Col)
+            bool added = prePiece.Coord.Col == piece.Coord.Col;
+            if (added)
             {
-                // 前一个棋子尚未加入结果列表时
-                if (result.Count == 0 || result.Last() != prePiece)
+                if (!preAdded)
                     result.Add(prePiece);
 
                 result.Add(piece);
             }
 
             prePiece = piece;
+            preAdded = added;
         }
 
         return result;

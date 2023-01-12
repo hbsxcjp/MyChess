@@ -48,7 +48,7 @@ public class Seats
     public Seats()
     {
         _seats = new Seat[Coord.RowCount, Coord.ColCount];
-        foreach (Coord coord in Coord.CreatCoords())
+        foreach (Coord coord in Coord.AllCoords)
             _seats[coord.Row, coord.Col] = new(coord);
     }
 
@@ -131,7 +131,7 @@ public class Seats
                 if (char.IsDigit(ch))
                     col += Convert.ToInt32(ch.ToString());
                 else
-                    _seats[row, col++].Piece = pieces.GetNotAtSeatPiece(ch);
+                    _seats[row, col++].Piece = pieces.GetPiece_SeatNull(ch);
 
             row++;
         }

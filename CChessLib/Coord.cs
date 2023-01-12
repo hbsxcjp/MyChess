@@ -12,6 +12,7 @@ public enum ChangeType
 public class Coord : IComparable
 {
     public static readonly Coord Null = new(-1, -1);
+    public static readonly List<Coord> AllCoords = CreatAllCoords(); // Range(0,RowCount*ColCount).
     public const string ColChars = "ABCDEFGHI";
     public const int RowCount = 10;
     public const int ColCount = 9;
@@ -24,7 +25,7 @@ public class Coord : IComparable
     public string Iccs { get { return $"{ColChars[Col]}{Row}"; } }
     public bool IsBottom { get { return (Row << 1) < RowCount; } }
 
-    public static List<Coord> CreatCoords()
+    private static List<Coord> CreatAllCoords()
     {
         List<Coord> coords = new(RowCount * ColCount);
         for (int row = 0; row < RowCount; row++)
@@ -91,7 +92,7 @@ public class Coord : IComparable
     public static int GetCol(int col, bool isBottomColor) => isBottomColor ? SymmetryCol(col) : col;
 
     public static int GetDoubleIndex(Coord coord) => SymmetryRow(coord.Row) * 2 * (ColCount * 2) + coord.Col * 2;
-    
+
     public static bool IsValid(int Row, int col) => Row >= 0 && Row < RowCount && col >= 0 && col < ColCount;
 
     public override string ToString() => $"({Row},{Col})";
