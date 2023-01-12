@@ -34,7 +34,7 @@ public class Manual
         _info = info;
         _manualMove = new();
         string moveStrKey = Database.GetInfoKey(ManualField.MoveString);
-        if(_info.ContainsKey(moveStrKey))
+        if (_info.ContainsKey(moveStrKey))
             _manualMove.SetFromString(_info[moveStrKey], FileExtType.Text);
         else
             _manualMove.SetFromRowCols(GetInfoValue(ManualField.RowCols));
@@ -42,7 +42,7 @@ public class Manual
     public Manual(string fileName) : this()
     {
         FileExtType fileExtType = GetFileExtType(fileName);
-        switch(fileExtType)
+        switch (fileExtType)
         {
             case FileExtType.Xqf:
                 ReadXQF(fileName);
@@ -62,7 +62,7 @@ public class Manual
     public void Write(string fileName)
     {
         FileExtType fileExtType = GetFileExtType(fileName);
-        switch(fileExtType)
+        switch (fileExtType)
         {
             case FileExtType.Xqf:
                 //ReadXQF(fileName);
@@ -172,11 +172,11 @@ public class Manual
         stream.Read(RMKWriter, 0, 16); // = 480 bytes
         stream.Read(Author, 0, 16); // = 496 bytes
 
-        if(Signature[0] != 0x58 || Signature[1] != 0x51)
+        if (Signature[0] != 0x58 || Signature[1] != 0x51)
             throw new Exception("文件标记不符。");
-        if((headKeysSum[0] + headKeyXY[0] + headKeyXYf[0] + headKeyXYt[0]) % 256 != 0)
+        if ((headKeysSum[0] + headKeyXY[0] + headKeyXYf[0] + headKeyXYt[0]) % 256 != 0)
             throw new Exception("检查密码校验和不对，不等于0。");
-        if(Version[0] > 18)
+        if (Version[0] > 18)
             throw new Exception("这是一个高版本的XQF文件，您需要更高版本的XQStudio来读取这个文件。");
 
         byte[] KeyXY = new byte[1], KeyXYf = new byte[1], KeyXYt = new byte[1],
@@ -184,7 +184,7 @@ public class Manual
         uint KeyRMKSize = 0;
 
         headQiziXY.CopyTo(head_QiziXY, 0);
-        if(Version[0] <= 10)
+        if (Version[0] <= 10)
         {   // version <= 10 兼容1.0以前的版本
             KeyRMKSize = 0;
             KeyXYf[0] = KeyXYt[0] = 0;
@@ -201,14 +201,14 @@ public class Manual
             KeyXYf[0] = __calkey(headKeyXYf[0], KeyXY[0]);
             KeyXYt[0] = __calkey(headKeyXYt[0], KeyXYf[0]);
             KeyRMKSize = (uint)(((headKeysSum[0] * 256 + headKeyXY[0]) % 32000) + 767); // % 65536
-            if(Version[0] >= 12)
+            if (Version[0] >= 12)
             {   // 棋子位置循环移动
                 byte[] Qixy = new byte[PIECENUM];
                 headQiziXY.CopyTo(Qixy, 0);
-                for(int i = 0;i != PIECENUM;++i)
+                for (int i = 0; i != PIECENUM; ++i)
                     head_QiziXY[(i + KeyXY[0] + 1) % PIECENUM] = Qixy[i];
             }
-            for(int i = 0;i != PIECENUM;++i)
+            for (int i = 0; i != PIECENUM; ++i)
                 head_QiziXY[i] -= KeyXY[0]; // 保持为8位无符号整数，<256
         }
         int[] KeyBytes = new int[]{
@@ -217,16 +217,16 @@ public class Manual
                     (headKeyXYf[0] & headKeyMask[0]) | headKeyOrC[0],
                     (headKeyXYt[0] & headKeyMask[0]) | headKeyOrD[0] };
         string copyright = "[(C) Copyright Mr. Dong Shiwei.]";
-        for(int i = 0;i != PIECENUM;++i)
+        for (int i = 0; i != PIECENUM; ++i)
             F32Keys[i] = (byte)(copyright[i] & KeyBytes[i % 4]); // ord(c)
 
         // 取得棋子字符串
         StringBuilder pieceChars = new(new string('_', 90));
         string pieChars = "RNBAKABNRCCPPPPPrnbakabnrccppppp"; // QiziXY设定的棋子顺序
-        for(int i = 0;i != PIECENUM;++i)
+        for (int i = 0; i != PIECENUM; ++i)
         {
             int xy = head_QiziXY[i];
-            if(xy <= 89)
+            if (xy <= 89)
                 // 用单字节坐标表示, 将字节变为十进制,
                 // 十位数为X(0-8),个位数为Y(0-9),棋盘的左下角为原点(0, 0)
                 pieceChars[xy % 10 * 9 + xy / 10] = pieChars[i];
@@ -244,7 +244,7 @@ public class Manual
                 ManualField.Date, ManualField.Site, ManualField.Red, ManualField.Black,
                 ManualField.Opening, ManualField.Writer, ManualField.Author};
         byte[][] fieldBytes = new byte[][] { TitleA, Event, Date, Site, Red, Black, Opening, RMKWriter, Author };
-        for(int i = 0;i < fields.Length;i++)
+        for (int i = 0; i < fields.Length; i++)
             SetInfoValue(fields[i], codec.GetString(fieldBytes[i]).Replace('\0', ' ').Trim());
         SetBoard();
 
@@ -254,8 +254,8 @@ public class Manual
         {
             int pos = (int)stream.Position;
             stream.Read(bytes, 0, size);
-            if(Version[0] > 10) // '字节解密'
-                for(uint i = 0;i != size;++i)
+            if (Version[0] > 10) // '字节解密'
+                for (uint i = 0; i != size; ++i)
                     bytes[i] = __sub(bytes[i], F32Keys[(pos + i) % 32]);
         }
 
@@ -278,7 +278,7 @@ public class Manual
             frc = data[0];
             trc = data[1];
             tag = data[2];
-            if(Version[0] <= 10)
+            if (Version[0] <= 10)
             {
                 tag = (byte)((((tag & 0xF0) != 0) ? 0x80 : 0) | (((tag & 0x0F) != 0) ? 0x40 : 0));
                 RemarkSize = __getRemarksize();
@@ -286,11 +286,11 @@ public class Manual
             else
             {
                 tag &= 0xE0;
-                if((tag & 0x20) != 0)
+                if ((tag & 0x20) != 0)
                     RemarkSize = __getRemarksize();
             }
 
-            if(RemarkSize == 0)
+            if (RemarkSize == 0)
                 return null;
 
             // # 有注解
@@ -303,7 +303,7 @@ public class Manual
         stream.Seek(1024, SeekOrigin.Begin);
         _manualMove.CurRemark = __readDataAndGetRemark();
 
-        if((tag & 0x80) == 0) // 无左子树
+        if ((tag & 0x80) == 0) // 无左子树
             return;
 
         // 有左子树
@@ -311,14 +311,14 @@ public class Manual
         beforeMoves.Push(_manualMove.CurMove);
         bool isOther = false;
         // 当前棋子为根，且有后继棋子时，表明深度搜索已经回退到根，已经没有后续棋子了
-        while(!(_manualMove.CurMove.Before == null && _manualMove.CurMove.HasAfter))
+        while (!(_manualMove.CurMove.Before == null && _manualMove.CurMove.HasAfter))
         {
             var remark = __readDataAndGetRemark();
             //# 一步棋的起点和终点有简单的加密计算，读入时需要还原
 
             int fcolrow = __sub(frc, (byte)(0X18 + KeyXYf[0])),
                 tcolrow = __sub(trc, (byte)(0X20 + KeyXYt[0]));
-            if(fcolrow > 89 || tcolrow > 89)
+            if (fcolrow > 89 || tcolrow > 89)
                 throw new Exception("fcolrow > 89 || tcolrow > 89 ? ");
 
             int frow = fcolrow % 10, fcol = fcolrow / 10, trow = tcolrow % 10,
@@ -328,26 +328,26 @@ public class Manual
             bool hasNext = (tag & 0x80) != 0, hasOther = (tag & 0x40) != 0;
 
             var curCoordPair = _manualMove.CurMove.CoordPair;
-            if(curCoordPair.FromCoord.Row == frow && curCoordPair.FromCoord.Col == fcol
+            if (curCoordPair.FromCoord.Row == frow && curCoordPair.FromCoord.Col == fcol
                 && curCoordPair.ToCoord.Row == trow && curCoordPair.ToCoord.Col == tcol)
             {
                 Debug.WriteLine("Error: " + fileName + coordPair.ToString() + _manualMove.CurRemark);
             }
             else
             {
-                if(isOther)
+                if (isOther)
                     _manualMove.Back();
                 _manualMove.AddMove(coordPair, remark, true);
                 //Debug.WriteLine("_manualMove.CurMove: " + _manualMove.CurMove.ToString());
 
-                if(hasNext && hasOther)
+                if (hasNext && hasOther)
                     beforeMoves.Push(_manualMove.CurMove);
 
                 isOther = !hasNext;
-                if(isOther && !hasOther && beforeMoves.Count > 0)
+                if (isOther && !hasOther && beforeMoves.Count > 0)
                 {
                     var beforeMove = beforeMoves.Pop(); // 最后时，将回退到根
-                    while(beforeMove != _manualMove.CurMove)
+                    while (beforeMove != _manualMove.CurMove)
                         _manualMove.Back();
                 }
             }
@@ -357,13 +357,13 @@ public class Manual
     }
     private void ReadCM(string fileName)
     {
-        if(!File.Exists(fileName))
+        if (!File.Exists(fileName))
             return;
 
         using var stream = File.Open(fileName, FileMode.Open);
         using var reader = new BinaryReader(stream, Encoding.UTF8, false);
         int count = reader.ReadInt32();
-        for(int i = 0;i < count;i++)
+        for (int i = 0; i < count; i++)
         {
             string key = reader.ReadString();
             string value = reader.ReadString();
@@ -379,7 +379,7 @@ public class Manual
         using var writer = new BinaryWriter(stream, Encoding.UTF8, false);
 
         writer.Write(_info.Count);
-        foreach(var kv in _info)
+        foreach (var kv in _info)
         {
             writer.Write(kv.Key);
             writer.Write(kv.Value);
@@ -390,7 +390,7 @@ public class Manual
 
     private void ReadText(string fileName, FileExtType fileExtType)
     {
-        if(!File.Exists(fileName))
+        if (!File.Exists(fileName))
             return;
 
         using var stream = File.Open(fileName, FileMode.Open);
@@ -413,13 +413,13 @@ public class Manual
     private void SetInfo(string infoString)
     {
         var matches = Regex.Matches(infoString, @"\[(\S+) ""(.*)""\]");
-        foreach(Match match in matches.Cast<Match>())
+        foreach (Match match in matches.Cast<Match>())
             _info[match.Groups[1].Value] = match.Groups[2].Value;
     }
     private string GetInfoString()
     {
         string result = "";
-        foreach(var item in _info)
+        foreach (var item in _info)
             result += "[" + item.Key + " \"" + item.Value + "\"]\n";
 
         return result;

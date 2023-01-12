@@ -471,6 +471,7 @@ public class Pieces
         Seat kingSeat = GetKing(PieceColor.Red).Seat;
         return ((kingSeat.IsNull || kingSeat.Coord.IsBottom) ? PieceColor.Red : PieceColor.Black) == color;
     }
+
     public Piece GetKing(PieceColor color) => _pieces[(int)color][(int)PieceKind.King][0];
 
     public List<Piece> GetPieces()
@@ -480,6 +481,7 @@ public class Pieces
 
         return pieces;
     }
+
     private List<Piece> GetPieces(PieceColor color)
     {
         List<Piece> pieces = new();
@@ -490,34 +492,62 @@ public class Pieces
     }
 
     public List<Piece> GetLivePieces() => LivePieces(GetPieces());
+
     public List<Piece> GetLivePieces(PieceColor color) => LivePieces(GetPieces(color));
 
-    public List<Piece> LivePieces(PieceColor color, PieceKind kind)
+    public List<Piece> GetLivePieces(PieceColor color, PieceKind kind)
         => LivePieces(_pieces[(int)color][(int)kind]);
-    public List<Piece> LivePieces(PieceColor color, PieceKind kind, int col)
-        => LivePieces(color, kind).Where(piece => piece.Coord.Col == col).ToList();
+
+    public List<Piece> GetLivePieces(PieceColor color, PieceKind kind, int col)
+        => GetLivePieces(color, kind).Where(piece => piece.Coord.Col == col).ToList();
+
     private static List<Piece> LivePieces(IEnumerable<Piece> pieces)
         => pieces.Where(piece => !piece.Seat.IsNull).ToList();
 
-    public List<Piece> LivePieces_MultiColPawns(PieceColor color)
+    /// <summary>
+    /// 获取多兵列
+    /// </summary>
+    /// <param name="color"></param>
+    /// <returns></returns>
+    public List<Piece> GetLivePieces_MultiPawns(PieceColor color)
     {
-        List<Piece> pawnPieces = new();
-        Dictionary<int, List<Piece>> colPieces = new();
-        foreach (Piece piece in LivePieces(color, PieceKind.Pawn))
-        {
-            int col = piece.Coord.Col;
-            if (!colPieces.ContainsKey(col))
-                colPieces[col] = new();
+        // List<Piece> pawnPieces = new();
+        // Dictionary<int, List<Piece>> colPieces = new();
+        // foreach (Piece piece in GetLivePieces(color, PieceKind.Pawn))
+        // {
+        //     int col = piece.Coord.Col;
+        //     if (!colPieces.ContainsKey(col))
+        //         colPieces[col] = new();
 
-            colPieces[col].Add(piece);
+        //     colPieces[col].Add(piece);
+        // }
+
+        // foreach (var pieces in colPieces.Values)
+        //     if (pieces.Count > 1)
+        //         pawnPieces.AddRange(pieces);
+
+        // return pawnPieces;
+
+        List<Piece> pieces = GetLivePieces(color, PieceKind.Pawn), result = new();
+        pieces.Sort();
+        
+        Piece prePiece = Piece.Null;
+        for (int i = 0; i < pieces.Count; i++)
+        {
+            Piece piece = pieces[i];
+            if (prePiece.Coord.Col == piece.Coord.Col)
+            {
+                // 前一个棋子尚未加入结果列表时
+                if (result.Count == 0 || result.Last() != prePiece)
+                    result.Add(prePiece);
+
+                result.Add(piece);
+            }
+
+            prePiece = piece;
         }
 
-        foreach (var pieces in colPieces.Values)
-            if (pieces.Count > 1)
-                pawnPieces.AddRange(pieces);
-
-        return pawnPieces;
+        return result;
     }
-
 
 }

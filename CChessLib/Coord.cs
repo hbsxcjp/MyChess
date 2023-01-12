@@ -89,7 +89,9 @@ public class Coord : IComparable
     }
 
     public static int GetCol(int col, bool isBottomColor) => isBottomColor ? SymmetryCol(col) : col;
+
     public static int GetDoubleIndex(Coord coord) => SymmetryRow(coord.Row) * 2 * (ColCount * 2) + coord.Col * 2;
+    
     public static bool IsValid(int Row, int col) => Row >= 0 && Row < RowCount && col >= 0 && col < ColCount;
 
     public override string ToString() => $"({Row},{Col})";
@@ -113,7 +115,9 @@ public class CoordPair //: IEquatable<CoordPair>
     public Coord ToCoord { get; }
 
     public string RowCol { get { return $"{FromCoord.RowCol}{ToCoord.RowCol}"; } }
+
     public string Iccs { get { return $"{FromCoord.Iccs}{ToCoord.Iccs}"; } }
+
 
     public bool Equals(CoordPair other) => FromCoord == other.FromCoord && ToCoord == other.ToCoord;
 

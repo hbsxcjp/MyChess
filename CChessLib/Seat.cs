@@ -77,28 +77,18 @@ public class Seats
     public void Undo(CoordPair coordPair, Piece toPiece)
         => this[coordPair.ToCoord].MoveTo(this[coordPair.FromCoord], toPiece);
 
-    public void Reset()
-    {
-        foreach (var seat in _seats)
-            seat.Piece = Piece.Null;
-    }
-    public string GetFEN()
-    {
-        StringBuilder pieceChars = new();
-        foreach (var seat in _seats)
-            pieceChars.Append(seat.Piece.Char);
+    public void Reset() => GetAllSeats().ForEach(seat => seat.Piece = Piece.Null);
 
-        return GetFEN(pieceChars.ToString());
-    }
+    public string GetFEN() => GetFEN(string.Concat(GetAllSeats().Select(seat => seat.Piece.Char)));
+
     public static string GetFEN(string pieceChars)
     {
         StringBuilder fen = new();
-        for (int row = Coord.RowCount - 1; row >= 0; --row)
+        for (int row = Coord.RowCount - 1; row > 0; --row)
         {
-            fen.Append(pieceChars[(row * Coord.ColCount)..((row + 1) * Coord.ColCount)]);
-            if (row > 0)
-                fen.Append(Piece.FENSplitChar);
+            fen.Append(pieceChars.Substring(row * Coord.ColCount, Coord.ColCount)).Append(Piece.FENSplitChar);
         }
+        fen.Append(pieceChars[0..Coord.ColCount]);
 
         return Regex.Replace(fen.ToString(), $"{Piece.Null.Char}+", (Match match) => match.Value.Length.ToString());
     }
@@ -115,17 +105,15 @@ public class Seats
             return fen;
 
         IEnumerable<string> ReverseRow(IEnumerable<string> fenArray) => fenArray.Reverse();
-        IEnumerable<string> ReverseCol(IEnumerable<string> fenArray) => fenArray.Select(line => string.Concat(line.Reverse()));
+        IEnumerable<string> ReverseCol(IEnumerable<string> fenArray)
+            => fenArray.Select(line => string.Concat(line.Reverse()));
 
-        IEnumerable<string> values;
-        if (ct == ChangeType.Symmetry_H)
-            values = ReverseCol(fenArray);
-        else if (ct == ChangeType.Symmetry_V)
-            values = ReverseRow(fenArray);
-        else // if(ct == ChangeType.Rotate)
-            values = ReverseCol(ReverseRow(fenArray));
-
-        return string.Join(Piece.FENSplitChar, values);
+        return string.Join(Piece.FENSplitChar, ct switch
+        {
+            ChangeType.Symmetry_H => ReverseCol(fenArray),
+            ChangeType.Symmetry_V => ReverseRow(fenArray),
+            _ => ReverseCol(ReverseRow(fenArray)) //ChangeType.Rotate
+        });
     }
 
     public bool SetFEN(string fen, Pieces pieces)
@@ -165,35 +153,29 @@ public class Seats
         int fromRow = fromSeat.Coord.Row, fromCol = fromSeat.Coord.Col,
             toRow = toSeat.Coord.Row, toCol = toSeat.Coord.Col;
         bool isSameRow = fromRow == toRow, isBottomColor = pieces.IsBottom(color);
-        var livePieces = pieces.LivePieces(color, kind, fromCol);
+
+        var livePieces = pieces.GetLivePieces(color, kind, fromCol);
         if (livePieces.Count > 1 && kind > PieceKind.Bishop)
         {
-            // 有两条纵线，每条纵线上都有一个以上的兵
+            // 该列有多兵时，需检查多列多兵的情况
             if (kind == PieceKind.Pawn)
-                livePieces = pieces.LivePieces_MultiColPawns(color);
+                livePieces = pieces.GetLivePieces_MultiPawns(color);
 
-            livePieces.Sort();
-            if (isBottomColor)
-                livePieces.Reverse();
-            int index = livePieces.IndexOf(fromPiece);
-            zhStr = $"{Piece.PreChars(livePieces.Count)[index]}{name}";
+            SortPieces(livePieces, isBottomColor);
+            zhStr = $"{Piece.PreChars(livePieces.Count)[livePieces.IndexOf(fromPiece)]}{name}";
         }
         else
         {  //将帅, 仕(士),相(象): 不用“前”和“后”区别，因为能退的一定在前，能进的一定在后
-            char colChar = Piece.GetColChar(color, Coord.GetCol(fromCol, isBottomColor));
-            zhStr = $"{name}{colChar}";
+            zhStr = $"{name}{Piece.GetColChar(color, Coord.GetCol(fromCol, isBottomColor))}";
         }
 
-        char movChar = Piece.MoveChar(isSameRow, isBottomColor == toRow > fromRow);
-        int numOrCol = !isSameRow && Piece.IsLinePiece(kind)
-            ? Math.Abs(fromRow - toRow) - 1
-            : Coord.GetCol(toCol, isBottomColor);
-        char toNumColChar = Piece.GetColChar(color, numOrCol);
-        zhStr += $"{movChar}{toNumColChar}";
+        int numOrCol = !isSameRow && Piece.IsLinePiece(kind) ? Math.Abs(fromRow - toRow) - 1 : Coord.GetCol(toCol, isBottomColor);
+        zhStr += $"{Piece.MoveChar(isSameRow, isBottomColor == toRow > fromRow)}{Piece.GetColChar(color, numOrCol)}";
 
         Debug.Assert(GetCoordPair(zhStr, pieces).Equals(coordPair));
         return zhStr;
     }
+
     public CoordPair GetCoordPair(string zhStr, Pieces pieces)
     {
         Debug.Assert(zhStr.Length == 4);
@@ -207,11 +189,8 @@ public class Seats
         if (kind != PieceKind.NoKind)
         {   // 首字符为棋子名
             int col = Coord.GetCol(Piece.GetCol(color, zhStr[1]), isBottomColor);
-            livePieces = pieces.LivePieces(color, kind, col);
-
+            livePieces = pieces.GetLivePieces(color, kind, col);
             Debug.Assert(livePieces.Count > 0);
-            if (livePieces.Count == 0)
-                return CoordPair.Null;
 
             // 士、象同列时不分前后，以进、退区分棋子。移动方向为退时，修正index
             if (livePieces.Count == 2)
@@ -220,9 +199,10 @@ public class Seats
         else
         {
             kind = Piece.GetKind(zhStr[1]);
-            livePieces = kind == PieceKind.Pawn ? pieces.LivePieces_MultiColPawns(color) : pieces.LivePieces(color, kind);
-
+            livePieces = kind == PieceKind.Pawn
+                ? pieces.GetLivePieces_MultiPawns(color) : pieces.GetLivePieces(color, kind);
             Debug.Assert(livePieces.Count > 1);
+
             if (livePieces.Count < 2)
                 return CoordPair.Null;
 
@@ -232,13 +212,11 @@ public class Seats
         if (livePieces.Count <= index)
             return CoordPair.Null;
 
-        livePieces.Sort();
-        if (isBottomColor)
-            livePieces.Reverse();
+        SortPieces(livePieces, isBottomColor);
         Coord fromCoord = livePieces[index].Coord;
+
         int toNum = Piece.GetCol(color, zhStr[3]) + 1,
-            toRow = fromCoord.Row,
-            toCol = Coord.GetCol(toNum - 1, isBottomColor);
+            toRow = fromCoord.Row, toCol = Coord.GetCol(toNum - 1, isBottomColor);
         if (Piece.IsLinePiece(kind))
         {
             if (absMovDir != 0)
@@ -257,6 +235,13 @@ public class Seats
         }
 
         return new(fromCoord, this[toRow, toCol].Coord);
+    }
+
+    private static void SortPieces(List<Piece> pieces, bool isBottomColor)
+    {
+        pieces.Sort();
+        if (isBottomColor)
+            pieces.Reverse();
     }
 
     public bool IsNull(int row, int col) => _seats[row, col].Piece.IsNull;

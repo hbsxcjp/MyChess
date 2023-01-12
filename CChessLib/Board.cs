@@ -49,7 +49,7 @@ public class Board
         {
             FileExtType.PGNIccs => GetCoordPairFromIccs(pgnText),
             FileExtType.PGNRowCol => GetCoordPairFromRowCol(pgnText),
-            _ => GetCoordPairFromZhstr(pgnText),
+            _ => GetCoordPairFromZhstr(pgnText)
         };
 
     public List<Piece> LivePieces(PieceColor color) => pieces.GetLivePieces(color);
@@ -94,9 +94,6 @@ public class Board
             );
         // 边框粗线
 
-        // foreach (var seat in _seats)
-        //     if (!seat.Piece.IsNull)
-        //         textBlankBoard[Coord.GetDoubleIndex(seat.Coord)] = seat.Piece.PrintName;
         var livePieces = pieces.GetLivePieces(PieceColor.Red);
         livePieces.AddRange(pieces.GetLivePieces(PieceColor.Black));
         foreach (var piece in livePieces)
