@@ -11,8 +11,8 @@ public class ManualTest
     //"飞相局【卒7进1】",
     //"中炮【马2进3】"
 
-    private static string OutFileName(string fileName, FileExtType extType)
-        => @"output/" + fileName + Manual.GetExtName(extType);
+    private static string GetFileName(string fileName, FileExtType extType)
+        => fileName + Manual.GetExtName(extType);
 
     [Theory]
     [InlineData("01",
@@ -41,19 +41,20 @@ public class ManualTest
             FileExtType.PGNRowCol, FileExtType.PGNIccs, FileExtType.PGNZh};
         foreach (var fileExtType in fileExtTypes)
         {
-            FileExtType toFileExtType = fileExtType == FileExtType.PGNZh
-                        ? FileExtType.PGNZh : fileExtTypes[(int)fileExtType + 1];
-            string fromFileName = OutFileName(fileName, fileExtType),
-                toFileName = OutFileName(fileName + (fileExtType == FileExtType.PGNZh ? "-副本" : ""), toFileExtType);
-
+            string fromFileName = GetFileName(fileName, fileExtType),
+                toFileName = (fileExtType != FileExtType.PGNZh)
+                    ? GetFileName(fileName, fileExtTypes[(int)fileExtType + 1])
+                    : GetFileName(fileName + "-副本", FileExtType.PGNZh);
+            Console.WriteLine("from: " + fromFileName);
             Manual manual = new(fromFileName);
+            Console.WriteLine("to  : " + toFileName);
+            manual.Write(toFileName);
+
             string result = manual.GetString();
             Assert.Equal(expectManualString, result);
 
-            result = manual.ToString(true, true);
-            Assert.Equal(expectManualDetailString, result);
-
-            manual.Write(toFileName);
+            string detailResult = manual.ToString(true, true);
+            Assert.Equal(expectManualDetailString, detailResult);
         }
     }
 

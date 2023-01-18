@@ -17,7 +17,7 @@ public enum FileExtType
 
 public class Manual
 {
-    private readonly static List<string> FileExtName = new() { ".XQF", ".cm", ".text", ".pgnrc", ".pgniccs", ".pgnzh" };
+    private readonly static List<string> FileExtName = new() { ".XQF", ".cm", ".txt", ".pgnrc", ".pgniccs", ".pgnzh" };
     private const string FEN = "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR";
 
     private readonly Dictionary<string, string> _info;
@@ -39,47 +39,60 @@ public class Manual
         else
             _manualMove.SetFromRowCols(GetInfoValue(ManualField.RowCols));
     }
+
     public Manual(string fileName) : this()
     {
-        FileExtType fileExtType = GetFileExtType(fileName);
-        switch (fileExtType)
-        {
-            case FileExtType.Xqf:
-                ReadXQF(fileName);
-                break;
-            case FileExtType.Cm:
-                ReadCM(fileName);
-                break;
-            default:
-                ReadText(fileName, fileExtType);
-                return;
-        }
+        if (!File.Exists(fileName))
+            return;
+
+        using FileStream stream = File.Open(fileName, FileMode.Open);
+        SetFromStream(stream, GetFileExtType(fileName));
     }
 
     public Dictionary<string, string> Info { get { return _info; } }
     public ManualMove ManualMove { get { return _manualMove; } }
 
-    public void Write(string fileName)
-    {
-        FileExtType fileExtType = GetFileExtType(fileName);
-        switch (fileExtType)
-        {
-            case FileExtType.Xqf:
-                //ReadXQF(fileName);
-                break;
-            case FileExtType.Cm:
-                WriteCM(fileName);
-                break;
-            default:
-                WriteText(fileName, fileExtType);
-                return;
-        }
-    }
-
     public void Reset()
     {
         _manualMove.BackStart();
         SetBoard();
+    }
+
+    public void Write(string fileName)
+    {
+        using var stream = File.Open(fileName, FileMode.Create);
+        SetStream(stream, GetFileExtType(fileName));
+    }
+
+    public void SetStream(Stream stream, FileExtType fileExtType)
+    {
+        switch (fileExtType)
+        {
+            case FileExtType.Xqf:
+                break;
+            case FileExtType.Cm:
+                SetStreamBytes(stream);
+                break;
+            default:
+                SetStreamString(stream, fileExtType);
+                return;
+        }
+    }
+
+    public void SetFromStream(Stream stream, FileExtType fileExtType)
+    {
+        switch (fileExtType)
+        {
+            case FileExtType.Xqf:
+                SetFromXQF(stream);
+                break;
+            case FileExtType.Cm:
+                SetFromBytes(stream);
+                break;
+            default:
+                SetFromString(stream, fileExtType);
+                return;
+        }
     }
 
     public List<(string fen, string rowCol)> GetAspects() => _manualMove.GetAspects();
@@ -93,8 +106,11 @@ public class Manual
         SetInfoValue(ManualField.MoveString, GetMoveString());
     }
 
-    public void SetFromString(string manualString, FileExtType fileExtType = FileExtType.Text)
+    public void SetFromString(Stream stream, FileExtType fileExtType = FileExtType.Text)
     {
+        using var reader = new StreamReader(stream);
+        string manualString = reader.ReadToEnd();
+
         int infoEndPos = manualString.IndexOf("\n\n");
         SetInfo(manualString[..infoEndPos]);
         SetBoard();
@@ -102,6 +118,7 @@ public class Manual
         var moveString = manualString[(infoEndPos + 2)..];
         _manualMove.SetFromString(moveString, fileExtType);
     }
+
     public string GetString(FileExtType fileExtType = FileExtType.Text)
         => GetInfoString() + "\n" + GetMoveString(fileExtType);
 
@@ -111,9 +128,9 @@ public class Manual
     public string ToString(bool showMove = false, bool isOrder = false)
         => GetInfoString() + _manualMove.ToString(showMove, isOrder);
 
-    private void ReadXQF(string fileName)
+    private void SetFromXQF(Stream stream)
     {
-        using FileStream stream = File.OpenRead(fileName);
+        // using FileStream stream = File.OpenRead(fileName);
         //文件标记'XQ'=$5158/版本/加密掩码/ProductId[4], 产品(厂商的产品号)
         const int PIECENUM = 32;
         byte[] Signature = new byte[3], Version = new byte[1], headKeyMask = new byte[1],
@@ -331,7 +348,7 @@ public class Manual
             if (curCoordPair.FromCoord.Row == frow && curCoordPair.FromCoord.Col == fcol
                 && curCoordPair.ToCoord.Row == trow && curCoordPair.ToCoord.Col == tcol)
             {
-                Debug.WriteLine("Error: " + fileName + coordPair.ToString() + _manualMove.CurRemark);
+                Debug.WriteLine("Error: " + coordPair.ToString() + _manualMove.CurRemark);
             }
             else
             {
@@ -355,12 +372,9 @@ public class Manual
 
         _manualMove.ClearError(); // 清除XQF带来的错误着法
     }
-    private void ReadCM(string fileName)
-    {
-        if (!File.Exists(fileName))
-            return;
 
-        using var stream = File.Open(fileName, FileMode.Open);
+    private void SetFromBytes(Stream stream)
+    {
         using var reader = new BinaryReader(stream, Encoding.UTF8, false);
         int count = reader.ReadInt32();
         for (int i = 0; i < count; i++)
@@ -373,10 +387,25 @@ public class Manual
 
         _manualMove.ReadCM(reader);
     }
-    private void WriteCM(string fileName)
+
+    // private void WriteCM(string fileName)
+    // {
+    //     using var stream = File.Open(fileName, FileMode.Create);
+    //     using var writer = new BinaryWriter(stream, Encoding.UTF8, false);
+
+    //     writer.Write(_info.Count);
+    //     foreach (var kv in _info)
+    //     {
+    //         writer.Write(kv.Key);
+    //         writer.Write(kv.Value);
+    //     }
+
+    //     _manualMove.WriteCM(writer);
+    // }
+
+    private void SetStreamBytes(Stream stream)
     {
-        using var stream = File.Open(fileName, FileMode.Create);
-        using var writer = new BinaryWriter(stream, Encoding.UTF8, false);
+        using var writer = new BinaryWriter(stream, Encoding.UTF8);
 
         writer.Write(_info.Count);
         foreach (var kv in _info)
@@ -388,19 +417,8 @@ public class Manual
         _manualMove.WriteCM(writer);
     }
 
-    private void ReadText(string fileName, FileExtType fileExtType)
+    private void SetStreamString(Stream stream, FileExtType fileExtType)
     {
-        if (!File.Exists(fileName))
-            return;
-
-        using var stream = File.Open(fileName, FileMode.Open);
-        using var reader = new StreamReader(stream);
-        string text = reader.ReadToEnd();
-        SetFromString(text, fileExtType);
-    }
-    private void WriteText(string fileName, FileExtType fileExtType)
-    {
-        using var stream = File.Open(fileName, FileMode.Create);
         using var writer = new StreamWriter(stream);
         writer.Write(GetString(fileExtType));
     }

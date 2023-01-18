@@ -668,7 +668,7 @@ public class EccoData
 
     public void InitEccoData()
     {
-#if WRITERESULTTEXTa
+#if WRITERESULTTEXT
             string htmls = DownHtmls();
             using StreamWriter htmlsSw = File.CreateText("EccoHtmls.text");
             htmlsSw.WriteLine(htmls);
