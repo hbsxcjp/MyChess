@@ -6,7 +6,6 @@ namespace CChess;
 
 public class Seat
 {
-    public static readonly Seat Null = new(Coord.Null);
     private Piece _piece;
 
     internal Seat(Coord coord)
@@ -21,14 +20,13 @@ public class Seat
         get { return _piece; }
         set
         {
-            _piece.Seat = Null;
+            _piece.Coord = Coord.Null;
             if (value != Piece.Null)
-                value.Seat = this;
+                value.Coord = Coord;
 
             _piece = value;
         }
     }
-    public bool IsNull { get { return this == Null; } }
 
     public void MoveTo(Seat toSeat, Piece fillPiece)
     {
@@ -247,12 +245,12 @@ public class Seats
     public bool IsNull(int row, int col) => _seats[row, col].Piece.IsNull;
     public bool IsKilled(PieceColor color, Pieces pieces)
     {
-        Coord kingCoord = GetKing(color, pieces);
+        Coord kingCoord = pieces.GetKing(color).Coord;
         var otherColor = color == PieceColor.Red ? PieceColor.Black : PieceColor.Red;
 
         // 将帅是否对面
         int col = kingCoord.Col;
-        Coord otherKingCoord = GetKing(otherColor, pieces);
+        Coord otherKingCoord = pieces.GetKing(otherColor).Coord;
         if (col == otherKingCoord.Col)
         {
             int thisRow = kingCoord.Row, otherRow = otherKingCoord.Row,
@@ -265,7 +263,6 @@ public class Seats
         return pieces.GetLivePieces(otherColor).Any(
             piece => piece.MoveCoord(this, pieces.IsBottom(piece.Color)).Contains(kingCoord));
     }
-    private Coord GetKing(PieceColor color, Pieces pieces) => pieces.GetKing(color).Seat.Coord;
 
     public bool IsFailed(PieceColor color, Pieces pieces)
         => pieces.GetLivePieces(color).All(piece => CanMoveCoord(piece.Coord, pieces).Count == 0);

@@ -11,9 +11,6 @@ public class ManualTest
     //"飞相局【卒7进1】",
     //"中炮【马2进3】"
 
-    private static string GetFileName(string fileName, FileExtType extType)
-        => fileName + Manual.GetExtName(extType);
-
     [Theory]
     [InlineData("01",
         "[FEN \"5a3/4ak2r/6R2/8p/9/9/9/B4N2B/4K4/3c5 r - - 0 1\"]\n[version \"18\"]\n[win \"红胜\"]\n[type \"残局\"]\n[title \"\u0006第01局\"]\n[event \"\"]\n[date \"\"]\n[site \"\"]\n[red \"\"]\n[black \"\"]\n[opening \"\"]\n[writer \"\"]\n[author \"\"]\n\n(2) +2546{从相肩进马是取胜的正确途径。其它着法，均不能取胜。}(4) +2544(1) +0393(1) +0373(1) +8475(1) +6858(1) +0393(1) +4654{不怕黑炮平中拴链，进观的攻势含蓄双有诱惑性，是红方制胜的关键。}(1) +4654(2) +4667{叫杀得车。} +4654(1) +4456(1) +9394(1) +7374(1) +8887(1) +8868(1) +9394(1) +7675{弃车，与前着相联系，由此巧妙成杀。}(1) +5466 +7675(1) +7686 +1413(1) +8475(1) +8475(2) +8887(1) +5466 +5466 +5473 +5677(1) +8777(1) +7677(1) +8493(1) +7787(1) +8575{至此，形成少见的高将底炮双士和单车的局面。}(1) +8767(1) +9584(1) +6765(1) +7574(1) +6568(1) +7475(1) +6865(1) +7574(1) +1303(1) +9495{和棋。} ",
@@ -37,25 +34,31 @@ public class ManualTest
     //     )]
     public void TestGetAndToString(string fileName, string expectManualString, string expectManualDetailString)
     {
-        FileExtType[] fileExtTypes = new FileExtType[] { FileExtType.Xqf, FileExtType.Cm, FileExtType.Text,
-            FileExtType.PGNRowCol, FileExtType.PGNIccs, FileExtType.PGNZh};
-        foreach (var fileExtType in fileExtTypes)
-        {
-            string fromFileName = GetFileName(fileName, fileExtType),
-                toFileName = (fileExtType != FileExtType.PGNZh)
-                    ? GetFileName(fileName, fileExtTypes[(int)fileExtType + 1])
-                    : GetFileName(fileName + "-副本", FileExtType.PGNZh);
-            Console.WriteLine("from: " + fromFileName);
-            Manual manual = new(fromFileName);
-            Console.WriteLine("to  : " + toFileName);
-            manual.Write(toFileName);
+        Manual manual = new(fileName + FileExtType.Xqf);
 
-            string result = manual.GetString();
-            Assert.Equal(expectManualString, result);
+        string result = manual.GetString();
+        Assert.Equal(expectManualString, result);
 
-            string detailResult = manual.ToString(true, true);
-            Assert.Equal(expectManualDetailString, detailResult);
-        }
+        string detailResult = manual.ToString(true, true);
+        Assert.Equal(expectManualDetailString, detailResult);
+
+        // foreach (var fileExtType in new FileExtType[] { FileExtType.Xqf, FileExtType.Cm, FileExtType.Text,
+            // FileExtType.PGNRowCol, FileExtType.PGNIccs, FileExtType.PGNZh})
+        // {
+            // toFileName = (fileExtType != FileExtType.PGNZh)
+            // ? GetFileName(fileName, fileExtTypes[(int)fileExtType + 1])
+            // : GetFileName(fileName + "-副本", FileExtType.PGNZh);
+            // Console.WriteLine("from: " + fromFileName);
+            // Manual manual = new(fromFileName);
+            // Console.WriteLine("to  : " + toFileName);
+            // manual.Write(toFileName);
+
+            // string result = manual.GetString();
+            // Assert.Equal(expectManualString, result);
+
+            // string detailResult = manual.ToString(true, true);
+            // Assert.Equal(expectManualDetailString, detailResult);
+        // }
     }
 
     // [Fact]

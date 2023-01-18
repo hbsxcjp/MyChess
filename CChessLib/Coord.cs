@@ -24,6 +24,7 @@ public class Coord : IComparable
     public string RowCol { get { return $"{Row}{Col}"; } }
     public string Iccs { get { return $"{ColChars[Col]}{Row}"; } }
     public bool IsBottom { get { return (Row << 1) < RowCount; } }
+    public bool IsNull { get { return this == Null; } }
 
     private static List<Coord> CreatAllCoords()
     {

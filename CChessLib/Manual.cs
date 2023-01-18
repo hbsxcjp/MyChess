@@ -45,6 +45,7 @@ public class Manual
         if (!File.Exists(fileName))
             return;
 
+        Console.WriteLine($"fileName: {fileName}");
         using FileStream stream = File.Open(fileName, FileMode.Open);
         SetFromStream(stream, GetFileExtType(fileName));
     }
@@ -387,21 +388,6 @@ public class Manual
 
         _manualMove.ReadCM(reader);
     }
-
-    // private void WriteCM(string fileName)
-    // {
-    //     using var stream = File.Open(fileName, FileMode.Create);
-    //     using var writer = new BinaryWriter(stream, Encoding.UTF8, false);
-
-    //     writer.Write(_info.Count);
-    //     foreach (var kv in _info)
-    //     {
-    //         writer.Write(kv.Key);
-    //         writer.Write(kv.Value);
-    //     }
-
-    //     _manualMove.WriteCM(writer);
-    // }
 
     private void SetStreamBytes(Stream stream)
     {

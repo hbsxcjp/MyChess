@@ -35,18 +35,16 @@ public abstract class Piece : IComparable
     protected Piece(PieceColor color)
     {
         Color = color;
-        Seat = Seat.Null;
+        Coord = Coord.Null;
     }
 
     public PieceColor Color { get; }
-    public Seat Seat { get; set; }
-    public Coord Coord { get { return Seat.Coord; } }
-
     abstract public PieceKind Kind { get; }
     abstract public char Char { get; }
     abstract public char Name { get; }
     virtual public char PrintName { get { return Name; } }
     public bool IsNull { get { return this == Null; } }
+    public Coord Coord { get; set; }
 
     /// <summary>
     /// 初始棋盘布局面时，棋子可放置的位置
@@ -462,7 +460,7 @@ public class Pieces
     public Piece GetPiece_SeatNull(char ch)
     {
         foreach (var piece in _pieces[Piece.GetColorIndex(ch)][Piece.GetKindIndex(ch)])
-            if (piece.Seat.IsNull)
+            if (piece.Coord.IsNull)
                 return piece;
 
         return Piece.Null;
@@ -470,8 +468,8 @@ public class Pieces
 
     public bool IsBottom(PieceColor color)
     {
-        Seat kingSeat = GetKing(PieceColor.Red).Seat;
-        return ((kingSeat.IsNull || kingSeat.Coord.IsBottom) ? PieceColor.Red : PieceColor.Black) == color;
+        Coord kingCoord = GetKing(PieceColor.Red).Coord;
+        return ((kingCoord.IsNull || kingCoord.IsBottom) ? PieceColor.Red : PieceColor.Black) == color;
     }
 
     public Piece GetKing(PieceColor color) => _pieces[(int)color][(int)PieceKind.King][0];
@@ -506,7 +504,7 @@ public class Pieces
         => GetLivePieces(color, kind).Where(piece => piece.Coord.Col == col).ToList();
 
     private static List<Piece> LivePieces(IEnumerable<Piece> pieces)
-        => pieces.Where(piece => !piece.Seat.IsNull).ToList();
+        => pieces.Where(piece => !piece.Coord.IsNull).ToList();
 
     /// <summary>
     /// 获取多兵列

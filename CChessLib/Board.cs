@@ -97,7 +97,7 @@ public class Board
         var livePieces = pieces.GetLivePieces(PieceColor.Red);
         livePieces.AddRange(pieces.GetLivePieces(PieceColor.Black));
         foreach (var piece in livePieces)
-            textBlankBoard[Coord.GetDoubleIndex(piece.Seat.Coord)] = piece.PrintName;
+            textBlankBoard[Coord.GetDoubleIndex(piece.Coord)] = piece.PrintName;
 
         int index = IsBottom(PieceColor.Red) ? 0 : 1;
         return preStr[index] + textBlankBoard.ToString() + sufStr[index];

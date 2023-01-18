@@ -4,9 +4,6 @@ namespace CChessTest;
 
 public class SeatTest
 {
-    // private Piece pie; // 静态对象，需要初始化设置一下，避免空引用
-    // public SeatTest() { pie = Piece.Null; }
-
     [Fact]
     public void TestToString()
     {
