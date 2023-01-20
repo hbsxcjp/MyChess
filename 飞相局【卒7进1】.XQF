@@ -68,13 +68,13 @@
 <script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/diffs-2d0725ffe778.js"></script>
   
 
-  <title>cchess_con/第09局.XQF at master · hbsxcjp/cchess_con</title>
+  <title>cchess_con/飞相局【卒7进1】.XQF at master · hbsxcjp/cchess_con</title>
 
 
 
     
 
-  <meta name="request-id" content="0733:08C1:A6C1C5:C6B20E:63C941BA" data-turbo-transient="true" /><meta name="html-safe-nonce" content="a85e412e62a23ed9d5258c5f1f1ef1f613fab4c6a00748c79596b5da25ec4744" data-turbo-transient="true" /><meta name="visitor-payload" content="eyJyZWZlcnJlciI6Imh0dHBzOi8vZ2l0aHViLmNvbS9oYnN4Y2pwL2NjaGVzc19jb24vdHJlZS9tYXN0ZXIvb3V0cHV0IiwicmVxdWVzdF9pZCI6IjA3MzM6MDhDMTpBNkMxQzU6QzZCMjBFOjYzQzk0MUJBIiwidmlzaXRvcl9pZCI6IjYxNDI1OTYxMTE2ODYyNTg1NDUiLCJyZWdpb25fZWRnZSI6InNvdXRoZWFzdGFzaWEiLCJyZWdpb25fcmVuZGVyIjoiaWFkIn0=" data-turbo-transient="true" /><meta name="visitor-hmac" content="c4167e327137ebb1ddf5ae05c4f4eaa12a300156294c44f1978755a7107777d3" data-turbo-transient="true" />
+  <meta name="request-id" content="0733:08C1:A6DF74:C6D42F:63C94210" data-turbo-transient="true" /><meta name="html-safe-nonce" content="a85e412e62a23ed9d5258c5f1f1ef1f613fab4c6a00748c79596b5da25ec4744" data-turbo-transient="true" /><meta name="visitor-payload" content="eyJyZWZlcnJlciI6Imh0dHBzOi8vZ2l0aHViLmNvbS9oYnN4Y2pwL2NjaGVzc19jb24vdHJlZS9tYXN0ZXIvb3V0cHV0IiwicmVxdWVzdF9pZCI6IjA3MzM6MDhDMTpBNkRGNzQ6QzZENDJGOjYzQzk0MjEwIiwidmlzaXRvcl9pZCI6IjYxNDI1OTYxMTE2ODYyNTg1NDUiLCJyZWdpb25fZWRnZSI6InNvdXRoZWFzdGFzaWEiLCJyZWdpb25fcmVuZGVyIjoiaWFkIn0=" data-turbo-transient="true" /><meta name="visitor-hmac" content="e19eb91b1f9e125020a6aceeb8f5d272f9f063c2adafc404e944b807f182d7a2" data-turbo-transient="true" />
 
 
     <meta name="hovercard-subject-tag" content="repository:535181366" data-turbo-transient>
@@ -113,11 +113,11 @@
     <link rel="fluid-icon" href="https://github.com/fluidicon.png" title="GitHub">
     <meta property="fb:app_id" content="1401488693436528">
     <meta name="apple-itunes-app" content="app-id=1477376905" />
-      <meta name="twitter:image:src" content="https://opengraph.githubassets.com/866f99871d23dc2421ed56d25b8c8d728016727c72c401131f59d90511c32be0/hbsxcjp/cchess_con" /><meta name="twitter:site" content="@github" /><meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content="cchess_con/第09局.XQF at master · hbsxcjp/cchess_con" /><meta name="twitter:description" content="象棋打谱软件--控制台应用. Contribute to hbsxcjp/cchess_con development by creating an account on GitHub." />
-      <meta property="og:image" content="https://opengraph.githubassets.com/866f99871d23dc2421ed56d25b8c8d728016727c72c401131f59d90511c32be0/hbsxcjp/cchess_con" /><meta property="og:image:alt" content="象棋打谱软件--控制台应用. Contribute to hbsxcjp/cchess_con development by creating an account on GitHub." /><meta property="og:image:width" content="1200" /><meta property="og:image:height" content="600" /><meta property="og:site_name" content="GitHub" /><meta property="og:type" content="object" /><meta property="og:title" content="cchess_con/第09局.XQF at master · hbsxcjp/cchess_con" /><meta property="og:url" content="https://github.com/hbsxcjp/cchess_con" /><meta property="og:description" content="象棋打谱软件--控制台应用. Contribute to hbsxcjp/cchess_con development by creating an account on GitHub." />
+      <meta name="twitter:image:src" content="https://opengraph.githubassets.com/866f99871d23dc2421ed56d25b8c8d728016727c72c401131f59d90511c32be0/hbsxcjp/cchess_con" /><meta name="twitter:site" content="@github" /><meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content="cchess_con/飞相局【卒7进1】.XQF at master · hbsxcjp/cchess_con" /><meta name="twitter:description" content="象棋打谱软件--控制台应用. Contribute to hbsxcjp/cchess_con development by creating an account on GitHub." />
+      <meta property="og:image" content="https://opengraph.githubassets.com/866f99871d23dc2421ed56d25b8c8d728016727c72c401131f59d90511c32be0/hbsxcjp/cchess_con" /><meta property="og:image:alt" content="象棋打谱软件--控制台应用. Contribute to hbsxcjp/cchess_con development by creating an account on GitHub." /><meta property="og:image:width" content="1200" /><meta property="og:image:height" content="600" /><meta property="og:site_name" content="GitHub" /><meta property="og:type" content="object" /><meta property="og:title" content="cchess_con/飞相局【卒7进1】.XQF at master · hbsxcjp/cchess_con" /><meta property="og:url" content="https://github.com/hbsxcjp/cchess_con" /><meta property="og:description" content="象棋打谱软件--控制台应用. Contribute to hbsxcjp/cchess_con development by creating an account on GitHub." />
       
     <link rel="assets" href="https://github.githubassets.com/">
-      <link rel="shared-web-socket" href="wss://alive.github.com/_sockets/u/34307491/ws?session=eyJ2IjoiVjMiLCJ1IjozNDMwNzQ5MSwicyI6MTAzMDkyNTAxOSwiYyI6Mjg2MDAzMjYxOSwidCI6MTY3NDEzMzk2MH0=--99a310b0d2dd2f419e87be714e0d0def8a412481cc6898dc83eb5eaf706d3a7d" data-refresh-url="/_alive" data-session-id="1ec940916c950587afa1a3cd3cd40e6c9a1001bf7d9c2ed7e5b20982e6825f20">
+      <link rel="shared-web-socket" href="wss://alive.github.com/_sockets/u/34307491/ws?session=eyJ2IjoiVjMiLCJ1IjozNDMwNzQ5MSwicyI6MTAzMDkyNTAxOSwiYyI6MzY2NDk0NDEzNiwidCI6MTY3NDEzNDA0M30=--dbc0893e21d639384a7b1a2d54b8c98c3b19ffabd1dbfc43323d3e6b6a14547b" data-refresh-url="/_alive" data-session-id="1ec940916c950587afa1a3cd3cd40e6c9a1001bf7d9c2ed7e5b20982e6825f20">
       <link rel="shared-web-socket-src" href="/assets-cdn/worker/socket-worker-0d10ae3755d1.js">
 
 
@@ -147,7 +147,7 @@
 
 
 
-    <link rel="canonical" href="https://github.com/hbsxcjp/cchess_con/blob/master/output/%E7%AC%AC09%E5%B1%80.XQF" data-turbo-transient>
+    <link rel="canonical" href="https://github.com/hbsxcjp/cchess_con/blob/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF" data-turbo-transient>
   <meta name="turbo-body-classes" content="logged-in env-production page-responsive page-blob">
 
 
@@ -242,7 +242,7 @@
           spellcheck="false"
           autocomplete="off"
         >
-        <input type="hidden" value="brBOih8oK-AUWKgInEBn94AsB7NfVxyHmtAGgN2yUpTP-WjTqpUjv1wm6h8-hsIv3xOHlFasYE4HcRJpb7mZoA" data-csrf="true" class="js-data-jump-to-suggestions-path-csrf" />
+        <input type="hidden" value="zYvBsJ13HWQL8tYNk9thM6DjZPe77MWIxeKhnfAdKLlswufpKMoVO0OMlBoxHcTr_9zk0LIXuUFYQ7V0QhbjjQ" data-csrf="true" class="js-data-jump-to-suggestions-path-csrf" />
         <input type="hidden" class="js-site-search-type-field" name="type" >
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="20" aria-hidden="true" class="mr-1 header-search-key-slash"><path fill="none" stroke="#979A9C" opacity=".4" d="M3.5.5h12c1.7 0 3 1.3 3 3v13c0 1.7-1.3 3-3 3h-12c-1.7 0-3-1.3-3-3v-13c0-1.7 1.3-3 3-3z"></path><path fill="#979A9C" d="M11.8 6L8 15.1h-.9L10.8 6h1z"></path></svg>
 
@@ -441,7 +441,7 @@
 
   <a class="js-selected-navigation-item Header-link mt-md-n3 mb-md-n3 py-2 py-md-3 mr-0 mr-md-3 border-top border-md-top-0 border-white-fade" data-ga-click="Header, click, Nav menu - item:explore" data-turbo="false" data-selected-links="/explore /trending /trending/developers /integrations /integrations/feature/code /integrations/feature/collaborate /integrations/feature/ship showcases showcases_search showcases_landing /explore" href="/explore">Explore</a>
 
-      <a class="js-selected-navigation-item Header-link d-block d-md-none py-2 py-md-3 border-top border-md-top-0 border-white-fade" data-ga-click="Header, click, Nav menu - item:Sponsors" data-hydro-click="{&quot;event_type&quot;:&quot;sponsors.button_click&quot;,&quot;payload&quot;:{&quot;button&quot;:&quot;HEADER_SPONSORS_DASHBOARD&quot;,&quot;sponsorable_login&quot;:&quot;hbsxcjp&quot;,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E7%AC%AC09%E5%B1%80.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="0d1d68f15e1798fb240ef28a80870ea9abaeb66cf1d421dfbe942bbd293fd9eb" data-turbo="false" data-selected-links=" /sponsors/accounts" href="/sponsors/accounts">Sponsors</a>
+      <a class="js-selected-navigation-item Header-link d-block d-md-none py-2 py-md-3 border-top border-md-top-0 border-white-fade" data-ga-click="Header, click, Nav menu - item:Sponsors" data-hydro-click="{&quot;event_type&quot;:&quot;sponsors.button_click&quot;,&quot;payload&quot;:{&quot;button&quot;:&quot;HEADER_SPONSORS_DASHBOARD&quot;,&quot;sponsorable_login&quot;:&quot;hbsxcjp&quot;,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="0b0ff625ef00e0bacd23721ee66b22bfe5d06613d95f412dc3d0561587443b88" data-turbo="false" data-selected-links=" /sponsors/accounts" href="/sponsors/accounts">Sponsors</a>
 
     <a class="Header-link d-block d-md-none mr-0 mr-md-3 py-2 py-md-3 border-top border-md-top-0 border-white-fade" data-turbo="false" href="/settings/profile">Settings</a>
 
@@ -449,7 +449,7 @@
       <img class="avatar avatar-user" loading="lazy" decoding="async" src="https://avatars.githubusercontent.com/u/34307491?s=40&amp;v=4" width="20" height="20" alt="@hbsxcjp" />
       hbsxcjp
 </a>
-    <!-- '"` --><!-- </textarea></xmp> --></option></form><form data-turbo="false" action="/logout" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="6XwQjxwgHVDf30luP_K9I5TPN08jBNFY4JAR7ad5AjvCCD2oi9SjeURUX8KHBKzTmIv6svm4WSvTuB1UXf043g" />
+    <!-- '"` --><!-- </textarea></xmp> --></option></form><form data-turbo="false" action="/logout" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="PMSK1PpnKfqLHKrkrmXdDaT9H4GOm70yBjd1SEl4yXEXsKfzbZOX0xCXvEgWk8z9qLnSfFQnNUE1H3nxs_zzlA" />
       <button
         type="submit"
         class="Header-link mr-0 mr-md-3 py-2 py-md-3 border-top border-md-top-0 border-white-fade d-md-none btn-link d-block width-full text-left"
@@ -484,7 +484,7 @@
     <div class="Header-item mr-0 mr-md-3 flex-order-1 flex-md-order-none">
         
 
-<notification-indicator data-channel="eyJjIjoibm90aWZpY2F0aW9uLWNoYW5nZWQ6MzQzMDc0OTEiLCJ0IjoxNjc0MTMzOTYwfQ==--ee1fafbfd01aee24eb97b85aedc52bf0c92040c01b2974e381c03a95bea6e7e4" data-indicator-mode="none" data-tooltip-global="You have unread notifications" data-tooltip-unavailable="Notifications are unavailable at the moment." data-tooltip-none="You have no unread notifications" data-view-component="true" class="js-socket-channel">
+<notification-indicator data-channel="eyJjIjoibm90aWZpY2F0aW9uLWNoYW5nZWQ6MzQzMDc0OTEiLCJ0IjoxNjc0MTM0MDQzfQ==--30f1671dc9aa5701516335a8ffa5345db396a792cb05a3bdfc2b0efddba9258d" data-indicator-mode="none" data-tooltip-global="You have unread notifications" data-tooltip-unavailable="Notifications are unavailable at the moment." data-tooltip-none="You have no unread notifications" data-view-component="true" class="js-socket-channel">
   <a id="AppHeader-notifications-button" href="/notifications"
     class="Header-link notification-indicator position-relative tooltipped tooltipped-sw"
 
@@ -642,7 +642,7 @@
   <details-dialog class="command-palette-details-dialog d-flex flex-column flex-justify-center height-fit" aria-label="command palette">
     <command-palette
       class="command-palette color-bg-default rounded-3 border color-shadow-small"
-      return-to=/hbsxcjp/cchess_con/blob/master/output/%E7%AC%AC09%E5%B1%80.XQF
+      return-to=/hbsxcjp/cchess_con/blob/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF
       user-id="34307491"
       activation-hotkey="Mod+k,Mod+Alt+k"
       command-mode-hotkey="Mod+Shift+k"
@@ -1598,7 +1598,7 @@
 
       <li>
   <div class="float-left" >
-    <!-- '"` --><!-- </textarea></xmp> --></option></form><form data-turbo="false" action="/hbsxcjp/cchess_con/profile_pin" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="INBQfXYgYbBsbKh-3MRF_xmoE7kQx5iMdOZufWfl4kC1AYsSpeGyQTJ7eGHtx8cj3dGiffwKl62AJX0TtW2a_A" autocomplete="off" />
+    <!-- '"` --><!-- </textarea></xmp> --></option></form><form data-turbo="false" action="/hbsxcjp/cchess_con/profile_pin" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="3gcFf1ccBW8z_yDG56SEXplCBI7X8663DPcV06DpplJL1t4QhN3Wnm3o8NnWpwaCXTu1Sjs-oZb4NAa9cmHe7g" autocomplete="off" />
         <button title="Pin this repository to your profile" type="submit" data-view-component="true" class="btn-sm btn">    <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-pin mr-2">
     <path fill-rule="evenodd" d="M4.456.734a1.75 1.75 0 012.826.504l.613 1.327a3.081 3.081 0 002.084 1.707l2.454.584c1.332.317 1.8 1.972.832 2.94L11.06 10l3.72 3.72a.75.75 0 11-1.061 1.06L10 11.06l-2.204 2.205c-.968.968-2.623.5-2.94-.832l-.584-2.454a3.081 3.081 0 00-1.707-2.084l-1.327-.613a1.75 1.75 0 01-.504-2.826L4.456.734zM5.92 1.866a.25.25 0 00-.404-.072L1.794 5.516a.25.25 0 00.072.404l1.328.613A4.582 4.582 0 015.73 9.63l.584 2.454a.25.25 0 00.42.12l5.47-5.47a.25.25 0 00-.12-.42L9.63 5.73a4.581 4.581 0 01-3.098-2.537L5.92 1.866z"></path>
 </svg>Pin
@@ -1617,7 +1617,7 @@
         data-action="toggle:notifications-list-subscription-form#detailsToggled"
       >
 
-        <summary data-hydro-click="{&quot;event_type&quot;:&quot;repository.click&quot;,&quot;payload&quot;:{&quot;target&quot;:&quot;WATCH_BUTTON&quot;,&quot;repository_id&quot;:535181366,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E7%AC%AC09%E5%B1%80.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="5ba18c39c67a2aaf345a4af2f75791b045f8603b8f6e4a0e3b650814df8c157a" data-ga-click="Repository, click Watch settings, action:blob#show" aria-label="Notification settings" data-view-component="true" class="btn-sm btn">    <span data-menu-button>
+        <summary data-hydro-click="{&quot;event_type&quot;:&quot;repository.click&quot;,&quot;payload&quot;:{&quot;target&quot;:&quot;WATCH_BUTTON&quot;,&quot;repository_id&quot;:535181366,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="d674093cc9ee3e2a61dec5bf9162fa51027e060881b64fb425d78373038b5223" data-ga-click="Repository, click Watch settings, action:blob#show" aria-label="Notification settings" data-view-component="true" class="btn-sm btn">    <span data-menu-button>
             <span
               
               
@@ -1669,7 +1669,7 @@
             </header>
 
             <div class="SelectMenu-list">
-              <!-- '"` --><!-- </textarea></xmp> --></option></form><form data-target="notifications-list-subscription-form.form" data-action="submit:notifications-list-subscription-form#submitForm" data-turbo="false" action="/notifications/subscribe" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="wqCsW9TSOMMH3EHFp8mbPdZ8s3vl5MBq_GTHqMeyXEFhq-qpUbNEwbbpHhBxXR_4LgGyDGHjQSdpEj6udrM2Fg" autocomplete="off" />
+              <!-- '"` --><!-- </textarea></xmp> --></option></form><form data-target="notifications-list-subscription-form.form" data-action="submit:notifications-list-subscription-form#submitForm" data-turbo="false" action="/notifications/subscribe" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="rtcWyj2kM4jdr5cF3bg4dpER3T2woedIN-2uhmKLzz8N3FA4uMVPimyayNALLLyzaWzcSjSmZgWim1eA04qlaA" autocomplete="off" />
 
                 <input type="hidden" name="repository_id" value="535181366">
 
@@ -1797,7 +1797,7 @@
           hidden
         >
           <div class="SelectMenu-modal notifications-component-dialog-modal overflow-visible">
-            <!-- '"` --><!-- </textarea></xmp> --></option></form><form data-target="notifications-list-subscription-form.customform" data-action="submit:notifications-list-subscription-form#submitCustomForm" data-turbo="false" action="/notifications/subscribe" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="6DsRMoxlQeSDS3meQOl6GzAWmwbOyDfOQpsMDyZiTM9LMFfACQQ95jJ-JkuWff7eyGuacUrPtoPX7fUJl2MmmA" autocomplete="off" />
+            <!-- '"` --><!-- </textarea></xmp> --></option></form><form data-target="notifications-list-subscription-form.customform" data-action="submit:notifications-list-subscription-form#submitCustomForm" data-turbo="false" action="/notifications/subscribe" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="XLNcvs--FUL24kIKbI4uykLFLQVVSWu8fZBzFUOugVb_uBpMSt9pQEfXHd-6GqoPurgsctFO6vHo5ooT8q_rAQ" autocomplete="off" />
 
               <input type="hidden" name="repository_id" value="535181366">
 
@@ -1968,13 +1968,13 @@
       
 >
     <div class="SelectMenu-modal">
-        <button class="SelectMenu-closeButton position-absolute right-0 m-2" type="button" aria-label="Close menu" data-toggle-for="details-df5645">
+        <button class="SelectMenu-closeButton position-absolute right-0 m-2" type="button" aria-label="Close menu" data-toggle-for="details-2773dd">
           <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-x">
     <path fill-rule="evenodd" d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z"></path>
 </svg>
         </button>
       <div
-        id="filter-menu-df5645"
+        id="filter-menu-2773dd"
         class="d-flex flex-column flex-1 overflow-hidden"
 >
         <div
@@ -2016,10 +2016,10 @@
 
   <div data-view-component="true" class="js-toggler-container js-social-container starring-container d-flex">
     <div data-view-component="true" class="starred BtnGroup flex-1">
-      <!-- '"` --><!-- </textarea></xmp> --></option></form><form class="js-social-form BtnGroup-parent flex-auto js-deferred-toggler-target" data-turbo="false" action="/hbsxcjp/cchess_con/unstar" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="7XYx5sTxc8KcMPeeAdhiZnQ7k1xNrOf7aWG_vxh0DxHE3W2dgrrelblpybMN66ckBXQub1q9GV09ZvNCX79SAg" autocomplete="off" />
-          <input type="hidden" value="nbJoMjZAWGcz_gCXJVQZVDj01YCVVb6LIFpYP4o8IHy0GTRJcAv1MBanPropZ9wWSbtos4JEQC10XRTCzfd9bw" data-csrf="true" class="js-confirm-csrf-token" />
+      <!-- '"` --><!-- </textarea></xmp> --></option></form><form class="js-social-form BtnGroup-parent flex-auto js-deferred-toggler-target" data-turbo="false" action="/hbsxcjp/cchess_con/unstar" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="i6A-pi6cTLx0bMsEnBphc71gSA-SL6Lpq394uPyJdAOiC2LdaNfh61E19SmQKaQxzC_1PIU-XE__eDRFu0IpEA" autocomplete="off" />
+          <input type="hidden" value="ojDR6m9Cv-t_NHzzrKOnBZD3nmEYZ3ZJ_GNct85D-TCLm42RKQkSvFptQt6gkGJH4bgjUg92iO-oZBBKiYikIw" data-csrf="true" class="js-confirm-csrf-token" />
         <input type="hidden" name="context" value="repository">
-          <button data-hydro-click="{&quot;event_type&quot;:&quot;repository.click&quot;,&quot;payload&quot;:{&quot;target&quot;:&quot;UNSTAR_BUTTON&quot;,&quot;repository_id&quot;:535181366,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E7%AC%AC09%E5%B1%80.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="75883d523068ec42ee52d9e3f0deb26eec54701340ac0780f18dd0c48d649645" data-ga-click="Repository, click unstar button, action:blob#show; text:Unstar" aria-label="Unstar this repository (0)" type="submit" data-view-component="true" class="rounded-left-2 btn-sm btn BtnGroup-item">    <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-star-fill starred-button-icon d-inline-block mr-2">
+          <button data-hydro-click="{&quot;event_type&quot;:&quot;repository.click&quot;,&quot;payload&quot;:{&quot;target&quot;:&quot;UNSTAR_BUTTON&quot;,&quot;repository_id&quot;:535181366,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="3187bdd6da877676062d8ac5903921332569a35385376c90d4103923dd98fef5" data-ga-click="Repository, click unstar button, action:blob#show; text:Unstar" aria-label="Unstar this repository (0)" type="submit" data-view-component="true" class="rounded-left-2 btn-sm btn BtnGroup-item">    <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-star-fill starred-button-icon d-inline-block mr-2">
     <path fill-rule="evenodd" d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"></path>
 </svg><span data-view-component="true" class="d-inline">
             Starred
@@ -2037,13 +2037,13 @@
       
 >
     <div class="SelectMenu-modal">
-        <button class="SelectMenu-closeButton position-absolute right-0 m-2" type="button" aria-label="Close menu" data-toggle-for="details-493b6d">
+        <button class="SelectMenu-closeButton position-absolute right-0 m-2" type="button" aria-label="Close menu" data-toggle-for="details-8ce321">
           <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-x">
     <path fill-rule="evenodd" d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z"></path>
 </svg>
         </button>
       <div
-        id="filter-menu-493b6d"
+        id="filter-menu-8ce321"
         class="d-flex flex-column flex-1 overflow-hidden"
 >
         <div
@@ -2064,9 +2064,9 @@
 </details>
 </div>
     <div data-view-component="true" class="unstarred BtnGroup flex-1">
-      <!-- '"` --><!-- </textarea></xmp> --></option></form><form class="js-social-form BtnGroup-parent flex-auto" data-turbo="false" action="/hbsxcjp/cchess_con/star" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="hJwR1l5rs790DxwNguxDID4SXSmT8yEPDU9ooR9OCyVvbrcJn-Axk0qlDUtrwi23asZYHCcrol17v8QN8UFVkw" autocomplete="off" />
+      <!-- '"` --><!-- </textarea></xmp> --></option></form><form class="js-social-form BtnGroup-parent flex-auto" data-turbo="false" action="/hbsxcjp/cchess_con/star" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="Q8YXHGmsfGXvxNb0X-VocdWtFHfsvLl9blDW8IHbIYaoNLHDqCf-SdFux7K2ywbmgXkRQlhkOi8YoHpcb9R_MA" autocomplete="off" />
         <input type="hidden" name="context" value="repository">
-          <button data-hydro-click="{&quot;event_type&quot;:&quot;repository.click&quot;,&quot;payload&quot;:{&quot;target&quot;:&quot;STAR_BUTTON&quot;,&quot;repository_id&quot;:535181366,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E7%AC%AC09%E5%B1%80.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="d4dc9f738e1a43f6c43914807035f3cca1f800d57a4dd89c85d4d8dc3747fb16" data-ga-click="Repository, click star button, action:blob#show; text:Star" aria-label="Star this repository (0)" type="submit" data-view-component="true" class="js-toggler-target rounded-left-2 btn-sm btn BtnGroup-item">    <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-star d-inline-block mr-2">
+          <button data-hydro-click="{&quot;event_type&quot;:&quot;repository.click&quot;,&quot;payload&quot;:{&quot;target&quot;:&quot;STAR_BUTTON&quot;,&quot;repository_id&quot;:535181366,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="418ee7df8158e616329abe0cbb439fb0a85972df0224f8446a88abf1b7799fbc" data-ga-click="Repository, click star button, action:blob#show; text:Star" aria-label="Star this repository (0)" type="submit" data-view-component="true" class="js-toggler-target rounded-left-2 btn-sm btn BtnGroup-item">    <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-star d-inline-block mr-2">
     <path fill-rule="evenodd" d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25zm0 2.445L6.615 5.5a.75.75 0 01-.564.41l-3.097.45 2.24 2.184a.75.75 0 01.216.664l-.528 3.084 2.769-1.456a.75.75 0 01.698 0l2.77 1.456-.53-3.084a.75.75 0 01.216-.664l2.24-2.183-3.096-.45a.75.75 0 01-.564-.41L8 2.694v.001z"></path>
 </svg><span data-view-component="true" class="d-inline">
             Star
@@ -2084,13 +2084,13 @@
       
 >
     <div class="SelectMenu-modal">
-        <button class="SelectMenu-closeButton position-absolute right-0 m-2" type="button" aria-label="Close menu" data-toggle-for="details-493b6d">
+        <button class="SelectMenu-closeButton position-absolute right-0 m-2" type="button" aria-label="Close menu" data-toggle-for="details-8ce321">
           <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-x">
     <path fill-rule="evenodd" d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z"></path>
 </svg>
         </button>
       <div
-        id="filter-menu-493b6d"
+        id="filter-menu-8ce321"
         class="d-flex flex-column flex-1 overflow-hidden"
 >
         <div
@@ -2309,7 +2309,7 @@
 
 
     
-<a class="d-none js-permalink-shortcut" data-hotkey="y" href="/hbsxcjp/cchess_con/blob/ed240b5d5521a4db5c4079e974be1cbfbd27ceca/output/%E7%AC%AC09%E5%B1%80.XQF">Permalink</a>
+<a class="d-none js-permalink-shortcut" data-hotkey="y" href="/hbsxcjp/cchess_con/blob/ed240b5d5521a4db5c4079e974be1cbfbd27ceca/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF">Permalink</a>
 
 <div class="d-flex flex-items-start flex-shrink-0 pb-3 flex-wrap flex-md-nowrap flex-justify-between flex-md-justify-start">
   
@@ -2317,7 +2317,7 @@
   <details
     class="js-branch-select-menu details-reset details-overlay mr-0 mb-0 "
     id="branch-select-menu"
-    data-hydro-click-payload="{&quot;event_type&quot;:&quot;repository.click&quot;,&quot;payload&quot;:{&quot;target&quot;:&quot;REFS_SELECTOR_MENU&quot;,&quot;repository_id&quot;:535181366,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E7%AC%AC09%E5%B1%80.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="9d7a6965e58f8651c27ab055ff0fbfe18e59e2c8cb6a0bf46fbd8ce7baa8b78e">
+    data-hydro-click-payload="{&quot;event_type&quot;:&quot;repository.click&quot;,&quot;payload&quot;:{&quot;target&quot;:&quot;REFS_SELECTOR_MENU&quot;,&quot;repository_id&quot;:535181366,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="cada0e1fdc7d3ac35d09834510220ce51da8f05b03945ce0d6db85675148305c">
     <summary class="btn css-truncate"
             data-hotkey="w"
             title="Switch branches or tags">
@@ -2385,10 +2385,10 @@
     <create-repo-from-selector
       check-tag-name-exists-path="/hbsxcjp/cchess_con/branches/check_tag_name_exists"
     >
-      <!-- '"` --><!-- </textarea></xmp> --></option></form><form data-turbo="false" action="/hbsxcjp/cchess_con/branches" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="k2V-W-WRwlnBWZkbVB91gd7P71pwEfNVMVBigClVeIAS4RBzUMn2zDlXfqUNnI5l69D5wk6rekAdWeknYucYCA" />
+      <!-- '"` --><!-- </textarea></xmp> --></option></form><form data-turbo="false" action="/hbsxcjp/cchess_con/branches" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="qmu9SEX9q8GVwnsY41vG1UZIjMsOthPRCt1g-jgM-jQr79Ng8KWfVG3MnKa62D0xc1eaUzAMmsQm1Otdc76avA" />
         <input data-target="create-repo-from-selector.refName" type="hidden" name="name" value="{{ refName }}">
         <input type="hidden" name="branch"  value="master">
-        <input type="hidden" name="path_binary" value="b3V0cHV0L+esrDA55bGALlhRRg==">
+        <input type="hidden" name="path_binary" value="b3V0cHV0L+mjnuebuOWxgOOAkOWNkjfov5sx44CRLlhRRg==">
 
         <button
           class="SelectMenu-item wb-break-word"
@@ -2396,14 +2396,14 @@
           role="menuitem"
           data-index="{{ index }}"
           data-action="click:create-repo-from-selector#createBranch"
-          data-hydro-click="{&quot;event_type&quot;:&quot;repository.click&quot;,&quot;payload&quot;:{&quot;target&quot;:&quot;REFS_SELECTOR_MENU_CREATE_BRANCH&quot;,&quot;repository_id&quot;:535181366,&quot;ref_name&quot;:&quot;{{ refName }}&quot;,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E7%AC%AC09%E5%B1%80.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="ce238b882066d44aab8d5504c425749af5671fcc03e22ec575d6c5783219b6ee">
+          data-hydro-click="{&quot;event_type&quot;:&quot;repository.click&quot;,&quot;payload&quot;:{&quot;target&quot;:&quot;REFS_SELECTOR_MENU_CREATE_BRANCH&quot;,&quot;repository_id&quot;:535181366,&quot;ref_name&quot;:&quot;{{ refName }}&quot;,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="ff4560a4771bda8bd80924d0eb58e4b5d4fefd961c86ac60b4bd4e325dbc38af">
           <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-git-branch SelectMenu-icon flex-self-baseline">
     <path fill-rule="evenodd" d="M11.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122V6A2.5 2.5 0 0110 8.5H6a1 1 0 00-1 1v1.128a2.251 2.251 0 11-1.5 0V5.372a2.25 2.25 0 111.5 0v1.836A2.492 2.492 0 016 7h4a1 1 0 001-1v-.628A2.25 2.25 0 019.5 3.25zM4.25 12a.75.75 0 100 1.5.75.75 0 000-1.5zM3.5 3.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0z"></path>
 </svg>
           <div>
             <span class="text-bold">Create branch: {{ refName }}</span>
             <span class="color-fg-muted">from ‘master’</span>
-            <input type="hidden" value="rTT08QsikYAe8UdMDkG-wEnzCQtPhjwNT58Lvar6lzVGLZh8LMaJHb_aTKIMc75xcHSN68xtjYlgkgE9Oc1k0g" data-csrf="true" data-target="create-repo-from-selector.checkTagNameExistsPathCsrf" />
+            <input type="hidden" value="-wqIUR4g-uCG6mBG22bK6yVd8ldHON_Q2FjoRi-FSC8QE-TcOcTifSfBa6jZVMpaHNp2t8TTblT3VeLGvLK7yA" data-csrf="true" data-target="create-repo-from-selector.checkTagNameExistsPathCsrf" />
           </div>
         </button>
 </form>    </create-repo-from-selector>
@@ -2422,7 +2422,7 @@
               
 
 <template data-target="ref-selector.itemTemplate">
-  <a href="https://github.com/hbsxcjp/cchess_con/blob/{{ urlEncodedRefName }}/output/%E7%AC%AC09%E5%B1%80.XQF" class="SelectMenu-item" role="menuitemradio" rel="nofollow" aria-checked="{{ isCurrent }}" data-index="{{ index }}" >
+  <a href="https://github.com/hbsxcjp/cchess_con/blob/{{ urlEncodedRefName }}/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF" class="SelectMenu-item" role="menuitemradio" rel="nofollow" aria-checked="{{ isCurrent }}" data-index="{{ index }}" >
     <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-check SelectMenu-icon SelectMenu-icon--check">
     <path fill-rule="evenodd" d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"></path>
 </svg>
@@ -2464,7 +2464,7 @@
               
 
 <template data-target="ref-selector.itemTemplate">
-  <a href="https://github.com/hbsxcjp/cchess_con/blob/{{ urlEncodedRefName }}/output/%E7%AC%AC09%E5%B1%80.XQF" class="SelectMenu-item" role="menuitemradio" rel="nofollow" aria-checked="{{ isCurrent }}" data-index="{{ index }}" >
+  <a href="https://github.com/hbsxcjp/cchess_con/blob/{{ urlEncodedRefName }}/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF" class="SelectMenu-item" role="menuitemradio" rel="nofollow" aria-checked="{{ isCurrent }}" data-index="{{ index }}" >
     <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-check SelectMenu-icon SelectMenu-icon--check">
     <path fill-rule="evenodd" d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"></path>
 </svg>
@@ -2525,7 +2525,7 @@
 
 
   <h2 id="blob-path" class="breadcrumb flex-auto flex-self-center min-width-0 text-normal mx-2 width-full width-md-auto flex-order-1 flex-md-order-none mt-3 mt-md-0">
-    <span class="js-repo-root text-bold"><span class="js-path-segment d-inline-block wb-break-all"><a data-turbo-frame="repo-content-turbo-frame" href="/hbsxcjp/cchess_con"><span>cchess_con</span></a></span></span><span class="separator">/</span><span class="js-path-segment d-inline-block wb-break-all"><a data-turbo-frame="repo-content-turbo-frame" href="/hbsxcjp/cchess_con/tree/master/output"><span>output</span></a></span><span class="separator">/</span><strong class="final-path">第09局.XQF</strong>
+    <span class="js-repo-root text-bold"><span class="js-path-segment d-inline-block wb-break-all"><a data-turbo-frame="repo-content-turbo-frame" href="/hbsxcjp/cchess_con"><span>cchess_con</span></a></span></span><span class="separator">/</span><span class="js-path-segment d-inline-block wb-break-all"><a data-turbo-frame="repo-content-turbo-frame" href="/hbsxcjp/cchess_con/tree/master/output"><span>output</span></a></span><span class="separator">/</span><strong class="final-path">飞相局【卒7进1】.XQF</strong>
   </h2>
     <a href="/hbsxcjp/cchess_con/find/master" data-pjax="" data-hotkey="t" data-view-component="true" class="btn mr-2 d-none d-md-block">    Go to file
 </a>
@@ -2536,7 +2536,7 @@
 </summary>
   <div data-view-component="true">      <ul class="dropdown-menu dropdown-menu-sw">
         <li class="d-block d-md-none">
-          <a class="dropdown-item d-flex flex-items-baseline" data-hydro-click="{&quot;event_type&quot;:&quot;repository.click&quot;,&quot;payload&quot;:{&quot;target&quot;:&quot;FIND_FILE_BUTTON&quot;,&quot;repository_id&quot;:535181366,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E7%AC%AC09%E5%B1%80.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="00298e0a6f32a4a1439f9ea4027a9fba2f3cfe2cd87b108f549b0892f2d01f5c" data-ga-click="Repository, find file, location:repo overview" data-hotkey="t" href="/hbsxcjp/cchess_con/find/master">
+          <a class="dropdown-item d-flex flex-items-baseline" data-hydro-click="{&quot;event_type&quot;:&quot;repository.click&quot;,&quot;payload&quot;:{&quot;target&quot;:&quot;FIND_FILE_BUTTON&quot;,&quot;repository_id&quot;:535181366,&quot;originating_url&quot;:&quot;https://github.com/hbsxcjp/cchess_con/blob/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF&quot;,&quot;user_id&quot;:34307491}}" data-hydro-click-hmac="54becece97f2a44322c728dfdfaed9b9c1d198feaa77657f3688ce2e556844c9" data-ga-click="Repository, find file, location:repo overview" data-hotkey="t" href="/hbsxcjp/cchess_con/find/master">
             <span class="flex-auto">Go to file</span>
             <span class="text-small color-fg-muted" aria-hidden="true">T</span>
 </a>        </li>
@@ -2548,13 +2548,13 @@
 </button>        </li>
         <li class="dropdown-divider" role="none"></li>
         <li>
-          <clipboard-copy data-toggle-for="blob-more-options-details" aria-label="Copy path" value="output/第09局.XQF" data-view-component="true" class="dropdown-item cursor-pointer">
+          <clipboard-copy data-toggle-for="blob-more-options-details" aria-label="Copy path" value="output/飞相局【卒7进1】.XQF" data-view-component="true" class="dropdown-item cursor-pointer">
     
             Copy path
 
 </clipboard-copy>        </li>
         <li>
-          <clipboard-copy data-toggle-for="blob-more-options-details" aria-label="Copy permalink" value="https://github.com/hbsxcjp/cchess_con/blob/ed240b5d5521a4db5c4079e974be1cbfbd27ceca/output/%E7%AC%AC09%E5%B1%80.XQF" data-view-component="true" class="dropdown-item cursor-pointer">
+          <clipboard-copy data-toggle-for="blob-more-options-details" aria-label="Copy permalink" value="https://github.com/hbsxcjp/cchess_con/blob/ed240b5d5521a4db5c4079e974be1cbfbd27ceca/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF" data-view-component="true" class="dropdown-item cursor-pointer">
     
             <span class="d-flex flex-items-baseline">
               <span class="flex-auto">Copy permalink</span>
@@ -2586,7 +2586,7 @@
     <include-fragment src="/hbsxcjp/cchess_con/spoofed_commit_check/ed240b5d5521a4db5c4079e974be1cbfbd27ceca" data-test-selector="spoofed-commit-check"></include-fragment>
 
     <div class="Box d-flex flex-column flex-shrink-0 mb-3">
-  <include-fragment src="/hbsxcjp/cchess_con/contributors/master/output/%E7%AC%AC09%E5%B1%80.XQF" class="commit-loader">
+  <include-fragment src="/hbsxcjp/cchess_con/contributors/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF" class="commit-loader">
     <div class="Box-header d-flex flex-items-center">
       <div class="Skeleton avatar avatar-user flex-shrink-0 ml-n1 mr-n1 mt-n1 mb-n1" style="width:24px;height:24px;"></div>
       <div class="Skeleton Skeleton--text col-5 ml-2">&nbsp;</div>
@@ -2620,18 +2620,18 @@
 
   <div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1">
 
-    1.79 KB
+    35.5 KB
   </div>
 
   <div class="d-flex py-1 py-md-0 flex-auto flex-order-1 flex-md-order-2 flex-sm-grow-0 flex-justify-between hide-sm hide-md">
       
 
     <div class="BtnGroup">
-        <a data-permalink-href="/hbsxcjp/cchess_con/raw/ed240b5d5521a4db5c4079e974be1cbfbd27ceca/output/%E7%AC%AC09%E5%B1%80.XQF" href="/hbsxcjp/cchess_con/raw/master/output/%E7%AC%AC09%E5%B1%80.XQF" id="raw-url" data-view-component="true" class="js-permalink-replaceable-link btn-sm btn BtnGroup-item">    Download
+        <a data-permalink-href="/hbsxcjp/cchess_con/raw/ed240b5d5521a4db5c4079e974be1cbfbd27ceca/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF" href="/hbsxcjp/cchess_con/raw/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF" id="raw-url" data-view-component="true" class="js-permalink-replaceable-link btn-sm btn BtnGroup-item">    Download
 </a>    </div>
 
     <div class="d-flex">
-          <!-- '"` --><!-- </textarea></xmp> --></option></form><form class="inline-form" data-turbo="false" action="/hbsxcjp/cchess_con/delete/master/output/%E7%AC%AC09%E5%B1%80.XQF" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="L2XFlXSb4u5ZnHYNLDZcFjLphnlvllN3FYIOph-_uoQTAhuhQBK2Ua0MkMO8z0UKBeuUujJjMcydQ3GAsB3ZnQ" />
+          <!-- '"` --><!-- </textarea></xmp> --></option></form><form class="inline-form" data-turbo="false" action="/hbsxcjp/cchess_con/delete/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF" accept-charset="UTF-8" method="post"><input type="hidden" name="authenticity_token" value="pe0j90zA1vbfH54yamkpgFodR5vIjr41zDMSSBGZbyslu9fvnt1bCDLQr73dzN4Z5YbAo9Cihlyl83FPk0SaBA" />
             <button class="btn-octicon btn-octicon-danger tooltipped tooltipped-nw" type="submit"
               aria-label="Delete this file" data-disable-with>
               <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-trash">
@@ -2659,18 +2659,18 @@
             <li>
                 <a class="dropdown-item tooltipped tooltipped-nw js-remove-unless-platform"
                    data-platforms="windows,mac"
-                   href="x-github-client://openRepo/https://github.com/hbsxcjp/cchess_con?branch=master&amp;filepath=output%2F%E7%AC%AC09%E5%B1%80.XQF">
+                   href="x-github-client://openRepo/https://github.com/hbsxcjp/cchess_con?branch=master&amp;filepath=output%2F%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF">
                   Open with Desktop
                 </a>
             </li>
           <li>
-            <a class="dropdown-item" href="/hbsxcjp/cchess_con/raw/master/output/%E7%AC%AC09%E5%B1%80.XQF">
+            <a class="dropdown-item" href="/hbsxcjp/cchess_con/raw/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF">
               Download
             </a>
           </li>
 
             <li>
-              <a class="dropdown-item menu-item-danger" href="/hbsxcjp/cchess_con/delete/master/output/%E7%AC%AC09%E5%B1%80.XQF">Delete file</a>
+              <a class="dropdown-item menu-item-danger" href="/hbsxcjp/cchess_con/delete/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF">Delete file</a>
             </li>
         </ul>
       </details>
@@ -2682,7 +2682,7 @@
     <div itemprop="text" class="Box-body p-0 blob-wrapper data type-text  gist-border-0">
 
         <div class="text-center p-3" data-hpc>
-            <a href="/hbsxcjp/cchess_con/blob/master/output/%E7%AC%AC09%E5%B1%80.XQF?raw=true">View raw</a>
+            <a href="/hbsxcjp/cchess_con/blob/master/output/%E9%A3%9E%E7%9B%B8%E5%B1%80%E3%80%90%E5%8D%927%E8%BF%9B1%E3%80%91.XQF?raw=true">View raw</a>
         </div>
     </div>
 

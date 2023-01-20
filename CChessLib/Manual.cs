@@ -45,9 +45,9 @@ public class Manual
         if (!File.Exists(fileName))
             return;
 
-        Console.WriteLine($"fileName: {fileName}");
-        using FileStream stream = File.Open(fileName, FileMode.Open);
-        SetFromStream(stream, GetFileExtType(fileName));
+        // using FileStream stream = File.OpenRead(fileName);
+        // SetFromStream(stream, GetFileExtType(fileName));
+        SetFromXQF(fileName);
     }
 
     public Dictionary<string, string> Info { get { return _info; } }
@@ -85,7 +85,7 @@ public class Manual
         switch (fileExtType)
         {
             case FileExtType.Xqf:
-                SetFromXQF(stream);
+                // SetFromXQF(stream);
                 break;
             case FileExtType.Cm:
                 SetFromBytes(stream);
@@ -129,9 +129,10 @@ public class Manual
     public string ToString(bool showMove = false, bool isOrder = false)
         => GetInfoString() + _manualMove.ToString(showMove, isOrder);
 
-    private void SetFromXQF(Stream stream)
+    // private void SetFromXQF(Stream stream)
+    private void SetFromXQF(string fileName)
     {
-        // using FileStream stream = File.OpenRead(fileName);
+        using FileStream stream = File.OpenRead(fileName);
         //文件标记'XQ'=$5158/版本/加密掩码/ProductId[4], 产品(厂商的产品号)
         const int PIECENUM = 32;
         byte[] Signature = new byte[3], Version = new byte[1], headKeyMask = new byte[1],
@@ -314,7 +315,8 @@ public class Manual
             // # 有注解
             byte[] rem = new byte[2048 * 2];
             __readBytes(rem, (int)RemarkSize);
-            var remark = codec.GetString(rem).Replace('\0', ' ').Replace("\r\n", "\n").Trim();
+            var remark = codec.GetString(rem).Replace('\0', ' ')
+                .Replace("\r\n", "\n").Trim();
             return remark.Length > 0 ? remark : null;
         }
 
@@ -412,6 +414,7 @@ public class Manual
     public static string GetExtName(FileExtType fileExtType) => FileExtName[(int)fileExtType];
     private static FileExtType GetFileExtType(string fileName)
         => (FileExtType)(FileExtName.IndexOf(new FileInfo(fileName).Extension));
+
     private bool SetBoard() => _manualMove.SetBoard(InfoHas(ManualField.FEN) ? GetInfoValue(ManualField.FEN) : FEN);
 
     private void SetInfo(string infoString)
