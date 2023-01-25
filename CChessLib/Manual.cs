@@ -42,12 +42,15 @@ public class Manual
 
     public Manual(string fileName) : this()
     {
+        // string curDir = Directory.GetCurrentDirectory();
+        // throw new Exception($"{curDir}");
         if (!File.Exists(fileName))
             return;
 
-        // using FileStream stream = File.OpenRead(fileName);
-        // SetFromStream(stream, GetFileExtType(fileName));
-        SetFromXQF(fileName);
+        // System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        using FileStream stream = File.OpenRead(fileName);
+        SetFromStream(stream, GetFileExtType(fileName));
+        // SetFromXQF(fileName);
     }
 
     public Dictionary<string, string> Info { get { return _info; } }
@@ -85,7 +88,7 @@ public class Manual
         switch (fileExtType)
         {
             case FileExtType.Xqf:
-                // SetFromXQF(stream);
+                SetFromXQF(stream);
                 break;
             case FileExtType.Cm:
                 SetFromBytes(stream);
@@ -129,10 +132,10 @@ public class Manual
     public string ToString(bool showMove = false, bool isOrder = false)
         => GetInfoString() + _manualMove.ToString(showMove, isOrder);
 
-    // private void SetFromXQF(Stream stream)
-    private void SetFromXQF(string fileName)
+    private void SetFromXQF(Stream stream)
+    // private void SetFromXQF(string fileName)
     {
-        using FileStream stream = File.OpenRead(fileName);
+        // using FileStream stream = File.OpenRead(fileName);
         //文件标记'XQ'=$5158/版本/加密掩码/ProductId[4], 产品(厂商的产品号)
         const int PIECENUM = 32;
         byte[] Signature = new byte[3], Version = new byte[1], headKeyMask = new byte[1],
@@ -251,8 +254,9 @@ public class Manual
                 pieceChars[xy % 10 * 9 + xy / 10] = pieChars[i];
         }
 
+        // System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        Encoding codec = Encoding.GetEncoding("gb18030"); // "gb2312"
+        Encoding codec = Encoding.GetEncoding("gb2312"); // "gb2312"
         string[] result = { "未知", "红胜", "黑胜", "和棋" };
         string[] typestr = { "全局", "开局", "中局", "残局" };
         SetInfoValue(ManualField.FEN, $"{Seats.GetFEN(pieceChars.ToString())} r - - 0 1"); // 可能存在不是红棋先走的情况？
@@ -378,7 +382,7 @@ public class Manual
 
     private void SetFromBytes(Stream stream)
     {
-        using var reader = new BinaryReader(stream, Encoding.UTF8, false);
+        using var reader = new BinaryReader(stream, Encoding.UTF8, true);
         int count = reader.ReadInt32();
         for (int i = 0; i < count; i++)
         {
@@ -393,7 +397,7 @@ public class Manual
 
     private void SetStreamBytes(Stream stream)
     {
-        using var writer = new BinaryWriter(stream, Encoding.UTF8);
+        using var writer = new BinaryWriter(stream, Encoding.UTF8, true);
 
         writer.Write(_info.Count);
         foreach (var kv in _info)
@@ -407,7 +411,7 @@ public class Manual
 
     private void SetStreamString(Stream stream, FileExtType fileExtType)
     {
-        using var writer = new StreamWriter(stream);
+        using var writer = new StreamWriter(stream, Encoding.UTF8, 4096, true);
         writer.Write(GetString(fileExtType));
     }
 

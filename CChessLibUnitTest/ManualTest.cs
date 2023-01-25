@@ -11,7 +11,7 @@ public class ManualTest
     //"飞相局【卒7进1】",
     //"中炮【马2进3】"
 
-    private string[,] fileNameManualStrings =  {
+    private string[,] manualStrings =  {
         {"01",
         "[FEN \"5a3/4ak2r/6R2/8p/9/9/9/B4N2B/4K4/3c5 r - - 0 1\"]\n[version \"18\"]\n[win \"红胜\"]\n[type \"残局\"]\n[title \"\u0006第01局\"]\n[event \"\"]\n[date \"\"]\n[site \"\"]\n[red \"\"]\n[black \"\"]\n[opening \"\"]\n[writer \"\"]\n[author \"\"]\n\n(2) +2546{从相肩进马是取胜的正确途径。其它着法，均不能取胜。}(4) +2544(1) +0393(1) +0373(1) +8475(1) +6858(1) +0393(1) +4654{不怕黑炮平中拴链，进观的攻势含蓄双有诱惑性，是红方制胜的关键。}(1) +4654(2) +4667{叫杀得车。} +4654(1) +4456(1) +9394(1) +7374(1) +8887(1) +8868(1) +9394(1) +7675{弃车，与前着相联系，由此巧妙成杀。}(1) +5466 +7675(1) +7686 +1413(1) +8475(1) +8475(2) +8887(1) +5466 +5466 +5473 +5677(1) +8777(1) +7677(1) +8493(1) +7787(1) +8575{至此，形成少见的高将底炮双士和单车的局面。}(1) +8767(1) +9584(1) +6765(1) +7574(1) +6568(1) +7475(1) +6865(1) +7574(1) +1303(1) +9495{和棋。} ",
         "[FEN \"5a3/4ak2r/6R2/8p/9/9/9/B4N2B/4K4/3c5 r - - 0 1\"]\n[version \"18\"]\n[win \"红胜\"]\n[type \"残局\"]\n[title \"\u0006第01局\"]\n[event \"\"]\n[date \"\"]\n[site \"\"]\n[red \"\"]\n[black \"\"]\n[opening \"\"]\n[writer \"\"]\n[author \"\"]\n　　　　　　　黑　方　　　　　　　\n１　２　３　４　５　６　７　８　９\n┏━┯━┯━┯━┯━士━┯━┯━┓\n┃　│　│　│╲│╱│　│　│　┃\n┠─┼─┼─┼─士─将─┼─┼─車\n┃　│　│　│╱│╲│　│　│　┃\n┠─╬─┼─┼─┼─┼─车─╬─┨\n┃　│　│　│　│　│　│　│　┃\n┠─┼─╬─┼─╬─┼─╬─┼─卒\n┃　│　│　│　│　│　│　│　┃\n┠─┴─┴─┴─┴─┴─┴─┴─┨\n┃　　　　　　　　　　　　　　　┃\n┠─┬─┬─┬─┬─┬─┬─┬─┨\n┃　│　│　│　│　│　│　│　┃\n┠─┼─╬─┼─╬─┼─╬─┼─┨\n┃　│　│　│　│　│　│　│　┃\n相─╬─┼─┼─┼─马─┼─╬─相\n┃　│　│　│╲│╱│　│　│　┃\n┠─┼─┼─┼─帅─┼─┼─┼─┨\n┃　│　│　│╱│╲│　│　│　┃\n┗━┷━┷━砲━┷━┷━┷━┷━┛\n九　八　七　六　五　四　三　二　一\n　　　　　　　红　方　　　　　　　\n-[(-1,-1),(-1,-1)].0 \n\t0-[(2,5),(4,6)].1 从相肩进马是取胜的正确途径。其它着法，均不能取胜。\n\t0-[(2,5),(4,4)].2 \n\t\t1-[(0,3),(9,3)].3 \n\t\t1-[(0,3),(7,3)].4 \n\t\t1-[(8,4),(7,5)].5 \n\t\t1-[(6,8),(5,8)].6 \n\t\t2-[(0,3),(9,3)].7 \n\t\t\t3-[(4,6),(5,4)].8 不怕黑炮平中拴链，进观的攻势含蓄双有诱惑性，是红方制胜的关键。\n\t\t\t4-[(4,6),(5,4)].9 \n\t\t\t5-[(4,6),(6,7)].10 叫杀得车。\n\t\t\t6-[(4,6),(5,4)].11 \n\t\t\t7-[(4,4),(5,6)].12 \n\t\t\t\t8-[(9,3),(9,4)].13 \n\t\t\t\t9-[(7,3),(7,4)].14 \n\t\t\t\t9-[(8,8),(8,7)].15 \n\t\t\t\t11-[(8,8),(6,8)].16 \n\t\t\t\t12-[(9,3),(9,4)].17 \n\t\t\t\t\t13-[(7,6),(7,5)].18 弃车，与前着相联系，由此巧妙成杀。\n\t\t\t\t\t14-[(5,4),(6,6)].19 \n\t\t\t\t\t15-[(7,6),(7,5)].20 \n\t\t\t\t\t16-[(7,6),(8,6)].21 \n\t\t\t\t\t17-[(1,4),(1,3)].22 \n\t\t\t\t\t\t18-[(8,4),(7,5)].23 \n\t\t\t\t\t\t20-[(8,4),(7,5)].24 \n\t\t\t\t\t\t22-[(8,8),(8,7)].25 \n\t\t\t\t\t\t\t23-[(5,4),(6,6)].26 \n\t\t\t\t\t\t\t24-[(5,4),(6,6)].27 \n\t\t\t\t\t\t\t24-[(5,4),(7,3)].28 \n\t\t\t\t\t\t\t25-[(5,6),(7,7)].29 \n\t\t\t\t\t\t\t\t29-[(8,7),(7,7)].30 \n\t\t\t\t\t\t\t\t\t30-[(7,6),(7,7)].31 \n\t\t\t\t\t\t\t\t\t\t31-[(8,4),(9,3)].32 \n\t\t\t\t\t\t\t\t\t\t\t32-[(7,7),(8,7)].33 \n\t\t\t\t\t\t\t\t\t\t\t\t33-[(8,5),(7,5)].34 至此，形成少见的高将底炮双士和单车的局面。\n\t\t\t\t\t\t\t\t\t\t\t\t\t34-[(8,7),(6,7)].35 \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t35-[(9,5),(8,4)].36 \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t36-[(6,7),(6,5)].37 \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t37-[(7,5),(7,4)].38 \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t38-[(6,5),(6,8)].39 \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t39-[(7,4),(7,5)].40 \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t40-[(6,8),(6,5)].41 \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t41-[(7,5),(7,4)].42 \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t42-[(1,3),(0,3)].43 \n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t43-[(9,4),(9,5)].44 和棋。\n着法数量【44】\t注解数量【6】\t注解最长【31】\n\n"
@@ -34,27 +34,121 @@ public class ManualTest
         }
     };
 
+    private Manual GetManual(int index)
+        => new(manualStrings[index, 0] + Manual.GetExtName(FileExtType.Xqf));
+
+    private Manual GetManual(int index, FileExtType fileExtType)
+    {
+        Manual manual = new();
+        MemoryStream stream = new();
+
+        GetManual(index).SetStream(stream, fileExtType);
+        stream.Seek(0, SeekOrigin.Begin);
+        manual.SetFromStream(stream, fileExtType);
+
+        return manual;
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
     [InlineData(4)]
-    public void TestSetFromXQF(int index)
+    public void TestXQFType(int index)
     {
-        string fileName = fileNameManualStrings[index, 0] + Manual.GetExtName(FileExtType.Xqf);
-        string expectManualString = fileNameManualStrings[index, 1];
-        string expectManualDetailString = fileNameManualStrings[index, 2];
-        Manual manual = new(fileName);
+        Manual manual = GetManual(index);
 
         string result = manual.GetString();
-        Assert.Equal(expectManualString, result);
+        Assert.Equal(manualStrings[index, 1], result);
 
         string detailResult = manual.ToString(true, true);
-        Assert.Equal(expectManualDetailString, detailResult);
+        Assert.Equal(manualStrings[index, 2], detailResult);
+    }
 
-        // foreach (var fileExtType in new FileExtType[] { FileExtType.Xqf, FileExtType.Cm, FileExtType.Text,
-        // FileExtType.PGNRowCol, FileExtType.PGNIccs, FileExtType.PGNZh})
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    public void TestCmType(int index)
+    {
+        Manual manual = GetManual(index, FileExtType.Cm);
+
+        string result = manual.GetString();
+        Assert.Equal(manualStrings[index, 1], result);
+
+        string detailResult = manual.ToString(true, true);
+        Assert.Equal(manualStrings[index, 2], detailResult);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    public void TestTextType(int index)
+    {
+        Manual manual = GetManual(index, FileExtType.Text);
+
+        string result = manual.GetString();
+        Assert.Equal(manualStrings[index, 1], result);
+
+        string detailResult = manual.ToString(true, true);
+        Assert.Equal(manualStrings[index, 2], detailResult);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    public void TestPGNRowColType(int index)
+    {
+        Manual manual = GetManual(index, FileExtType.PGNRowCol);
+
+        string result = manual.GetString();
+        Assert.Equal(manualStrings[index, 1], result);
+
+        string detailResult = manual.ToString(true, true);
+        Assert.Equal(manualStrings[index, 2], detailResult);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    public void TestPGNIccsType(int index)
+    {
+        Manual manual = GetManual(index, FileExtType.PGNIccs);
+
+        string result = manual.GetString();
+        Assert.Equal(manualStrings[index, 1], result);
+
+        string detailResult = manual.ToString(true, true);
+        Assert.Equal(manualStrings[index, 2], detailResult);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    public void TestPGNZhType(int index)
+    {
+        Manual manual = GetManual(index, FileExtType.PGNZh);
+
+        string result = manual.GetString();
+        Assert.Equal(manualStrings[index, 1], result);
+
+        string detailResult = manual.ToString(true, true);
+        Assert.Equal(manualStrings[index, 2], detailResult);
     }
 
     // [Fact]

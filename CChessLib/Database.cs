@@ -164,6 +164,7 @@ public class EccoData
     static string DownHtmls()
     {
         using HttpClient client = new();
+        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         Encoding codec = Encoding.GetEncoding("gb2312");
         string eccoChars = "abcde";
         Task<string>[] taskArray = new Task<string>[eccoChars.Length];
