@@ -8,13 +8,48 @@ public class Aspects
     private readonly Dictionary<string, Dictionary<string, List<int>>> _aspectDict;
 
     public Aspects() { _aspectDict = new(); }
+
+    public Aspects(List<Manual> manuals) : this()
+    {
+        foreach (Manual manual in manuals)
+            Add(manual);
+    }
+    
     public Aspects(string fileName) : this()
     {
         if (!File.Exists(fileName))
             return;
 
         using var stream = File.Open(fileName, FileMode.Open);
-        using var reader = new BinaryReader(stream, Encoding.UTF8, false);
+        SetFromStream(stream);
+    }
+    public void Write(string fileName)
+    {
+        using var stream = File.Open(fileName, FileMode.Create);
+        SetStream(stream);
+    }
+
+    public void SetStream(Stream stream)
+    {
+        using var writer = new BinaryWriter(stream, Encoding.UTF8, true);
+        writer.Write(_aspectDict.Count);
+        foreach (var fenData in _aspectDict)
+        {
+            writer.Write(fenData.Key);
+            writer.Write(fenData.Value.Count);
+            foreach (var aspectData in fenData.Value)
+            {
+                writer.Write(aspectData.Key);
+                writer.Write(aspectData.Value.Count);
+                foreach (var x in aspectData.Value)
+                    writer.Write(x);
+            }
+        }
+    }
+
+    public void SetFromStream(Stream stream)
+    {
+        using var reader = new BinaryReader(stream, Encoding.UTF8, true);
         int fenCount = reader.ReadInt32();
         for (int i = 0; i < fenCount; i++)
         {
@@ -34,33 +69,15 @@ public class Aspects
             _aspectDict.TryAdd(fen, aspectData);
         }
     }
-    public void Write(string fileName)
-    {
-        using var stream = File.Open(fileName, FileMode.Create);
-        using var writer = new BinaryWriter(stream, Encoding.UTF8, false);
-        writer.Write(_aspectDict.Count);
-        foreach (var fenData in _aspectDict)
-        {
-            writer.Write(fenData.Key);
-            writer.Write(fenData.Value.Count);
-            foreach (var aspectData in fenData.Value)
-            {
-                writer.Write(aspectData.Key);
-                writer.Write(aspectData.Value.Count);
-                foreach (var x in aspectData.Value)
-                    writer.Write(x);
-            }
-        }
-    }
 
-    public void Add(string fileName)
+    public void Add(Manual manual)
     {
-        Manual manual = new(fileName);
-        foreach (var aspect in manual.GetAspects())
-            Join(aspect);
+        // Manual manual = new(fileName);
+        foreach (var fenRowCols in manual.GetFENRowCols())
+            Join(fenRowCols);
 
         // 以下同步方式与非同步方式的耗时基本相同，同步字典并行运行时被锁定？
-        //var aspectList = (new Manual(fileName)).GetAspects();
+        //var aspectList = (new Manual(fileName)).GetFENRowCols();
         //Parallel.ForEach<(string fen, int data), bool>(
         //    aspectList,
         //    () => true,
@@ -78,9 +95,9 @@ public class Aspects
             rowColValue => (Coord.GetRowCol(rowColValue.Key, findCt), rowColValue.Value)).ToList();
     }
 
-    private bool Join((string fen, string rowCol) aspect)
+    private bool Join((string fen, string rowCol) fenRowCols)
     {
-        var (fen, rowCol) = aspect;
+        var (fen, rowCol) = fenRowCols;
         Dictionary<string, List<int>> aspectData;
         var (finded, findCt, findFen) = FindCtFens(fen);
         if (finded)
@@ -115,6 +132,54 @@ public class Aspects
             return (true, ct, fen);
 
         return (false, ChangeType.NoChange, fen);
+    }
+
+    public bool Equal(Aspects aspects)
+    {
+        var akeys = _aspectDict.Keys;
+        var bkeys = aspects._aspectDict.Keys;
+        var avalues = _aspectDict.Values;
+        var bvalues = aspects._aspectDict.Values;
+
+        int count = akeys.Count;
+        if (count != bkeys.Count || count != avalues.Count || count != bvalues.Count)
+            return false;
+
+        for (int i = 0; i < count; ++i)
+        {
+            if (akeys.ElementAt(i) != bkeys.ElementAt(i))
+                return false;
+
+            var aRcInts = avalues.ElementAt(i);
+            var bRcInts = bvalues.ElementAt(i);
+            var aRcKeys = aRcInts.Keys;
+            var bRcKeys = bRcInts.Keys;
+            var aRcValues = aRcInts.Values;
+            var bRcValues = bRcInts.Values;
+
+            int rcCount = aRcKeys.Count;
+            if (rcCount != bRcKeys.Count || rcCount != aRcValues.Count || rcCount != bRcValues.Count)
+                return false;
+
+            for (int j = 0; j < rcCount; ++j)
+            {
+                if (aRcKeys.ElementAt(j) != bRcKeys.ElementAt(j))
+                    return false;
+
+                var aints = aRcValues.ElementAt(j);
+                var bints = bRcValues.ElementAt(j);
+                aints.Sort();
+                bints.Sort();
+                if (aints.Count != bints.Count)
+                    return false;
+
+                for (int k = 0; k < aints.Count; ++k)
+                    if (aints[k] != bints[k])
+                        return false;
+            }
+        }
+
+        return true;
     }
 
     override public string ToString()

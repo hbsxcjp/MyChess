@@ -21,7 +21,7 @@ public class ManualMove : IEnumerable
     public Move CurMove { get; set; }
     public bool EnumMoveDone { get; set; }
     public string? CurRemark { get { return CurMove.Remark; } set { CurMove.Remark = value?.Trim(); } }
-    public string AspectFEN
+    public string UniversalFEN
     {
         get => Seats.GetFEN(_board.GetFEN(), _board.IsBottom(PieceColor.Red) ? ChangeType.NoChange : ChangeType.Exchange);
     }
@@ -283,13 +283,13 @@ public class ManualMove : IEnumerable
         return rowCols.ToString();
     }
 
-    public List<(string fen, string rowCol)> GetAspects()
+    public List<(string fen, string rowCol)> GetFENRowCols()
     {
         List<(string fen, string rowCol)> aspects = new();
         var oldEnumMoveDone = EnumMoveDone;
         EnumMoveDone = true;
         foreach (var move in this)
-            aspects.Add((AspectFEN, move.CoordPair.RowCol));
+            aspects.Add((UniversalFEN, move.CoordPair.RowCol));
         EnumMoveDone = oldEnumMoveDone;
 
         return aspects;
