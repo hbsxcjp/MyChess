@@ -4,7 +4,8 @@ namespace CChessTest;
 
 public class AspectTest
 {
-    private static List<Manual> GetManuals()
+    [Fact]
+    public void TestManualsAspects()
     {
         List<Manual> manuals = new();
         foreach (string fileName in new string[] {
@@ -15,14 +16,7 @@ public class AspectTest
             "- 北京张强 (和) 上海胡荣华 (1993.4.27于南京)"})
             manuals.Add(new(Manual.GetFileName(fileName, FileExtType.Xqf)));
 
-        return manuals;
-    }
-
-    [Fact]
-    public void TestManualsAspects()
-    {
-        Aspects aspects = new(GetManuals());
-
+        Aspects aspects = new(manuals);
         MemoryStream stream = new();
         aspects.SetStream(stream);
         stream.Seek(0, SeekOrigin.Begin);

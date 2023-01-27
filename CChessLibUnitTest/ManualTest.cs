@@ -45,14 +45,15 @@ public class ManualTest
         return manuals;
     }
 
-    private Manual GetManual(int index) => Manuals[index];
-
     private Manual GetManual(int index, FileExtType fileExtType)
     {
+        if (fileExtType == FileExtType.Xqf)
+            return Manuals[index];
+
         Manual manual = new();
         MemoryStream stream = new();
 
-        GetManual(index).SetStream(stream, fileExtType);
+        Manuals[index].SetStream(stream, fileExtType);
         stream.Seek(0, SeekOrigin.Begin);
         manual.SetFromStream(stream, fileExtType);
 
@@ -67,7 +68,7 @@ public class ManualTest
     [InlineData(4)]
     public void TestXQFType(int index)
     {
-        Manual manual = GetManual(index);
+        Manual manual = GetManual(index, FileExtType.Xqf);
 
         string result = manual.GetString();
         Assert.Equal(manualStrings[index, 1], result);

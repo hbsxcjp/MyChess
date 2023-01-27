@@ -112,7 +112,7 @@ public class Aspects
             rowCol = Coord.GetRowCol(rowCol, findCt);
 
         if (aspectData.ContainsKey(rowCol))
-        {
+        { 
             aspectData[rowCol][0]++; // 第一项计数，列表可添加功能
         }
         else
