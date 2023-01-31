@@ -16,8 +16,6 @@ public class Board
     public Piece Done(CoordPair coordPair) => seats.Done(coordPair);
     public void Undo(CoordPair coordPair, Piece toPiece) => seats.Undo(coordPair, toPiece);
 
-    public List<Coord> GetAllCoords() => seats.GetAllCoords();
-
     public bool IsNull(int row, int col) => seats[row, col].Piece.IsNull;
     public bool IsBottom(PieceColor color) => pieces.IsBottom(color);
     public bool IsKilled(PieceColor color) => seats.IsKilled(color, pieces);
@@ -97,7 +95,7 @@ public class Board
         var livePieces = pieces.GetLivePieces(PieceColor.Red);
         livePieces.AddRange(pieces.GetLivePieces(PieceColor.Black));
         foreach (var piece in livePieces)
-            textBlankBoard[Coord.GetDoubleIndex(piece.Coord)] = piece.PrintName;
+            textBlankBoard[Coord.GetDoubleIndex(seats.GetCoord(piece))] = piece.PrintName;
 
         int index = IsBottom(PieceColor.Red) ? 0 : 1;
         return preStr[index] + textBlankBoard.ToString() + sufStr[index];

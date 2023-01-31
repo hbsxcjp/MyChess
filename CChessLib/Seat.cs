@@ -41,27 +41,35 @@ public class Seat
 
 public class Seats
 {
-    private Seat[,] _seats;
-
+    public readonly List<Seat> AllSeats;
     public Seats()
     {
-        _seats = new Seat[Coord.RowCount, Coord.ColCount];
-        foreach (Coord coord in Coord.AllCoords)
-            _seats[coord.Row, coord.Col] = new(coord);
+        AllSeats = Coord.AllCoords.Select(coord => new Seat(coord)).ToList();
     }
 
-    public Seat this[int row, int col] { get { return _seats[row, col]; } }
-    public Seat this[Coord coord] { get { return _seats[coord.Row, coord.Col]; } }
+    public Seat this[int row, int col] { get { return AllSeats[Coord.GetIndex(row, col)]; } }
+    public Seat this[(int row, int col) rowCol] { get { return AllSeats[Coord.GetIndex(rowCol.row, rowCol.col)]; } }
+    public Seat this[Coord coord] { get { return AllSeats[coord.Index]; } }
 
-    public List<Seat> GetAllSeats()
-    {
-        List<Seat> seats = new();
-        foreach (var seat in _seats)
-            seats.Add(seat);
+    public Coord GetCoord(Piece piece) => AllSeats.First(seat => seat.Piece == piece).Coord;
 
-        return seats;
-    }
-    public List<Coord> GetAllCoords() => GetAllSeats().Select(seat => seat.Coord).ToList();
+    /// <summary>
+    /// 初始棋盘布局面时，棋子可放置的位置
+    /// </summary>
+    /// <returns>棋盘位置坐标的列表</returns>
+    public List<Coord> PutCoord(Piece piece, bool isBottomColor)
+        => (piece.Kind == PieceKind.Rook || piece.Kind == PieceKind.Cannon || piece.Kind == PieceKind.Knight)
+                ? Coord.AllCoords
+                : piece.PutRowCols(isBottomColor).Select(rowCol => this[rowCol].Coord).ToList();
+
+    /// <summary>
+    /// 当前棋盘局面下，棋子可移动位置, 已排除规则不允许行走的位置、同色棋子的位置
+    /// </summary>
+    /// <returns>棋盘位置坐标的列表</returns>
+    public List<Coord> MoveCoord(Piece piece, bool isBottomColor)
+        => piece.MoveRowCols(this, isBottomColor).Where(
+                rowCol => this[rowCol].Piece.Color != piece.Color).
+                Select(rowCol => this[rowCol].Coord).ToList();
 
     public Piece Done(CoordPair coordPair)
     {
@@ -75,9 +83,9 @@ public class Seats
     public void Undo(CoordPair coordPair, Piece toPiece)
         => this[coordPair.ToCoord].MoveTo(this[coordPair.FromCoord], toPiece);
 
-    public void Reset() => GetAllSeats().ForEach(seat => seat.Piece = Piece.Null);
+    public void Reset() => AllSeats.ForEach(seat => seat.Piece = Piece.Null);
 
-    public string GetFEN() => GetFEN(string.Concat(GetAllSeats().Select(seat => seat.Piece.Char)));
+    public string GetFEN() => GetFEN(string.Concat(AllSeats.Select(seat => seat.Piece.Char)));
 
     public static string GetFEN(string pieceChars)
     {
@@ -129,7 +137,9 @@ public class Seats
                 if (char.IsDigit(ch))
                     col += Convert.ToInt32(ch.ToString());
                 else
-                    _seats[row, col++].Piece = pieces.GetPiece_SeatNull(ch);
+                    // this[row, col++].Piece = pieces.GetPiece_SeatNull(ch);
+                    this[row, col++].Piece = pieces.GetPieces(ch)
+                        .First(piece => AllSeats.FindIndex(seat => seat.Piece == piece) == -1);
 
             row++;
         }
@@ -177,7 +187,7 @@ public class Seats
     public CoordPair GetCoordPair(string zhStr, Pieces pieces)
     {
         Debug.Assert(zhStr.Length == 4);
-        PieceColor color = Piece.GetColor(zhStr[3]);
+        PieceColor color = Piece.GetColor_Num(zhStr[3]);
         bool isBottomColor = pieces.IsBottom(color);
         int index = 0, movDir = Piece.MoveDir(zhStr[2]),
             absMovDir = movDir * (isBottomColor ? 1 : -1);
@@ -242,7 +252,7 @@ public class Seats
             pieces.Reverse();
     }
 
-    public bool IsNull(int row, int col) => _seats[row, col].Piece.IsNull;
+    public bool IsNull(int row, int col) => this[row, col].Piece.IsNull;
     public bool IsKilled(PieceColor color, Pieces pieces)
     {
         Coord kingCoord = pieces.GetKing(color).Coord;
@@ -261,7 +271,7 @@ public class Seats
 
         // 是否正被将军
         return pieces.GetLivePieces(otherColor).Any(
-            piece => piece.MoveCoord(this, pieces.IsBottom(piece.Color)).Contains(kingCoord));
+            piece => MoveCoord(piece, pieces.IsBottom(piece.Color)).Contains(kingCoord));
     }
 
     public bool IsFailed(PieceColor color, Pieces pieces)
@@ -274,8 +284,8 @@ public class Seats
     /// <returns></returns>
     public List<Coord> CanMoveCoord(Coord fromCoord, Pieces pieces)
     {
-        Piece piece = _seats[fromCoord.Row, fromCoord.Col].Piece;
-        List<Coord> coords = piece.MoveCoord(this, pieces.IsBottom(piece.Color));
+        Piece piece = this[fromCoord].Piece;
+        List<Coord> coords = MoveCoord(piece, pieces.IsBottom(piece.Color));
         coords.RemoveAll(toCoord => !CanMove(fromCoord, toCoord, pieces));
         return coords;
     }
@@ -288,11 +298,11 @@ public class Seats
     /// <returns></returns>
     public bool CanMove(Coord fromCoord, Coord toCoord, Pieces pieces)
     {
-        Seat fromSeat = _seats[fromCoord.Row, fromCoord.Col];
+        Seat fromSeat = this[fromCoord];
         Debug.Assert(!fromSeat.Piece.IsNull);
 
         var color = fromSeat.Piece.Color;
-        Seat toSeat = _seats[toCoord.Row, toCoord.Col];
+        Seat toSeat = this[toCoord];
         Piece toPiece = toSeat.Piece;
 
         // 如是对方将帅的位置则直接可走，不用判断是否被将军（如加以判断，则会直接走棋吃将帅）

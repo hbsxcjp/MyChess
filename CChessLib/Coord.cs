@@ -11,14 +11,16 @@ public enum ChangeType
 
 public class Coord : IComparable
 {
-    public static readonly Coord Null = new(-1, -1);
-    public static readonly List<Coord> AllCoords = CreatAllCoords(); // Range(0,RowCount*ColCount).
+    public static readonly Coord Null = new(-10); // (-1, -1)
+    public static readonly List<Coord> AllCoords = Enumerable.Range(0, RowCount * ColCount).Select(
+            index => new Coord(index)).ToList();
     public const string ColChars = "ABCDEFGHI";
     public const int RowCount = 10;
     public const int ColCount = 9;
 
-    private Coord(int row, int col) { Row = row; Col = col; }
+    private Coord(int index) { Index = index; Row = index / ColCount; Col = index % ColCount; }
 
+    public int Index { get; }
     public int Row { get; }
     public int Col { get; }
     public string RowCol { get { return $"{Row}{Col}"; } }
@@ -26,16 +28,7 @@ public class Coord : IComparable
     public bool IsBottom { get { return (Row << 1) < RowCount; } }
     public bool IsNull { get { return this == Null; } }
 
-    private static List<Coord> CreatAllCoords()
-    {
-        List<Coord> coords = new(RowCount * ColCount);
-        for (int row = 0; row < RowCount; row++)
-            for (int col = 0; col < ColCount; col++)
-                coords.Add(new(row, col));
-
-        return coords;
-    }
-
+    public static int GetIndex(int row, int col) => row * ColCount + col;
     public static string GetRowCol(string rowCol, ChangeType ct)
     {
         int frow = int.Parse(rowCol[0].ToString()),

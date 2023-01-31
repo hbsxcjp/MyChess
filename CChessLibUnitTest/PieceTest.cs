@@ -24,7 +24,7 @@ public class PieceTest
         List<Piece> allPieces = pieces.GetPieces();
 
         string actual = string.Join("\n", allPieces.Select(piece => piece.ToString() + " PutCoord: " +
-            string.Concat(piece.PutCoord(seats, pieces.IsBottom(piece.Color)).Select(coord => coord.ToString()))));
+            string.Concat(seats.PutCoord(piece, pieces.IsBottom(piece.Color)).Select(coord => coord.ToString()))));
 
         Assert.Equal(expected, actual);
     }
