@@ -21,7 +21,7 @@ public enum PieceKind
     NoKind = -1
 }
 
-public abstract class Piece : IComparable
+public abstract class Piece
 {
     public static readonly Piece Null = new NullPiece();
     public const int KindNum = 7;
@@ -35,7 +35,6 @@ public abstract class Piece : IComparable
     protected Piece(PieceColor color)
     {
         Color = color;
-        Coord = Coord.Null;
     }
 
     public PieceColor Color { get; }
@@ -44,18 +43,17 @@ public abstract class Piece : IComparable
     abstract public char Name { get; }
     virtual public char PrintName { get { return Name; } }
     public bool IsNull { get { return this == Null; } }
-    public Coord Coord { get; set; }
 
     virtual public List<(int row, int col)> PutRowCols(bool isBottomColor) => new();
-    abstract public List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor);
+    abstract public List<(int row, int col)> MoveRowCols(Board board);
 
     override public string ToString()
-        => $"{(Color == PieceColor.Red ? "红" : (Color == PieceColor.Black ? "黑" : "无"))}{PrintName}{Char}{Coord}";
+        => $"{(Color == PieceColor.Red ? "红" : (Color == PieceColor.Black ? "黑" : "无"))}{PrintName}{Char}";
 
-    public static int GetColorIndex(char ch) => char.IsUpper(ch) ? 0 : 1;
-    public static int GetKindIndex(char ch) => ("KABNRCPkabnrcp".IndexOf(ch)) % KindNum;
+    public static PieceColor GetColor(char ch) => char.IsUpper(ch) ? PieceColor.Red : PieceColor.Black;
+    public static PieceKind GetKind(char ch) => (PieceKind)(("KABNRCPkabnrcp".IndexOf(ch)) % KindNum);
 
-    public static PieceKind GetKind(char name) => (PieceKind)(NameChars.IndexOf(name) % KindNum);
+    public static PieceKind GetKind_Name(char name) => (PieceKind)(NameChars.IndexOf(name) % KindNum);
     public static bool IsLinePiece(PieceKind kind)
         => (kind == PieceKind.King || kind == PieceKind.Rook || kind == PieceKind.Cannon || kind == PieceKind.Pawn);
     public static char GetColChar(PieceColor color, int col) => NumChars[(int)color][col];
@@ -66,15 +64,6 @@ public abstract class Piece : IComparable
     public static int MoveDir(char movCh) => MoveChars.IndexOf(movCh) - 1;
     public static string PGNZHChars() => $"{NameChars}{NumChars[0]}{NumChars[1]}{PositionChars}{MoveChars}";
 
-    int IComparable.CompareTo(object? obj)
-    {
-        if (obj is not Piece)
-            return 0;
-
-        return CompareTo((Piece)obj);
-    }
-
-    public int CompareTo(Piece piece) => Coord.CompareTo(piece.Coord);
 }
 
 public class King : Piece
@@ -97,11 +86,12 @@ public class King : Piece
         return rowCols;
     }
 
-    override public List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
+    override public List<(int row, int col)> MoveRowCols(Board board)
     {
         List<(int row, int col)> rowCols = new();
-        bool isBottom = Coord.IsBottom;
-        int Row = Coord.Row, Col = Coord.Col;
+        Coord coord = board.GetCoord(this);
+        bool isBottom = coord.IsBottom;
+        int Row = coord.Row, Col = coord.Col;
         if (Col > 3)
             rowCols.Add((Row, Col - 1));
         if (Col < 5)
@@ -137,11 +127,12 @@ public class Advisor : Piece
         return rowCols;
     }
 
-    override public List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
+    override public List<(int row, int col)> MoveRowCols(Board board)
     {
         List<(int row, int col)> rowCols = new();
-        bool isBottom = Coord.IsBottom;
-        int Row = Coord.Row, Col = Coord.Col;
+        Coord coord = board.GetCoord(this);
+        bool isBottom = coord.IsBottom;
+        int Row = coord.Row, Col = coord.Col;
         if (Col != 4)
             rowCols.Add((isBottom ? 1 : 8, 4));
         else
@@ -179,16 +170,17 @@ public class Bishop : Piece
         return rowCols;
     }
 
-    override public List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
+    override public List<(int row, int col)> MoveRowCols(Board board)
     {
         List<(int row, int col)> rowCols = new();
         List<Coord> coords = new();
-        bool isBottom = Coord.IsBottom;
-        int Row = Coord.Row, Col = Coord.Col;
+        Coord coord = board.GetCoord(this);
+        bool isBottom = coord.IsBottom;
+        int Row = coord.Row, Col = coord.Col;
         int maxRow = isBottom ? (Coord.RowCount - 1) / 2 : Coord.RowCount - 1;
         void AddRowCol(int row, int col)
         {
-            if (seats.IsNull((row + Row) / 2, (col + Col) / 2))
+            if (board.IsNull((row + Row) / 2, (col + Col) / 2))
                 rowCols.Add((row, col));
         }
 
@@ -220,10 +212,10 @@ public class Knight : Piece
     override public char Name { get { return '马'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '馬'; } }
 
-    override public List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
+    override public List<(int row, int col)> MoveRowCols(Board board)
     {
-        // List<(int row, int col)> rowCols = new();
-        int Row = Coord.Row, Col = Coord.Col;
+        Coord coord = board.GetCoord(this);
+        int Row = coord.Row, Col = coord.Col;
         ((int row, int col) to, (int row, int col) leg)[] allToLegRowCols =
         {
                 ((Row - 2, Col - 1), (Row - 1, Col))  ,
@@ -243,7 +235,7 @@ public class Knight : Piece
 
         // return rowCols;
         return allToLegRowCols.Where(
-            toLeg => Coord.IsValid(toLeg.to.row, toLeg.to.col) && (seats.IsNull(toLeg.leg.row, toLeg.leg.col)))
+            toLeg => Coord.IsValid(toLeg.to.row, toLeg.to.col) && (board.IsNull(toLeg.leg.row, toLeg.leg.col)))
             .Select(toLeg => (toLeg.to.row, toLeg.to.col)).ToList();
     }
 }
@@ -257,14 +249,15 @@ public class Rook : Piece
     override public char Name { get { return '车'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '車'; } }
 
-    override public List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
+    override public List<(int row, int col)> MoveRowCols(Board board)
     {
         List<(int row, int col)> rowCols = new();
-        int Row = Coord.Row, Col = Coord.Col;
+        Coord coord = board.GetCoord(this);
+        int Row = coord.Row, Col = coord.Col;
         bool AddRowCol(int row, int col)
         {
             rowCols.Add((row, col));
-            return seats.IsNull(row, col);
+            return board.IsNull(row, col);
         }
 
         for (int r = Row - 1; r >= 0; --r)
@@ -296,14 +289,15 @@ public class Cannon : Piece
     override public char Name { get { return '炮'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '砲'; } }
 
-    override public List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
+    override public List<(int row, int col)> MoveRowCols(Board board)
     {
         List<(int row, int col)> rowCols = new();
-        int Row = Coord.Row, Col = Coord.Col;
+        Coord coord = board.GetCoord(this);
+        int Row = coord.Row, Col = coord.Col;
         bool skiped = false;
         bool AddCoordToBreak(int row, int col)
         {
-            bool isNull = seats.IsNull(row, col);
+            bool isNull = board.IsNull(row, col);
             if (!skiped)
             {
                 if (isNull)
@@ -369,11 +363,14 @@ public class Pawn : Piece
         return rowCols;
     }
 
-    override public List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor)
+    override public List<(int row, int col)> MoveRowCols(Board board)
     {
         List<(int row, int col)> rowCols = new();
-        bool isBottom = Coord.IsBottom;
-        int Row = Coord.Row, Col = Coord.Col;
+        Coord coord = board.GetCoord(this);
+        bool isBottom = coord.IsBottom,
+            isBottomColor = board.BottomColor == Color;
+        int Row = coord.Row, Col = coord.Col;
+
         // 已过河
         if (isBottomColor != isBottom)
         {
@@ -400,7 +397,7 @@ public class NullPiece : Piece
     override public char Char { get { return '_'; } }
     override public char Name { get { return '空'; } }
     override public List<(int row, int col)> PutRowCols(bool isBottomColor) => new();
-    override public List<(int row, int col)> MoveRowCols(Seats seats, bool isBottomColor) => new();
+    override public List<(int row, int col)> MoveRowCols(Board board) => new();
 }
 
 public class Pieces
@@ -408,7 +405,9 @@ public class Pieces
     private Piece[][][] _pieces;
     private const int ColorNum = 2;
 
-    public Pieces()
+    public static readonly Pieces ThePieces = new();
+
+    private Pieces()
     {
         static Piece[] getKindPieces(PieceColor color, Type type, int num)
         {
@@ -438,104 +437,18 @@ public class Pieces
             _pieces[c] = getColorPieces((PieceColor)c);
     }
 
-    // public Piece GetPiece_SeatNull(char ch)
-    // {
-    //     foreach (var piece in _pieces[Piece.GetColorIndex(ch)][Piece.GetKindIndex(ch)])
-    //         if (piece.Coord.IsNull)
-    //             return piece;
-
-    //     return Piece.Null;
-    // }
-
-    public bool IsBottom(PieceColor color)
-    {
-        Coord kingCoord = GetKing(PieceColor.Red).Coord;
-        return ((kingCoord.IsNull || kingCoord.IsBottom) ? PieceColor.Red : PieceColor.Black) == color;
-    }
-
     public Piece GetKing(PieceColor color) => _pieces[(int)color][(int)PieceKind.King][0];
+
+    public List<Piece> GetPieces(char ch)
+        => _pieces[(int)Piece.GetColor(ch)][(int)Piece.GetKind(ch)].ToList();
 
     public List<Piece> GetPieces()
     {
-        List<Piece> pieces = GetPieces(PieceColor.Red);
-        pieces.AddRange(GetPieces(PieceColor.Black));
-
-        return pieces;
-    }
-
-    public List<Piece> GetPieces(PieceColor color)
-    {
         List<Piece> pieces = new();
-        foreach (var kindPieces in _pieces[(int)color])
-            pieces.AddRange(kindPieces);
+        foreach (var color in new[] { PieceColor.Red, PieceColor.Black })
+            foreach (var kindPieces in _pieces[(int)color])
+                pieces.AddRange(kindPieces);
 
         return pieces;
     }
-
-    public List<Piece> GetPieces(PieceColor color, PieceKind kind)
-        => _pieces[(int)color][(int)kind].ToList();
-    public List<Piece> GetPieces(char ch)
-        => _pieces[Piece.GetColorIndex(ch)][Piece.GetKindIndex(ch)].ToList();
-
-    public List<Piece> GetLivePieces(PieceColor color)
-        => LivePieces(GetPieces(color));
-
-    public List<Piece> GetLivePieces(PieceColor color, PieceKind kind)
-         => LivePieces(GetPieces(color, kind));
-
-    public List<Piece> GetLivePieces(PieceColor color, PieceKind kind, int col)
-        => GetLivePieces(color, kind).Where(piece => piece.Coord.Col == col).ToList();
-
-    private static List<Piece> LivePieces(IEnumerable<Piece> pieces)
-        => pieces.Where(piece => !piece.Coord.IsNull).ToList();
-
-    /// <summary>
-    /// 获取多兵列
-    /// </summary>
-    /// <param name="color"></param>
-    /// <returns></returns>
-    public List<Piece> GetLivePieces_MultiPawns(PieceColor color)
-    {
-        // List<Piece> pawnPieces = new();
-        // Dictionary<int, List<Piece>> colPieces = new();
-        // foreach (Piece piece in GetLivePieces(color, PieceKind.Pawn))
-        // {
-        //     int col = piece.Coord.Col;
-        //     if (!colPieces.ContainsKey(col))
-        //         colPieces[col] = new();
-
-        //     colPieces[col].Add(piece);
-        // }
-
-        // foreach (var pieces in colPieces.Values)
-        //     if (pieces.Count > 1)
-        //         pawnPieces.AddRange(pieces);
-
-        // return pawnPieces;
-
-        List<Piece> pieces = GetLivePieces(color, PieceKind.Pawn), result = new();
-        Debug.Assert(pieces.Count > 1);
-
-        pieces.Sort();
-        Piece prePiece = pieces[0];
-        bool preAdded = false;
-        for (int i = 1; i < pieces.Count; i++)
-        {
-            Piece piece = pieces[i];
-            bool added = prePiece.Coord.Col == piece.Coord.Col;
-            if (added)
-            {
-                if (!preAdded)
-                    result.Add(prePiece);
-
-                result.Add(piece);
-            }
-
-            prePiece = piece;
-            preAdded = added;
-        }
-
-        return result;
-    }
-
 }

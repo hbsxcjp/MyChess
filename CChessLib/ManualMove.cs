@@ -23,21 +23,23 @@ public class ManualMove : IEnumerable
     public string? CurRemark { get { return CurMove.Remark; } set { CurMove.Remark = value?.Trim(); } }
     public string UniversalFEN
     {
-        get => Seats.GetFEN(_board.GetFEN(), _board.IsBottom(PieceColor.Red) ? ChangeType.NoChange : ChangeType.Exchange);
+        get => Board.GetFEN(_board.GetFEN(), _board.BottomColor == PieceColor.Red
+            ? ChangeType.NoChange : ChangeType.Exchange);
     }
 
     // public List<Coord> GetCanPutCoords(Piece piece) => piece.PutCoord(_board, _board.IsBottom(piece.Color));
-    public List<Coord> GetCanMoveCoords(Coord fromCoord) => _board.CanMoveCoord(fromCoord);
+    // public List<Coord> GetCanMoveCoords(Coord fromCoord) => _board.CanMoveCoord(fromCoord);
 
     public bool AcceptCoordPair(CoordPair coordPair)
         => _board.CanMoveCoord(coordPair.FromCoord).Contains(coordPair.ToCoord);
+
     public bool SetBoard(string fen) => _board.SetFEN(fen.Split(' ')[0]);
 
     public void AddMove(CoordPair coordPair, string? remark = null, bool visible = true)
         => GoMove(CurMove.AddMove(coordPair, remark, visible));
     public bool AddMove(string zhStr)
     {
-        var coordPair = _board.GetCoordPairFromZhstr(zhStr);
+        var coordPair = _board.GetCoordPairFromZhStr(zhStr);
         bool success = coordPair != CoordPair.Null;
         if (success)
             AddMove(coordPair);

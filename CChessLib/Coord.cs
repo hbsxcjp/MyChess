@@ -18,11 +18,11 @@ public class Coord : IComparable
     public const int RowCount = 10;
     public const int ColCount = 9;
 
-    private Coord(int index) { Index = index; Row = index / ColCount; Col = index % ColCount; }
+    private Coord(int index) { Index = index; }
 
     public int Index { get; }
-    public int Row { get; }
-    public int Col { get; }
+    public int Row { get { return Index / ColCount; } }
+    public int Col { get { return Index % ColCount; } }
     public string RowCol { get { return $"{Row}{Col}"; } }
     public string Iccs { get { return $"{ColChars[Col]}{Row}"; } }
     public bool IsBottom { get { return (Row << 1) < RowCount; } }

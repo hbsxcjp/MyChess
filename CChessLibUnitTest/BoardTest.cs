@@ -21,10 +21,13 @@ public class BoardTest
     {
         string CanMoveCoordString()
         {
-            List<Piece> livePieces = board.LivePieces(PieceColor.Red);
-            livePieces.AddRange(board.LivePieces(PieceColor.Black));
-            return string.Join("\n", livePieces.Select(piece => piece.ToString() + " CanMoveCoord: " +
-                string.Join("", board.CanMoveCoord(piece.Coord).Select(coord => coord.ToString()))));
+            List<Piece> livePieces = board.GetLivePieces();
+            var sortLivePieces =
+                livePieces.OrderBy(piece => piece.Color).ThenBy(piece => piece.Kind);
+            return string.Join("\n", sortLivePieces.Select(
+                piece => $"{piece}{board.GetCoord(piece)} CanMoveCoord: " +
+                string.Join("", board.CanMoveCoord(board.GetCoord(piece))
+                    .Select(coord => coord.ToString()))));
         }
 
         StringBuilder result = new();

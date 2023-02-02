@@ -253,7 +253,7 @@ public class Manual
         Encoding codec = Encoding.GetEncoding("gb2312"); // "gb2312"
         string[] result = { "未知", "红胜", "黑胜", "和棋" };
         string[] typestr = { "全局", "开局", "中局", "残局" };
-        SetInfoValue(ManualField.FEN, $"{Seats.GetFEN(pieceChars.ToString())} r - - 0 1"); // 可能存在不是红棋先走的情况？
+        SetInfoValue(ManualField.FEN, $"{Board.GetFEN(pieceChars.ToString())} r - - 0 1"); // 可能存在不是红棋先走的情况？
         SetInfoValue(ManualField.Version, Version[0].ToString());
         SetInfoValue(ManualField.Win, result[headPlayResult[0]].Trim());
         SetInfoValue(ManualField.Type, typestr[headCodeA_H[0]].Trim());

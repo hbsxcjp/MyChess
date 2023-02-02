@@ -127,7 +127,7 @@ public class Aspects
             return (true, ChangeType.NoChange, fen);
 
         ChangeType ct = ChangeType.Symmetry_H;
-        fen = Seats.GetFEN(fen, ct);
+        fen = Board.GetFEN(fen, ct);
         if (_aspectDict.ContainsKey(fen))
             return (true, ct, fen);
 
