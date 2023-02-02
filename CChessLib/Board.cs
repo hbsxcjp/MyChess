@@ -54,10 +54,6 @@ public class Board
 
     public Coord GetCoord(Piece piece)
         => AllSeats.Find(seat => seat.Piece == piece)?.Coord ?? Coord.Null;
-    // {
-    // var seat = AllSeats.Find(seat => seat.Piece == piece);
-    // return seat == null ? Coord.Null : seat.Coord;
-    // }
 
     /// <summary>
     /// 初始棋盘布局面时，棋子可放置的位置

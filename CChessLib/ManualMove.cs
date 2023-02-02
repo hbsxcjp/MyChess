@@ -27,9 +27,6 @@ public class ManualMove : IEnumerable
             ? ChangeType.NoChange : ChangeType.Exchange);
     }
 
-    // public List<Coord> GetCanPutCoords(Piece piece) => piece.PutCoord(_board, _board.IsBottom(piece.Color));
-    // public List<Coord> GetCanMoveCoords(Coord fromCoord) => _board.CanMoveCoord(fromCoord);
-
     public bool AcceptCoordPair(CoordPair coordPair)
         => _board.CanMoveCoord(coordPair.FromCoord).Contains(coordPair.ToCoord);
 
@@ -47,7 +44,8 @@ public class ManualMove : IEnumerable
         return success;
     }
 
-    public CoordPair GetCoordPair(int frow, int fcol, int trow, int tcol) => _board.GetCoordPair(frow, fcol, trow, tcol);
+    public CoordPair GetCoordPair(int frow, int fcol, int trow, int tcol)
+        => _board.GetCoordPair(frow, fcol, trow, tcol);
 
     public bool Go() // 前进
     {
@@ -109,6 +107,7 @@ public class ManualMove : IEnumerable
         CurMove = move;
         return true;
     }
+    
     private void GoMove(Move move) => (CurMove = move).Done(_board);
 
     public void ReadCM(BinaryReader reader)
