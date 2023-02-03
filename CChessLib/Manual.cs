@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
-//using System.Text.Encoding.CodePages;
 
 namespace CChess;
 
@@ -17,7 +16,8 @@ public enum FileExtType
 
 public class Manual
 {
-    private readonly static List<string> FileExtName = new() { ".XQF", ".cm", ".txt", ".pgnrc", ".pgniccs", ".pgnzh" };
+    private static readonly List<string> FileExtName 
+        = new() { ".XQF", ".cm", ".txt", ".pgnrc", ".pgniccs", ".pgnzh" };
     private const string FEN = "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR";
 
     private readonly Dictionary<string, string> _info;

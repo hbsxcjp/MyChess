@@ -88,6 +88,6 @@ public class Move
             _afterMoves.RemoveAll(move => !manualMove.AcceptCoordPair(move.CoordPair));
     }
 
-    override public string ToString()
-        => $"{new string('\t', BeforeNum)}{Before?.Id}-{CoordPair}.{Id} {Remark}\n";
+    public override string ToString()
+       => $"{new string('\t', BeforeNum)}{Before?.Id}-{CoordPair}.{Id} {Remark}\n";
 }

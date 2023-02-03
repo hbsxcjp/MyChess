@@ -14,7 +14,7 @@ public class Aspects
         foreach (Manual manual in manuals)
             Add(manual);
     }
-    
+
     public Aspects(string fileName) : this()
     {
         if (!File.Exists(fileName))
@@ -108,11 +108,9 @@ public class Aspects
             _aspectDict.Add(fen, aspectData);
         }
 
-        if (findCt != ChangeType.NoChange)
-            rowCol = Coord.GetRowCol(rowCol, findCt);
-
+        rowCol = Coord.GetRowCol(rowCol, findCt);
         if (aspectData.ContainsKey(rowCol))
-        { 
+        {
             aspectData[rowCol][0]++; // 第一项计数，列表可添加功能
         }
         else

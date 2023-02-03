@@ -355,6 +355,7 @@ public class ManualMove : IEnumerable
         };
 
     IEnumerator IEnumerable.GetEnumerator() => (IEnumerator)GetEnumerator();
+    
     public ManualMoveEnum GetEnumerator() => new(this);
 }
 

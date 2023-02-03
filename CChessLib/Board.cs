@@ -8,6 +8,8 @@ public class Board
 {
     private List<Seat> AllSeats { get; }
 
+    private const char FENSplitChar = '/';
+
     public Board()
     {
         AllSeats = Coord.AllCoords.Select(coord => new Seat(coord)).ToList();
@@ -34,26 +36,7 @@ public class Board
         }
     }
 
-    public List<Piece> GetLivePieces()
-        => AllSeats.Where(seat => seat.Piece != Piece.Null)
-            .Select(seat => seat.Piece).ToList();
-
-    public List<Piece> GetLivePieces(PieceColor color)
-        => AllSeats.Where(seat => seat.Piece != Piece.Null && seat.Piece.Color == color)
-            .Select(seat => seat.Piece).ToList();
-
-    public List<Piece> GetLivePieces(PieceColor color, PieceKind kind)
-        => AllSeats.Where(seat => seat.Piece != Piece.Null
-            && seat.Piece.Color == color && seat.Piece.Kind == kind)
-            .Select(seat => seat.Piece).ToList();
-
-    public List<Piece> GetLivePieces(PieceColor color, PieceKind kind, int col)
-        => AllSeats.Where(seat => seat.Piece != Piece.Null && seat.Coord.Col == col
-            && seat.Piece.Color == color && seat.Piece.Kind == kind)
-            .Select(seat => seat.Piece).ToList();
-
-    public Coord GetCoord(Piece piece)
-        => AllSeats.Find(seat => seat.Piece == piece)?.Coord ?? Coord.Null;
+    public bool IsNull(int row, int col) => this[row, col].IsNull;
 
     /// <summary>
     /// 初始棋盘布局面时，棋子可放置的位置
@@ -75,9 +58,38 @@ public class Board
             .Select(rowCol => this[rowCol].Coord)
             .ToList();
 
-    public bool ChangeLayout(ChangeType ct) => SetFEN(GetFEN(GetFEN(), ct));
+    /// <summary>
+    /// 可移动位置, 排除将帅对面、被将军的位置
+    /// </summary>
+    public List<Coord> CanMoveCoord(Coord fromCoord)
+    {
+        Piece piece = this[fromCoord].Piece;
+        List<Coord> coords = MoveCoord(piece);
+        coords.RemoveAll(toCoord => !CanMove(fromCoord, toCoord));
+        return coords;
+    }
 
-    public List<Seat> GetAllSeats() => AllSeats; // 仅供测试使用
+    /// <summary>
+    /// 检测是否可移动, 包括直接杀将、移动后将帅未对面、未被将军
+    /// </summary>
+    public bool CanMove(Coord fromCoord, Coord toCoord)
+    {
+        Debug.Assert(!IsNull(fromCoord.Row, fromCoord.Col));
+
+        Seat fromSeat = this[fromCoord];
+        var color = fromSeat.Piece.Color;
+        Seat toSeat = this[toCoord];
+        Piece toPiece = toSeat.Piece;
+
+        // 如是对方将帅的位置则直接可走，不用判断是否被将军（如加以判断，则会直接走棋吃将帅）
+        if (toPiece.Kind == PieceKind.King)
+            return true;
+
+        fromSeat.MoveTo(toSeat, Piece.Null);
+        bool killed = IsKilled(color);
+        toSeat.MoveTo(fromSeat, toPiece);
+        return !killed;
+    }
 
     public Piece Done(CoordPair coordPair)
     {
@@ -100,7 +112,7 @@ public class Board
         StringBuilder fen = new();
         for (int row = Coord.RowCount - 1; row > 0; --row)
         {
-            fen.Append(pieceChars.Substring(row * Coord.ColCount, Coord.ColCount)).Append(Piece.FENSplitChar);
+            fen.Append(pieceChars.Substring(row * Coord.ColCount, Coord.ColCount)).Append(FENSplitChar);
         }
         fen.Append(pieceChars[0..Coord.ColCount]);
 
@@ -114,7 +126,7 @@ public class Board
         if (ct == ChangeType.Exchange)
             return string.Concat(fen.Select(ch => char.IsLower(ch) ? char.ToUpper(ch) : char.ToLower(ch)));
 
-        string[] fenArray = fen.Split(Piece.FENSplitChar);
+        string[] fenArray = fen.Split(FENSplitChar);
         if (fenArray.Length != Coord.RowCount)
             return fen;
 
@@ -122,7 +134,7 @@ public class Board
         IEnumerable<string> ReverseCol(IEnumerable<string> fenArray)
             => fenArray.Select(line => string.Concat(line.Reverse()));
 
-        return string.Join(Piece.FENSplitChar, ct switch
+        return string.Join(FENSplitChar, ct switch
         {
             ChangeType.Symmetry_H => ReverseCol(fenArray),
             ChangeType.Symmetry_V => ReverseRow(fenArray),
@@ -132,7 +144,7 @@ public class Board
 
     public bool SetFEN(string fen)
     {
-        var fenArray = fen.Split(Piece.FENSplitChar);
+        var fenArray = fen.Split(FENSplitChar);
         if (fenArray.Length != Coord.RowCount)
             return false;
 
@@ -147,7 +159,8 @@ public class Board
                 else
                 {
                     List<Piece> livePieces = GetLivePieces(Piece.GetColor(ch), Piece.GetKind(ch));
-                    this[row, col++].Piece = Pieces.ThePieces.GetPieces(ch).Find(piece => !livePieces.Contains(piece)) ?? Piece.Null;
+                    this[row, col++].Piece = Pieces.ThePieces.GetPieces(ch)
+                        .Find(piece => !livePieces.Contains(piece)) ?? Piece.Null;
                 }
 
             row++;
@@ -156,15 +169,36 @@ public class Board
         return true;
     }
 
-    public bool IsNull(int row, int col) => this[row, col].Piece.IsNull;
+    public bool ChangeLayout(ChangeType ct) => SetFEN(GetFEN(GetFEN(), ct));
+
+    public Coord GetCoord(Piece piece)
+        => AllSeats.Find(seat => seat.Piece == piece)?.Coord ?? Coord.Null;
+
+    public Coord GetKingCoord(PieceColor color)
+        => AllSeats.Find(seat => seat.Piece.Kind == PieceKind.King
+            && seat.Piece.Color == color)?.Coord ?? Coord.Null;
+
+    public List<Piece> GetLivePieces()
+        => AllSeats.Where(seat => !seat.IsNull)
+            .Select(seat => seat.Piece).ToList();
+
+    public List<Piece> GetLivePieces(PieceColor color)
+        => GetLivePieces().Where(piece => piece.Color == color).ToList();
+
+    public List<Piece> GetLivePieces(PieceColor color, PieceKind kind)
+        => GetLivePieces(color).Where(piece => piece.Kind == kind).ToList();
+
+    public List<Piece> GetLivePieces(PieceColor color, PieceKind kind, int col)
+        => GetLivePieces(color, kind).Where(piece => GetCoord(piece).Col == col).ToList();
+
     public bool IsKilled(PieceColor color)
     {
-        Coord kingCoord = GetCoord(Pieces.ThePieces.GetKing(color));
+        Coord kingCoord = GetKingCoord(color);
         var otherColor = color == PieceColor.Red ? PieceColor.Black : PieceColor.Red;
 
         // 将帅是否对面
         int col = kingCoord.Col;
-        Coord otherKingCoord = GetCoord(Pieces.ThePieces.GetKing(otherColor));
+        Coord otherKingCoord = GetKingCoord(otherColor);
         if (col == otherKingCoord.Col)
         {
             int thisRow = kingCoord.Row, otherRow = otherKingCoord.Row,
@@ -182,45 +216,13 @@ public class Board
         => GetLivePieces(color).All(
             piece => CanMoveCoord(GetCoord(piece)).Count == 0);
 
-    /// <summary>
-    /// 可移动位置, 排除将帅对面、被将军的位置
-    /// </summary>
-    public List<Coord> CanMoveCoord(Coord fromCoord)
-    {
-        Piece piece = this[fromCoord].Piece;
-        List<Coord> coords = MoveCoord(piece);
-        coords.RemoveAll(toCoord => !CanMove(fromCoord, toCoord));
-        return coords;
-    }
-
-    /// <summary>
-    /// 检测是否可移动, 包括直接杀将、移动后将帅未对面、未被将军
-    /// </summary>
-    public bool CanMove(Coord fromCoord, Coord toCoord)
-    {
-        Seat fromSeat = this[fromCoord];
-        Debug.Assert(!fromSeat.Piece.IsNull);
-
-        var color = fromSeat.Piece.Color;
-        Seat toSeat = this[toCoord];
-        Piece toPiece = toSeat.Piece;
-
-        // 如是对方将帅的位置则直接可走，不用判断是否被将军（如加以判断，则会直接走棋吃将帅）
-        if (toPiece.Kind == PieceKind.King)
-            return true;
-
-        fromSeat.MoveTo(toSeat, Piece.Null);
-        bool killed = IsKilled(color);
-        toSeat.MoveTo(fromSeat, toPiece);
-        return !killed;
-    }
-
     public string GetZhStrFromCoordPair(CoordPair coordPair)
     {
+        Debug.Assert(!IsNull(coordPair.FromCoord.Row, coordPair.FromCoord.Col));
+
         string zhStr;
         Seat fromSeat = this[coordPair.FromCoord],
             toSeat = this[coordPair.ToCoord];
-        Debug.Assert(!fromSeat.Piece.IsNull);
 
         Piece fromPiece = fromSeat.Piece;
         PieceColor color = fromPiece.Color;
@@ -314,12 +316,15 @@ public class Board
     }
 
     private void SortPieces(List<Piece> pieces, bool isBottomColor)
-    {
-        pieces.Sort(delegate (Piece piece1, Piece piece2)
-         { return GetCoord(piece1).CompareTo(GetCoord(piece2)); });
-        if (isBottomColor)
-            pieces.Reverse();
-    }
+        => pieces.Sort(delegate (Piece piece1, Piece piece2)
+        {
+            Coord coord1 = GetCoord(piece1), coord2 = GetCoord(piece2);
+            int comp = coord1.Col.CompareTo(coord2.Col);
+            if (comp == 0)
+                comp = coord1.Row.CompareTo(coord2.Row);
+
+            return isBottomColor ? -comp : comp;
+        });
 
     private List<Piece> GetLivePieces_MultiPawns(PieceColor color)
         => GetLivePieces(color, PieceKind.Pawn)
@@ -346,7 +351,11 @@ public class Board
             _ => GetCoordPairFromZhStr(pgnText)
         };
 
-    override public string ToString()
+    // 仅供测试使用
+    public string AllSeatsString() => string.Join(" ",
+            AllSeats.Select(seat => $"{seat}{Coord.Null}"));
+
+    public override string ToString()
     {
         // 棋盘上边标识字符串
         string[] preStr = {
