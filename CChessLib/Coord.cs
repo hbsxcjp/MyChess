@@ -1,18 +1,11 @@
 namespace CChess;
 
-public enum ChangeType
-{
-    Exchange,
-    Rotate,
-    Symmetry_H,
-    Symmetry_V,
-    NoChange = -1,
-}
+public enum ChangeType { Exchange, Rotate, Symmetry_H, Symmetry_V, NoChange = -1, }
 
 public class Coord
 {
     public static readonly Coord Null = new(-10); // (-1, -1)
-    public static readonly List<Coord> AllCoords =
+    public static readonly List<Coord> Coords =
         Enumerable.Range(0, RowCount * ColCount).Select(index => new Coord(index)).ToList();
 
     public const string ColChars = "ABCDEFGHI";

@@ -1,10 +1,6 @@
 namespace CChess;
-public enum VisibleType
-{
-    All,
-    True,
-    False
-}
+
+public enum VisibleType { All, True, False }
 
 public class Move
 {
@@ -79,6 +75,22 @@ public class Move
     {
         if (_afterMoves != null)
             _afterMoves.RemoveAll(move => !manualMove.AcceptCoordPair(move.MoveInfo.CoordPair));
+    }
+
+    public void Done(Board board)
+    {
+        CoordPair coordPair = MoveInfo.CoordPair;
+        Seat toSeat = board[coordPair.ToCoord];
+        MoveInfo.EatPiece = toSeat.Piece;
+
+        board[coordPair.FromCoord].MoveTo(toSeat, Piece.Null);
+    }
+
+    public void Undo(Board board)
+    {
+        CoordPair coordPair = MoveInfo.CoordPair;
+        board[coordPair.ToCoord].MoveTo(board[coordPair.FromCoord],
+            MoveInfo.EatPiece);
     }
 
     public override string ToString()

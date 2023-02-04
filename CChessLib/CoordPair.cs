@@ -14,10 +14,8 @@ public class CoordPair
     public Coord FromCoord { get; }
     public Coord ToCoord { get; }
 
-    public string RowCol { get { return $"{FromCoord.RowCol}{ToCoord.RowCol}"; } }
-
     public string Iccs { get { return $"{FromCoord.Iccs}{ToCoord.Iccs}"; } }
-
+    public string RowCol { get { return $"{FromCoord.RowCol}{ToCoord.RowCol}"; } }
 
     public bool Equals(CoordPair other) => FromCoord == other.FromCoord && ToCoord == other.ToCoord;
 

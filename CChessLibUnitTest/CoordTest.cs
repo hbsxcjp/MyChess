@@ -4,7 +4,7 @@ namespace CChessTest;
 
 public class CoordTest
 {
-    private List<Coord> allCoord = Coord.AllCoords;
+    private List<Coord> allCoord = Coord.Coords;
 
     [Fact]
     public void TestToString()

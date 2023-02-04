@@ -397,7 +397,7 @@ public class EccoData
     void SetBoutStrs(SortedDictionary<char, List<string>> boutStrs, string sn, string mvstrs, bool isPreMvstrs)
     {
         // 捕捉一步着法: 1.着法，2.可能的“不分先后”标识，3.可能的“此前...”着法
-        string mv = @"[" + Piece.PGNZHChars() + @"]{4}",
+        string mv = @"[" + Board.PGNZHChars() + @"]{4}",
             moveStr = @"(?:" + mv + @"(?:／" + mv + @")*)",
             premStr = @"(?:" + mv + @"(?:[、／和，黑可走]{1,4}" + mv + @")*)",
             rich_mvStr = "(" + moveStr + @"|……)(\s?\(不.先后[)，])?(?:[^\da-z]*?此前.*?走((?:过除)?" + premStr + @").*?\))?";
@@ -505,7 +505,7 @@ public class EccoData
 
     List<string> GetRowcolList(string mvstr, bool isOrder, Manual manual)
     {
-        string reg_mv = @$"([{Piece.PGNZHChars()}]{4})",
+        string reg_mv = @$"([{Board.PGNZHChars()}]{4})",
             reg_UnOrderMv = "马二进一/车九平八|马二进三/马八进七|马八进七／马八进九|炮八平六/马八进九|" +
                 "兵三进一.兵七进一|相三进五／相七进五|仕四进五／仕六进五|马８进７/车９进１|" +
                 "马８进７/马２进３|炮８进４/炮２进４|炮８平５／炮２平５|炮８平６／炮２平４／炮８平４／炮２平６|" +

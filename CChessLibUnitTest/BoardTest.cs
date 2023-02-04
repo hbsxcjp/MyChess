@@ -26,7 +26,7 @@ public class BoardTest
                 livePieces.OrderBy(piece => piece.Color).ThenBy(piece => piece.Kind);
             return string.Join("\n", sortLivePieces.Select(
                 piece => $"{piece}{board.GetCoord(piece)} CanMoveCoord: " +
-                string.Join("", board.CanMoveCoord(board.GetCoord(piece))
+                string.Join("", piece.CanMoveCoord(board)
                     .Select(coord => coord.ToString()))));
         }
 

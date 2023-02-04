@@ -4,19 +4,11 @@ using System.Text.RegularExpressions;
 
 namespace CChess;
 
-public enum FileExtType
-{
-    Xqf,
-    Cm,
-    Text,
-    PGNRowCol,
-    PGNIccs,
-    PGNZh,
-}
+public enum FileExtType { Xqf, Cm, Text, PGNRowCol, PGNIccs, PGNZh, }
 
 public class Manual
 {
-    private static readonly List<string> FileExtName 
+    private static readonly List<string> FileExtName
         = new() { ".XQF", ".cm", ".txt", ".pgnrc", ".pgniccs", ".pgnzh" };
     private const string FEN = "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR";
 
@@ -434,4 +426,3 @@ public class Manual
         return result;
     }
 }
-
