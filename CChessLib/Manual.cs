@@ -345,7 +345,7 @@ public class Manual
             CoordPair coordPair = _manualMove.GetCoordPair(frow, fcol, trow, tcol);
             bool hasNext = (tag & 0x80) != 0, hasOther = (tag & 0x40) != 0;
 
-            var curCoordPair = _manualMove.CurMove.CoordPair;
+            var curCoordPair = _manualMove.CurMove.MoveInfo.CoordPair;
             if (curCoordPair.FromCoord.Row == frow && curCoordPair.FromCoord.Col == fcol
                 && curCoordPair.ToCoord.Row == trow && curCoordPair.ToCoord.Col == tcol)
             {

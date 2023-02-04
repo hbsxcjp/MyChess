@@ -12,20 +12,17 @@ public class Move
 
     private Move(CoordPair coordPair, Move? before = null, string? remark = null, bool visible = true)
     {
-        CoordPair = coordPair;
         Before = before;
-        Remark = remark;
-        Visible = visible;
-
-        ToPiece = Piece.Null;
         _afterMoves = null;
+
+        MoveInfo = new(coordPair, remark, visible);
     }
 
+    public MoveInfo MoveInfo { get; set; }
+
     public int Id { get; set; }
-    public CoordPair CoordPair { get; }
     public Move? Before { get; }
-    public string? Remark { get; set; }
-    public bool Visible { get; set; }
+
     public int BeforeNum
     {
         get
@@ -41,7 +38,6 @@ public class Move
         }
     }
     public int AfterNum { get { return _afterMoves?.Count ?? 0; } }
-    public Piece ToPiece { get; set; }
     public bool HasAfter { get { return _afterMoves != null; } }
 
     public static Move CreateRootMove() => new(CoordPair.Null);
@@ -51,9 +47,6 @@ public class Move
         (_afterMoves ??= new()).Add(move);
         return move;
     }
-
-    public void Done(Board board) => ToPiece = board.Done(CoordPair);
-    public void Undo(Board board) => board.Undo(CoordPair, ToPiece);
 
     // 前置着法列表，不含根节点、含自身this
     public List<Move> BeforeMoves()
@@ -75,7 +68,7 @@ public class Move
             return _afterMoves;
 
         List<Move> moves = new(_afterMoves);
-        moves.RemoveAll(move => (vtype == VisibleType.False) == move.Visible);
+        moves.RemoveAll(move => (vtype == VisibleType.False) == move.MoveInfo.Visible);
 
         return moves;
     }
@@ -85,9 +78,9 @@ public class Move
     public void ClearAfterMovesError(ManualMove manualMove)
     {
         if (_afterMoves != null)
-            _afterMoves.RemoveAll(move => !manualMove.AcceptCoordPair(move.CoordPair));
+            _afterMoves.RemoveAll(move => !manualMove.AcceptCoordPair(move.MoveInfo.CoordPair));
     }
 
     public override string ToString()
-       => $"{new string('\t', BeforeNum)}{Before?.Id}-{CoordPair}.{Id} {Remark}\n";
+       => $"{new string('\t', BeforeNum)}{Before?.Id}-{MoveInfo.CoordPair}.{Id} {MoveInfo.Remark}\n";
 }

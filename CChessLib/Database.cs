@@ -495,7 +495,7 @@ public class EccoData
             }
         }
 
-        string rowCol = success ? manual.ManualMove.CurMove.CoordPair.RowCol : "";
+        string rowCol = success ? manual.ManualMove.CurMove.MoveInfo.CoordPair.RowCol : "";
 #if WRITERESULTTEXT
         sw.Write($"{(success ? "失败" : "OK ")}:{zhStr} {isGo}: {rowCol}");
 #endif

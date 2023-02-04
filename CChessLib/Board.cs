@@ -91,17 +91,21 @@ public class Board
         return !killed;
     }
 
-    public Piece Done(CoordPair coordPair)
+    public void Done(Move move)
     {
+        CoordPair coordPair = move.MoveInfo.CoordPair;
         Seat toSeat = this[coordPair.ToCoord];
-        Piece toPiece = toSeat.Piece;
+        move.MoveInfo.EatPiece = toSeat.Piece;
 
         this[coordPair.FromCoord].MoveTo(toSeat, Piece.Null);
-        return toPiece;
     }
 
-    public void Undo(CoordPair coordPair, Piece toPiece)
-        => this[coordPair.ToCoord].MoveTo(this[coordPair.FromCoord], toPiece);
+    public void Undo(Move move)
+    {
+        CoordPair coordPair = move.MoveInfo.CoordPair;
+        this[coordPair.ToCoord].MoveTo(this[coordPair.FromCoord],
+            move.MoveInfo.EatPiece);
+    }
 
     public void Reset() => AllSeats.ForEach(seat => seat.Piece = Piece.Null);
 

@@ -20,7 +20,7 @@ public class ManualMove : IEnumerable
 
     public Move CurMove { get; set; }
     public bool EnumMoveDone { get; set; }
-    public string? CurRemark { get { return CurMove.Remark; } set { CurMove.Remark = value?.Trim(); } }
+    public string? CurRemark { get { return CurMove.MoveInfo.Remark; } set { CurMove.MoveInfo.Remark = value?.Trim(); } }
     public string UniversalFEN
     {
         get => Board.GetFEN(_board.GetFEN(), _board.BottomColor == PieceColor.Red
@@ -67,7 +67,8 @@ public class ManualMove : IEnumerable
             || (!isLeft && index == otherMoves.Count - 1))
             return false;
 
-        CurMove.Undo(_board);
+        // CurMove.Undo(_board);
+        _board.Undo(CurMove);
         GoMove(otherMoves[index + (isLeft ? -1 : 1)]);
         return true;
     }
@@ -81,7 +82,8 @@ public class ManualMove : IEnumerable
         if (CurMove.Before == null)
             return false;
 
-        CurMove.Undo(_board);
+        // CurMove.Undo(_board);
+        _board.Undo(CurMove);
         CurMove = CurMove.Before;
         return true;
     }
@@ -102,13 +104,15 @@ public class ManualMove : IEnumerable
                 break;
 
         for (int i = index + 1; i < beforeMoves.Count; ++i)
-            beforeMoves[i].Done(_board);
+            // beforeMoves[i].Done(_board);
+            _board.Done(beforeMoves[i]);
 
         CurMove = move;
         return true;
     }
-    
-    private void GoMove(Move move) => (CurMove = move).Done(_board);
+
+    // private void GoMove(Move move) => (CurMove = move).Done(_board);
+    private void GoMove(Move move) => _board.Done((CurMove = move));
 
     public void ReadCM(BinaryReader reader)
     {
@@ -123,7 +127,7 @@ public class ManualMove : IEnumerable
         }
 
         var (rootRemark, rootAfterNum) = readRemarkAfterNum(reader);
-        _rootMove.Remark = rootRemark;
+        _rootMove.MoveInfo.Remark = rootRemark;
 
         Queue<(Move, int)> moveAfterNumQueue = new();
         moveAfterNumQueue.Enqueue((_rootMove, rootAfterNum));
@@ -153,12 +157,12 @@ public class ManualMove : IEnumerable
             writer.Write((byte)afterNum);
         }
 
-        writeRemarkAfterNum(writer, _rootMove.Remark, _rootMove.AfterNum);
+        writeRemarkAfterNum(writer, _rootMove.MoveInfo.Remark, _rootMove.AfterNum);
         foreach (var move in this)
         {
-            writer.Write(move.Visible);
-            writer.Write(move.CoordPair.RowCol);
-            writeRemarkAfterNum(writer, move.Remark, move.AfterNum);
+            writer.Write(move.MoveInfo.Visible);
+            writer.Write(move.MoveInfo.CoordPair.RowCol);
+            writeRemarkAfterNum(writer, move.MoveInfo.Remark, move.AfterNum);
         }
     }
 
@@ -175,7 +179,7 @@ public class ManualMove : IEnumerable
 
             var rootRemark = rootMoveMatch.Groups[1].Value;
             if (rootRemark.Length > 0)
-                _rootMove.Remark = rootRemark;
+                _rootMove.MoveInfo.Remark = rootRemark;
             Queue<(Move, int)> moveAfterNumQueue = new();
             moveAfterNumQueue.Enqueue((_rootMove, Convert.ToInt32(rootMoveMatch.Groups[2].Value)));
 
@@ -203,7 +207,7 @@ public class ManualMove : IEnumerable
         string remarkPattern = @"(?:{([\s\S]+?)})";
         var remarkMatch = Regex.Match(moveString, "^" + remarkPattern);
         if (remarkMatch.Success)
-            _rootMove.Remark = remarkMatch.Groups[1].Value;
+            _rootMove.MoveInfo.Remark = remarkMatch.Groups[1].Value;
 
         List<Move> allMoves = new() { _rootMove };
         string pgnPattern = (fileExtType == FileExtType.PGNIccs
@@ -233,11 +237,11 @@ public class ManualMove : IEnumerable
         if (fileExtType == FileExtType.Text)
         {
             static string GetRemarkAfterNum(Move move)
-                => (move.Remark == null ? "" : "{" + move.Remark + "}") +
+                => (move.MoveInfo.Remark == null ? "" : "{" + move.MoveInfo.Remark + "}") +
                  (move.AfterNum == 0 ? "" : "(" + move.AfterNum.ToString() + ")") + " ";
 
             static string GetMoveString(Move move)
-                 => $"{(move.Visible ? "+" : "-")}{move.CoordPair.RowCol}";
+                 => $"{(move.MoveInfo.Visible ? "+" : "-")}{move.MoveInfo.CoordPair.RowCol}";
 
             result = GetRemarkAfterNum(_rootMove);
             foreach (var move in this)
@@ -246,17 +250,17 @@ public class ManualMove : IEnumerable
             return result;
         }
 
-        if (_rootMove.Remark != null && _rootMove.Remark.Length > 0)
-            result += "{" + _rootMove.Remark + "}\n";
+        if (_rootMove.MoveInfo.Remark != null && _rootMove.MoveInfo.Remark.Length > 0)
+            result += "{" + _rootMove.MoveInfo.Remark + "}\n";
 
         var oldEnumMoveDone = EnumMoveDone;
         if (fileExtType == FileExtType.PGNZh)
             EnumMoveDone = true;
         foreach (var move in this)
             result += move.Before?.Id.ToString() + "-"
-                + GetPGNText(move.CoordPair, fileExtType)
-                + (move.Visible ? "" : "_")
-                + (move.Remark == null ? " " : "{" + move.Remark + "} ");
+                + GetPGNText(move.MoveInfo.CoordPair, fileExtType)
+                + (move.MoveInfo.Visible ? "" : "_")
+                + (move.MoveInfo.Remark == null ? " " : "{" + move.MoveInfo.Remark + "} ");
 
         if (fileExtType == FileExtType.PGNZh)
             EnumMoveDone = oldEnumMoveDone;
@@ -277,7 +281,7 @@ public class ManualMove : IEnumerable
         var afterMoves = _rootMove.AfterMoves();
         while (afterMoves != null && afterMoves.Count > 0)
         {
-            rowCols.Append(afterMoves[0].CoordPair.RowCol);
+            rowCols.Append(afterMoves[0].MoveInfo.CoordPair.RowCol);
             afterMoves = afterMoves[0].AfterMoves();
         }
 
@@ -290,7 +294,7 @@ public class ManualMove : IEnumerable
         var oldEnumMoveDone = EnumMoveDone;
         EnumMoveDone = true;
         foreach (var move in this)
-            aspects.Add((UniversalFEN, move.CoordPair.RowCol));
+            aspects.Add((UniversalFEN, move.MoveInfo.CoordPair.RowCol));
         EnumMoveDone = oldEnumMoveDone;
 
         return aspects;
@@ -303,9 +307,11 @@ public class ManualMove : IEnumerable
         _rootMove.ClearAfterMovesError(this);
         foreach (var move in this)
         {
-            move.Done(_board);
+            // move.Done(_board);
+            _board.Done(move);
             move.ClearAfterMovesError(this);
-            move.Undo(_board);
+            // move.Undo(_board);
+            _board.Undo(move);
         }
         EnumMoveDone = oldEnumMoveDone;
     }
@@ -318,10 +324,10 @@ public class ManualMove : IEnumerable
         foreach (var move in this)
         {
             ++moveCount;
-            if (move.Remark != null)
+            if (move.MoveInfo.Remark != null)
             {
                 remarkCount++;
-                maxRemarkCount = Math.Max(maxRemarkCount, move.Remark.Length);
+                maxRemarkCount = Math.Max(maxRemarkCount, move.MoveInfo.Remark.Length);
             }
             if (showMove)
             {
@@ -355,7 +361,7 @@ public class ManualMove : IEnumerable
         };
 
     IEnumerator IEnumerable.GetEnumerator() => (IEnumerator)GetEnumerator();
-    
+
     public ManualMoveEnum GetEnumerator() => new(this);
 }
 
