@@ -31,7 +31,7 @@ public class ManualMove : IEnumerable
     public bool AcceptCoordPair(CoordPair coordPair)
         => _board[coordPair.FromCoord].Piece.CanMoveCoord(_board).Contains(coordPair.ToCoord);
 
-    public bool SetBoard(string fen) => _board.SetFEN(fen.Split(' ')[0]);
+    public bool SetBoard(string fen) => _board.SetFromFEN(fen.Split(' ')[0]);
 
     public void AddMove(CoordPair coordPair, string? remark = null, bool visible = true)
         => GoMove(CurMove.AddMove(coordPair, remark, visible));

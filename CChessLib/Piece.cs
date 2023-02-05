@@ -18,8 +18,8 @@ public abstract class Piece
 
     virtual public List<Coord> PutCoord(Board board) => Coord.Coords;
     public List<Coord> MoveCoord(Board board)
-        => MoveCoord_Rule(board).Where(coord => board[coord].Piece.Color != Color).ToList();
-    abstract protected List<Coord> MoveCoord_Rule(Board board);
+        => RuleMoveCoord(board).Where(coord => board[coord].Piece.Color != Color).ToList();
+    abstract protected List<Coord> RuleMoveCoord(Board board);
 
     public List<Coord> CanMoveCoord(Board board)
     {
@@ -46,7 +46,7 @@ public class King : Piece
              .SelectMany(coords => coords)
              .ToList();
 
-    override protected List<Coord> MoveCoord_Rule(Board board)
+    override protected List<Coord> RuleMoveCoord(Board board)
     {
         List<Coord> coords = new();
         Coord coord = board.GetCoord(this);
@@ -88,7 +88,7 @@ public class Advisor : Piece
         return coords;
     }
 
-    override protected List<Coord> MoveCoord_Rule(Board board)
+    override protected List<Coord> RuleMoveCoord(Board board)
     {
         List<Coord> coords = new();
         Coord coord = board.GetCoord(this);
@@ -133,7 +133,7 @@ public class Bishop : Piece
         return coords;
     }
 
-    override protected List<Coord> MoveCoord_Rule(Board board)
+    override protected List<Coord> RuleMoveCoord(Board board)
     {
         List<Coord> coords = new();
         Coord coord = board.GetCoord(this);
@@ -174,7 +174,7 @@ public class Knight : Piece
     override public char Name { get { return '马'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '馬'; } }
 
-    override protected List<Coord> MoveCoord_Rule(Board board)
+    override protected List<Coord> RuleMoveCoord(Board board)
     {
         Coord coord = board.GetCoord(this);
         bool isBottom = coord.IsBottom;
@@ -207,7 +207,7 @@ public class Rook : Piece
     override public char Char { get { return Color == PieceColor.Red ? 'R' : 'r'; } }
     override public char Name { get { return '车'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '車'; } }
-    override protected List<Coord> MoveCoord_Rule(Board board)
+    override protected List<Coord> RuleMoveCoord(Board board)
     {
         List<Coord> coords = new();
         Coord coord = board.GetCoord(this);
@@ -246,7 +246,7 @@ public class Cannon : Piece
     override public char Char { get { return Color == PieceColor.Red ? 'C' : 'c'; } }
     override public char Name { get { return '炮'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '砲'; } }
-    override protected List<Coord> MoveCoord_Rule(Board board)
+    override protected List<Coord> RuleMoveCoord(Board board)
     {
         List<Coord> coords = new();
         Coord coord = board.GetCoord(this);
@@ -321,7 +321,7 @@ public class Pawn : Piece
         return coords;
     }
 
-    override protected List<Coord> MoveCoord_Rule(Board board)
+    override protected List<Coord> RuleMoveCoord(Board board)
     {
         List<Coord> coords = new();
         Coord coord = board.GetCoord(this);
@@ -355,5 +355,5 @@ public class NullPiece : Piece
     override public char Char { get { return '_'; } }
     override public char Name { get { return '空'; } }
     override public List<Coord> PutCoord(Board board) => new();
-    override protected List<Coord> MoveCoord_Rule(Board board) => new();
+    override protected List<Coord> RuleMoveCoord(Board board) => new();
 }

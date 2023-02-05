@@ -10,10 +10,22 @@ public class Board
 
     private const char FENSplitChar = '/';
     private const string NameChars = "帅仕相马车炮兵将士象马车炮卒";
+    private const string ChChars = "KABNRCPkabnrcp";
+    // private static string NameChars
+    //     => string.Concat(Enumerable.Range(0, Pieces.ColorNum)
+    //         .Select(c => Enumerable.Range(0, Pieces.KindNum)
+    //                     .Select(k => Pieces.ThePieces.GetPieces((PieceColor)c, (PieceKind)k)[0].Name))
+    //         .SelectMany(names => names));
+    // // => string.Concat(ChChars.Select(ch => Pieces.ThePieces.GetPieces(ch)[0].Name));
+    // private static string ChChars
+    //     => string.Concat(Enumerable.Range(0, Pieces.ColorNum)
+    //         .Select(c => Enumerable.Range(0, Pieces.KindNum)
+    //                     .Select(k => Pieces.ThePieces.GetPieces((PieceColor)c, (PieceKind)k)[0].Char))
+    //         .SelectMany(chs => chs));
+
     private static readonly string[] NumChars = { "一二三四五六七八九", "１２３４５６７８９" };
     private const string PositionChars = "前中后";
     private const string MoveChars = "退平进";
-    private const string ChChars = "KABNRCPkabnrcp";
 
     public Board()
     {
@@ -35,10 +47,10 @@ public class Board
 
     public void Reset() => Seats.ForEach(seat => seat.Piece = Piece.Null);
 
-    public string GetFEN()
-        => GetFEN(string.Concat(Seats.Select(seat => seat.Piece.Char)));
+    public string GetFEN() => PieceCharsToFEN(GetPieceChars());
+    public string GetPieceChars() => string.Concat(Seats.Select(seat => seat.Piece.Char));
 
-    public static string GetFEN(string pieceChars)
+    public static string PieceCharsToFEN(string pieceChars)
         => Regex.Replace(
             string.Join(FENSplitChar,
                 Enumerable.Range(0, Coord.RowCount)
@@ -46,6 +58,11 @@ public class Board
                     (Coord.RowCount - 1 - row) * Coord.ColCount, Coord.ColCount))),
             $"{Piece.Null.Char}+",
             match => match.Value.Length.ToString());
+    public static string FENToPieceChars(string fen)
+        => Regex.Replace(
+            string.Concat(fen.Split(FENSplitChar).Reverse()),
+            "\\d{1}",
+            match => new string(Piece.Null.Char, int.Parse(match.Captures[0].Value)));
 
     public static string GetFEN(string fen, ChangeType ct)
     {
@@ -64,39 +81,37 @@ public class Board
         {
             ChangeType.Symmetry_H => fenArray.Select(line => string.Concat(line.Reverse())),
             ChangeType.Symmetry_V => fenArray.Reverse(),
-            _ => fenArray.Reverse().Select(line => string.Concat(line.Reverse())) //ChangeType.Rotate
+            //ChangeType.Rotate
+            _ => fenArray.Reverse().Select(line => string.Concat(line.Reverse()))
         });
     }
 
-    public bool SetFEN(string fen)
+    public bool SetFromPieceChars(string pieceChars)
     {
-        var fenArray = fen.Split(FENSplitChar);
-        if (fenArray.Length != Coord.RowCount)
+        if (pieceChars.Length != Seats.Count)
             return false;
 
         Reset();
-        int row = 0;
-        foreach (var line in fenArray.Reverse())
-        {
-            int col = 0;
-            foreach (char ch in line)
-                if (char.IsDigit(ch))
-                    col += Convert.ToInt32(ch.ToString());
-                else
-                {
-                    List<Piece> livePieces = GetLivePieces(GetColor(ch), GetKind(ch));
-                    this[row, col++].Piece = Pieces.ThePieces.GetPieces(ch)
-                        .Find(piece => !livePieces.Contains(piece)) ?? Piece.Null;
-                }
 
-            row++;
+        void SetPiece((Seat seat, char ch) seatCh)
+        {
+            List<Piece> livePieces = GetLivePieces(GetColor(seatCh.ch), GetKind(seatCh.ch));
+            seatCh.seat.Piece = Pieces.ThePieces.GetPieces(seatCh.ch)
+                .Find(piece => !livePieces.Contains(piece)) ?? Piece.Null;
         }
+        Action<(Seat seat, char ch)> action = new Action<(Seat seat, char ch)>(SetPiece);
+        Array.ForEach(
+            Enumerable.Zip(Seats, pieceChars)
+            .Where(seatCh => seatCh.Second != Piece.Null.Char)
+            .ToArray(),
+            action);
 
         BottomColor = Seats.Find(seat => seat.Piece.Kind == PieceKind.King)?.Piece.Color ?? PieceColor.Red;
         return true;
     }
+    public bool SetFromFEN(string fen) => SetFromPieceChars(FENToPieceChars(fen));
 
-    public bool ChangeLayout(ChangeType ct) => SetFEN(GetFEN(GetFEN(), ct));
+    public bool ChangeLayout(ChangeType ct) => SetFromFEN(GetFEN(GetFEN(), ct));
 
     public Coord GetCoord(Piece piece)
         => Seats.Find(seat => seat.Piece == piece)?.Coord ?? Coord.Null;
@@ -278,11 +293,17 @@ public class Board
             .ToList();
 
     public CoordPair GetCoordPairFromRowCol(string rowCol)
-        => GetCoordPair(int.Parse(rowCol[0].ToString()), int.Parse(rowCol[1].ToString()),
-            int.Parse(rowCol[2].ToString()), int.Parse(rowCol[3].ToString()));
+        => GetCoordPair(
+            int.Parse(rowCol[0].ToString()),
+            int.Parse(rowCol[1].ToString()),
+            int.Parse(rowCol[2].ToString()),
+            int.Parse(rowCol[3].ToString()));
     public CoordPair GetCoordPairFromIccs(string iccs)
-        => GetCoordPair(int.Parse(iccs[1].ToString()), Coord.ColChars.IndexOf(iccs[0]),
-            int.Parse(iccs[3].ToString()), Coord.ColChars.IndexOf(iccs[2]));
+        => GetCoordPair(
+            int.Parse(iccs[1].ToString()),
+            Coord.ColChars.IndexOf(iccs[0]),
+            int.Parse(iccs[3].ToString()),
+            Coord.ColChars.IndexOf(iccs[2]));
 
     public CoordPair GetCoordPair(int frow, int fcol, int trow, int tcol)
         => new(this[frow, fcol].Coord, this[trow, tcol].Coord);
@@ -363,8 +384,8 @@ public class Board
             );
         // 边框粗线
 
-        foreach (var piece in GetLivePieces())
-            textBlankBoard[Coord.GetDoubleIndex(GetCoord(piece))] = piece.PrintName;
+        GetLivePieces().ForEach(piece =>
+            textBlankBoard[Coord.GetDoubleIndex(GetCoord(piece))] = piece.PrintName);
 
         int index = BottomColor == PieceColor.Red ? 0 : 1;
         return preStr[index] + textBlankBoard.ToString() + sufStr[index];

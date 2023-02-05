@@ -31,7 +31,7 @@ public class BoardTest
         }
 
         StringBuilder result = new();
-        board.SetFEN(fen);
+        board.SetFromFEN(fen);
         foreach (var ct in new List<ChangeType> {
                     ChangeType.NoChange, ChangeType.Symmetry_V,
                     ChangeType.Rotate, ChangeType.Symmetry_H, ChangeType.Exchange})

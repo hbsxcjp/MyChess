@@ -6,7 +6,8 @@ public class Coord
 {
     public static readonly Coord Null = new(-10); // (-1, -1)
     public static readonly List<Coord> Coords =
-        Enumerable.Range(0, RowCount * ColCount).Select(index => new Coord(index)).ToList();
+        Enumerable.Range(0, RowCount * ColCount)
+            .Select(index => new Coord(index)).ToList();
 
     public const string ColChars = "ABCDEFGHI";
     public const int RowCount = 10;

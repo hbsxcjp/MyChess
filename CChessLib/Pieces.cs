@@ -3,7 +3,7 @@ namespace CChess;
 public class Pieces
 {
     private Piece[][][] _pieces;
-    private const int ColorNum = 2;
+    public const int ColorNum = 2;
     public const int KindNum = 7;
 
     public static readonly Pieces ThePieces = new();
@@ -40,8 +40,11 @@ public class Pieces
 
     public Piece GetKing(PieceColor color) => _pieces[(int)color][(int)PieceKind.King][0];
 
+    public List<Piece> GetPieces(PieceColor color, PieceKind kind)
+        => _pieces[(int)color][(int)kind].ToList();
+
     public List<Piece> GetPieces(char ch)
-        => _pieces[(int)Board.GetColor(ch)][(int)Board.GetKind(ch)].ToList();
+        => GetPieces(Board.GetColor(ch), Board.GetKind(ch));
 
     public List<Piece> GetPieces()
         => _pieces.SelectMany(colorPieces => colorPieces)
