@@ -13,7 +13,7 @@ public class ManualMove : IEnumerable
     public ManualMove()
     {
         _board = new();
-        _rootMove = Move.CreateRootMove();
+        _rootMove = Move.RootMove();
 
         CurMove = _rootMove;
         EnumMoveDone = false;
@@ -35,6 +35,7 @@ public class ManualMove : IEnumerable
 
     public void AddMove(CoordPair coordPair, string? remark = null, bool visible = true)
         => GoMove(CurMove.AddMove(coordPair, remark, visible));
+
     public bool AddMove(string zhStr)
     {
         var coordPair = _board.GetCoordPairFromZhStr(zhStr);
@@ -91,22 +92,16 @@ public class ManualMove : IEnumerable
         while (Back())
             ;
     }
-    public bool GoTo(Move? move) // 转至指定move
+    public void GoTo(Move? move) // 转至指定move
     {
         if (CurMove == move || move == null)
-            return false;
+            return;
 
-        var beforeMoves = move.BeforeMoves();
-        int index = -1;
-        while (Back())
-            if ((index = beforeMoves.IndexOf(CurMove)) > -1)
-                break;
-
-        for (int i = index + 1; i < beforeMoves.Count; ++i)
-            beforeMoves[i].Done(_board);
+        BackStart();
+        move.BeforeMoves().ForEach(move => move.Done(_board));
 
         CurMove = move;
-        return true;
+        return ;
     }
 
     private void GoMove(Move move) => (CurMove = move).Done(_board);

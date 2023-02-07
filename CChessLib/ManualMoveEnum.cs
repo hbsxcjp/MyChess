@@ -52,11 +52,6 @@ public class ManualMoveEnum : IEnumerator
         if (_manualMove.EnumMoveDone)
             _manualMove.GoTo(_curMove.Before);
 
-        var afterMoves = _curMove.AfterMoves();
-        if (afterMoves != null)
-        {
-            foreach (var move in afterMoves)
-                _moveQueue.Enqueue(move);
-        }
+        _curMove.AfterMoves()?.ForEach(move => _moveQueue.Enqueue(move));
     }
 }

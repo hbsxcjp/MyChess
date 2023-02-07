@@ -92,19 +92,15 @@ public class Board
             return false;
 
         Reset();
-
-        void SetPiece((Seat seat, char ch) seatCh)
-        {
-            List<Piece> livePieces = GetLivePieces(GetColor(seatCh.ch), GetKind(seatCh.ch));
-            seatCh.seat.Piece = Pieces.ThePieces.GetPieces(seatCh.ch)
-                .Find(piece => !livePieces.Contains(piece)) ?? Piece.Null;
-        }
-        Action<(Seat seat, char ch)> action = new Action<(Seat seat, char ch)>(SetPiece);
-        Array.ForEach(
-            Enumerable.Zip(Seats, pieceChars)
+        Enumerable.Zip(Seats, pieceChars)
             .Where(seatCh => seatCh.Second != Piece.Null.Char)
-            .ToArray(),
-            action);
+            .ToList()
+            .ForEach(seatCh =>
+            {
+                List<Piece> livePieces = GetLivePieces(GetColor(seatCh.Second), GetKind(seatCh.Second));
+                seatCh.First.Piece = Pieces.ThePieces.GetPieces(seatCh.Second).Find(
+                    piece => !livePieces.Contains(piece)) ?? Piece.Null;
+            });
 
         BottomColor = Seats.Find(seat => seat.Piece.Kind == PieceKind.King)?.Piece.Color ?? PieceColor.Red;
         return true;

@@ -14,7 +14,7 @@ public class Move
         MoveInfo = new(coordPair, remark, visible);
     }
 
-    public MoveInfo MoveInfo { get; set; }
+    public MoveInfo MoveInfo { get; }
 
     public int Id { get; set; }
     public Move? Before { get; }
@@ -24,19 +24,17 @@ public class Move
         get
         {
             int count = 0;
-            Move move = this;
-            while (move.Before is not null)
-            {
+            Move? move = this;
+            while ((move = move.Before) != null)
                 count++;
-                move = move.Before;
-            }
+
             return count;
         }
     }
     public int AfterNum { get { return _afterMoves?.Count ?? 0; } }
     public bool HasAfter { get { return _afterMoves != null; } }
 
-    public static Move CreateRootMove() => new(CoordPair.Null);
+    public static Move RootMove() => new(CoordPair.Null);
     public Move AddMove(CoordPair coordPair, string? remark = null, bool visible = true)
     {
         Move move = new(coordPair, this, remark, visible);
@@ -57,17 +55,16 @@ public class Move
 
         return moves;
     }
+
     // 后置着法列表
     public List<Move>? AfterMoves(VisibleType vtype = VisibleType.All)
     {
-        if (_afterMoves == null || vtype == VisibleType.All || _afterMoves.Count == 0)
+        if (_afterMoves == null || vtype == VisibleType.All)
             return _afterMoves;
-
-        List<Move> moves = new(_afterMoves);
-        moves.RemoveAll(move => (vtype == VisibleType.False) == move.MoveInfo.Visible);
-
-        return moves;
+        
+        return _afterMoves.Where(move => (vtype == VisibleType.False) == move.MoveInfo.Visible).ToList();
     }
+    
     // 同步变着列表
     public List<Move>? OtherMoves(VisibleType vtype = VisibleType.True) => Before?.AfterMoves(vtype) ?? null;
 
