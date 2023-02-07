@@ -42,20 +42,6 @@ public class Move
         return move;
     }
 
-    // 前置着法列表，不含根节点、含自身this
-    public List<Move> BeforeMoves()
-    {
-        List<Move> moves = new();
-        Move move = this;
-        while (move.Before != null)
-        {
-            moves.Insert(0, move);
-            move = move.Before;
-        }
-
-        return moves;
-    }
-
     // 后置着法列表
     public List<Move>? AfterMoves(VisibleType vtype = VisibleType.All)
     {

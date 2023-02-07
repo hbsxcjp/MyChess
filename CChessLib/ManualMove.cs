@@ -98,10 +98,15 @@ public class ManualMove : IEnumerable
             return;
 
         BackStart();
-        move.BeforeMoves().ForEach(move => move.Done(_board));
-
         CurMove = move;
-        return ;
+
+        List<Move> beforeMoves = new();
+        while (move.Before != null)
+        {
+            beforeMoves.Insert(0, move);
+            move = move.Before;
+        }
+        beforeMoves.ForEach(move => move.Done(_board));
     }
 
     private void GoMove(Move move) => (CurMove = move).Done(_board);
