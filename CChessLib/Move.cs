@@ -47,10 +47,10 @@ public class Move
     {
         if (_afterMoves == null || vtype == VisibleType.All)
             return _afterMoves;
-        
+
         return _afterMoves.Where(move => (vtype == VisibleType.False) == move.MoveInfo.Visible).ToList();
     }
-    
+
     // 同步变着列表
     public List<Move>? OtherMoves(VisibleType vtype = VisibleType.True) => Before?.AfterMoves(vtype) ?? null;
 
@@ -63,16 +63,18 @@ public class Move
     public void Done(Board board)
     {
         CoordPair coordPair = MoveInfo.CoordPair;
-        Seat toSeat = board[coordPair.ToCoord];
-        MoveInfo.EatPiece = toSeat.Piece;
+        // Seat toSeat = board[coordPair.ToCoord];
+        MoveInfo.EatPiece = board[coordPair.ToCoord].Piece;
 
-        board[coordPair.FromCoord].MoveTo(toSeat, Piece.Null);
+        // board[coordPair.FromCoord].MoveTo(toSeat, Piece.Null);
+        board.MoveTo(coordPair.FromCoord, coordPair.ToCoord);
     }
 
     public void Undo(Board board)
     {
         CoordPair coordPair = MoveInfo.CoordPair;
-        board[coordPair.ToCoord].MoveTo(board[coordPair.FromCoord],
+        // board[coordPair.ToCoord].MoveTo(board[coordPair.FromCoord],
+        board.MoveBack(coordPair.FromCoord, coordPair.ToCoord,
             MoveInfo.EatPiece);
     }
 

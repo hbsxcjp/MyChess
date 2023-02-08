@@ -11,15 +11,15 @@ public class Seat
     public Coord Coord { get; }
     public Piece Piece { get; set; }
 
-    public bool IsNull { get { return Piece == Piece.Null; } }
+    // public bool IsNull { get { return Piece == Piece.Null; } }
 
-    public void MoveTo(Seat toSeat, Piece fillPiece)
-    {
-        Piece fromPiece = Piece;
-        Piece = fillPiece;
+    // public void MoveTo(Seat toSeat, Piece fillPiece)
+    // {
+    //     Piece fromPiece = Piece;
+    //     Piece = fillPiece;
 
-        toSeat.Piece = fromPiece;
-    }
+    //     toSeat.Piece = fromPiece;
+    // }
 
     public override string ToString() => $"{Coord}:{Piece}";
 }
