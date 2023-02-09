@@ -40,9 +40,9 @@ public class ManualMoveEnum : IEnumerator
         return true;
     }
 
-    object IEnumerator.Current { get { return Current; } }
+    object IEnumerator.Current { get => Current; }
 
-    public Move Current { get { return _curMove; } }
+    public Move Current { get => _curMove; }
 
     private void SetCurrentEnqueueAfterMoves(Move curMove)
     {

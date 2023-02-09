@@ -43,8 +43,7 @@ public class Pieces
     public List<Piece> GetPieces(PieceColor color, PieceKind kind)
         => _pieces[(int)color][(int)kind].ToList();
 
-    public List<Piece> GetPieces(char ch)
-        => GetPieces(Board.GetColor(ch), Board.GetKind(ch));
+    public List<Piece> GetPieces(char ch) => GetPieces(Piece.GetColor(ch), Piece.GetKind(ch));
 
     public List<Piece> GetPieces()
         => _pieces.SelectMany(colorPieces => colorPieces)
@@ -52,6 +51,5 @@ public class Pieces
             .ToList();
 
     public override string ToString()
-       => string.Join(" ",
-            GetPieces().Select(piece => $"{piece}{Coord.Null}"));
+       => string.Join(" ", GetPieces().Select(piece => $"{piece}{Coord.Null}"));
 }

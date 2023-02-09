@@ -21,7 +21,7 @@ public class ManualMove : IEnumerable
 
     public Move CurMove { get; set; }
     public bool EnumMoveDone { get; set; }
-    public string? CurRemark { get { return CurMove.MoveInfo.Remark; } set { CurMove.MoveInfo.Remark = value?.Trim(); } }
+    public string? CurRemark { get => CurMove.MoveInfo.Remark; set { CurMove.MoveInfo.Remark = value?.Trim(); } }
     public string UniversalFEN
     {
         get => Board.GetFEN(_board.GetFEN(), _board.BottomColor == PieceColor.Red

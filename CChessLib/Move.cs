@@ -63,18 +63,16 @@ public class Move
     public void Done(Board board)
     {
         CoordPair coordPair = MoveInfo.CoordPair;
-        // Seat toSeat = board[coordPair.ToCoord];
+        Seat toSeat = board[coordPair.ToCoord];
         MoveInfo.EatPiece = board[coordPair.ToCoord].Piece;
 
-        // board[coordPair.FromCoord].MoveTo(toSeat, Piece.Null);
-        board.MoveTo(coordPair.FromCoord, coordPair.ToCoord);
+        board[coordPair.FromCoord].MoveTo(toSeat, Piece.Null);
     }
 
     public void Undo(Board board)
     {
         CoordPair coordPair = MoveInfo.CoordPair;
-        // board[coordPair.ToCoord].MoveTo(board[coordPair.FromCoord],
-        board.MoveBack(coordPair.FromCoord, coordPair.ToCoord,
+        board[coordPair.ToCoord].MoveTo(board[coordPair.FromCoord],
             MoveInfo.EatPiece);
     }
 

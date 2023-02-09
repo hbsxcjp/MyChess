@@ -13,16 +13,16 @@ public class Coord
     public const int RowCount = 10;
     public const int ColCount = 9;
 
-    private Coord(int index) { Index = index; }
+    private Coord(int index) { Index = index; Row = index / ColCount; Col = index % ColCount; }
 
     public int Index { get; }
-    public int Row { get { return Index / ColCount; } }
-    public int Col { get { return Index % ColCount; } }
-    public string RowCol { get { return $"{Row}{Col}"; } }
-    public string Iccs { get { return $"{ColChars[Col]}{Row}"; } }
-    public bool IsBottom { get { return (Row << 1) < RowCount; } }
+    public int Row { get; }
+    public int Col { get; }
+    public string RowCol { get => $"{Row}{Col}"; }
+    public string Iccs { get => $"{ColChars[Col]}{Row}"; }
+    public bool IsBottom { get => (Row << 1) < RowCount; }
 
-    public static int GetIndex(int row, int col) => row * ColCount + col;
+    public static Coord Get(int row, int col) => Coords[row * ColCount + col];
 
     public static string GetRowCol(string rowCol, ChangeType ct)
     {

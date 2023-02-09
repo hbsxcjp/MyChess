@@ -8,13 +8,17 @@ public abstract class Piece
 {
     public static readonly Piece Null = new NullPiece();
 
-    protected Piece(PieceColor color) { Color = color; }
+    public static readonly string[] NameChars = { "帅仕相马车炮兵", "将士象马车炮卒" };
+    private static readonly string[] ChChars = { "KABNRCP", "kabnrcp" };
+    private static readonly string ColorChars = "无红黑";
+
+    protected Piece(PieceColor color, PieceKind kind) { Color = color; Kind = kind; }
 
     public PieceColor Color { get; }
-    abstract public PieceKind Kind { get; }
-    abstract public char Char { get; }
-    abstract public char Name { get; }
-    virtual public char PrintName { get { return Name; } }
+    public PieceKind Kind { get; }
+    virtual public char Char { get => ChChars[(int)Color][(int)Kind]; }
+    virtual public char Name { get => NameChars[(int)Color][(int)Kind]; }
+    virtual public char PrintName { get => Name; }
 
     virtual public List<Coord> PutCoord(Board board) => Coord.Coords;
     public List<Coord> MoveCoord(Board board)
@@ -27,17 +31,22 @@ public abstract class Piece
         return MoveCoord(board).Where(toCoord => board.CanMove(fromCoord, toCoord)).ToList();
     }
 
-    override public string ToString()
-        => $"{(Color == PieceColor.Red ? "红" : (Color == PieceColor.Black ? "黑" : "无"))}{PrintName}{Char}";
+    public static PieceColor GetColor(char ch) => char.IsUpper(ch) ? PieceColor.Red : PieceColor.Black;
+
+    public static PieceKind GetKind(char ch) => (PieceKind)ChChars[(int)GetColor(ch)].IndexOf(ch);
+
+    public static PieceKind GetKind_Name(char name)
+        => (PieceKind)NameChars[NameChars[0].Contains(name) ? 0 : 1].IndexOf(name);
+
+    public static bool IsLinePiece(PieceKind kind)
+        => (kind == PieceKind.King || kind == PieceKind.Rook || kind == PieceKind.Cannon || kind == PieceKind.Pawn);
+
+    override public string ToString() => $"{ColorChars[(int)Color + 1]}{PrintName}{Char}";
 }
 
 public class King : Piece
 {
-    public King(PieceColor color) : base(color) { }
-
-    override public PieceKind Kind { get { return PieceKind.King; } }
-    override public char Char { get { return Color == PieceColor.Red ? 'K' : 'k'; } }
-    override public char Name { get { return Color == PieceColor.Red ? '帅' : '将'; } }
+    public King(PieceColor color) : base(color, PieceKind.King) { }
 
     override public List<Coord> PutCoord(Board board)
         => Enumerable.Range(board.BottomColor == Color ? 0 : 7, 3)
@@ -67,11 +76,7 @@ public class King : Piece
 
 public class Advisor : Piece
 {
-    public Advisor(PieceColor color) : base(color) { }
-
-    override public PieceKind Kind { get { return PieceKind.Advisor; } }
-    override public char Char { get { return Color == PieceColor.Red ? 'A' : 'a'; } }
-    override public char Name { get { return Color == PieceColor.Red ? '仕' : '士'; } }
+    public Advisor(PieceColor color) : base(color, PieceKind.Advisor) { }
 
     override public List<Coord> PutCoord(Board board)
     {
@@ -110,11 +115,7 @@ public class Advisor : Piece
 
 public class Bishop : Piece
 {
-    public Bishop(PieceColor color) : base(color) { }
-
-    override public PieceKind Kind { get { return PieceKind.Bishop; } }
-    override public char Char { get { return Color == PieceColor.Red ? 'B' : 'b'; } }
-    override public char Name { get { return Color == PieceColor.Red ? '相' : '象'; } }
+    public Bishop(PieceColor color) : base(color, PieceKind.Bishop) { }
 
     override public List<Coord> PutCoord(Board board)
     {
@@ -167,11 +168,8 @@ public class Bishop : Piece
 
 public class Knight : Piece
 {
-    public Knight(PieceColor color) : base(color) { }
+    public Knight(PieceColor color) : base(color, PieceKind.Knight) { }
 
-    override public PieceKind Kind { get { return PieceKind.Knight; } }
-    override public char Char { get { return Color == PieceColor.Red ? 'N' : 'n'; } }
-    override public char Name { get { return '马'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '馬'; } }
 
     override protected List<Coord> RuleMoveCoord(Board board)
@@ -201,11 +199,8 @@ public class Knight : Piece
 
 public class Rook : Piece
 {
-    public Rook(PieceColor color) : base(color) { }
+    public Rook(PieceColor color) : base(color, PieceKind.Rook) { }
 
-    override public PieceKind Kind { get { return PieceKind.Rook; } }
-    override public char Char { get { return Color == PieceColor.Red ? 'R' : 'r'; } }
-    override public char Name { get { return '车'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '車'; } }
     override protected List<Coord> RuleMoveCoord(Board board)
     {
@@ -240,11 +235,8 @@ public class Rook : Piece
 
 public class Cannon : Piece
 {
-    public Cannon(PieceColor color) : base(color) { }
+    public Cannon(PieceColor color) : base(color, PieceKind.Cannon) { }
 
-    override public PieceKind Kind { get { return PieceKind.Cannon; } }
-    override public char Char { get { return Color == PieceColor.Red ? 'C' : 'c'; } }
-    override public char Name { get { return '炮'; } }
     override public char PrintName { get { return Color == PieceColor.Red ? Name : '砲'; } }
     override protected List<Coord> RuleMoveCoord(Board board)
     {
@@ -296,11 +288,7 @@ public class Cannon : Piece
 
 public class Pawn : Piece
 {
-    public Pawn(PieceColor color) : base(color) { }
-
-    override public PieceKind Kind { get { return PieceKind.Pawn; } }
-    override public char Char { get { return Color == PieceColor.Red ? 'P' : 'p'; } }
-    override public char Name { get { return Color == PieceColor.Red ? '兵' : '卒'; } }
+    public Pawn(PieceColor color) : base(color, PieceKind.Pawn) { }
 
     override public List<Coord> PutCoord(Board board)
     {
@@ -349,9 +337,8 @@ public class Pawn : Piece
 
 public class NullPiece : Piece
 {
-    public NullPiece() : base(PieceColor.NoColor) { }
+    public NullPiece() : base(PieceColor.NoColor, PieceKind.NoKind) { }
 
-    override public PieceKind Kind { get { return PieceKind.NoKind; } }
     override public char Char { get { return '_'; } }
     override public char Name { get { return '空'; } }
     override public List<Coord> PutCoord(Board board) => new();
