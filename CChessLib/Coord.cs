@@ -2,10 +2,10 @@ namespace CChess;
 
 public enum ChangeType { Exchange, Rotate, Symmetry_H, Symmetry_V, NoChange = -1, }
 
-public class Coord
+public struct Coord
 {
     public static readonly Coord Null = new(-10); // (-1, -1)
-    public static readonly List<Coord> Coords =
+    private static readonly List<Coord> coords =
         Enumerable.Range(0, RowCount * ColCount)
             .Select(index => new Coord(index)).ToList();
 
@@ -21,8 +21,10 @@ public class Coord
     public string RowCol { get => $"{Row}{Col}"; }
     public string Iccs { get => $"{ColChars[Col]}{Row}"; }
     public bool IsBottom { get => (Row << 1) < RowCount; }
+    public static List<Coord> Coords { get => coords; }
 
-    public static Coord Get(int row, int col) => Coords[row * ColCount + col];
+    public static Coord Get(int index) => Coords[index];
+    public static Coord Get(int row, int col) => Get(row * ColCount + col);
 
     public static string GetRowCol(string rowCol, ChangeType ct)
     {

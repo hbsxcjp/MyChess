@@ -6,7 +6,7 @@ namespace CChess;
 
 public class Board
 {
-    private List<Seat> Seats { get; }
+    private readonly List<Piece> SeatPieces;
 
     private const char FENSplitChar = '/';
     private static readonly string[] NumChars = { "一二三四五六七八九", "１２３４５６７８９" };
@@ -15,20 +15,29 @@ public class Board
 
     public Board()
     {
-        Seats = Coord.Coords.Select(coord => new Seat(coord)).ToList();
+        SeatPieces = Pieces.GetSeatPieces();
+    }
+    public Board(List<Piece> seatPieces)
+    {
+        SeatPieces = seatPieces;
+    }
+    public Board(string fen)
+    {
+        SeatPieces = Pieces.ThePieces.GetSeatPieces(FENToPieceChars(fen));
     }
 
-    public Seat this[Coord coord] { get => Seats[coord.Index]; }
-    public Seat this[int row, int col] { get => this[Coord.Get(row, col)]; }
+    public Piece this[Coord coord] => SeatPieces[coord.Index];
 
-    public PieceColor BottomColor { get; private set; }
+    private PieceColor BottomColor
+    {
+        get => SeatPieces.Find(piece => piece.Kind == PieceKind.King)?.Color ?? PieceColor.Red;
+    }
 
-    public bool IsNull(int row, int col) => this[row, col].IsNull;
-
-    public void Reset() => Seats.ForEach(seat => seat.Piece = Piece.Null);
+    public bool IsBottom(PieceColor color) => BottomColor == color;
+    public bool IsColor(Coord coord, PieceColor color) => this[coord].Color == color;
+    public bool IsNull(int row, int col) => this[Coord.Get(row, col)] == Piece.Null;
 
     public string GetFEN() => PieceCharsToFEN(GetPieceChars());
-    public string GetPieceChars() => string.Concat(Seats.Select(seat => seat.Piece.Char));
 
     public static string PieceCharsToFEN(string pieceChars)
         => Regex.Replace(
@@ -66,35 +75,16 @@ public class Board
         });
     }
 
-    public bool SetFromPieceChars(string pieceChars)
-    {
-        if (pieceChars.Length != Seats.Count)
-            return false;
-
-        Reset();
-        Enumerable.Zip(Seats, pieceChars)
-            .Where(seatCh => seatCh.Second != Piece.Null.Char)
-            .ToList()
-            .ForEach(seatCh =>
-            {
-                List<Piece> livePieces = GetLivePieces(Piece.GetColor(seatCh.Second), Piece.GetKind(seatCh.Second));
-                seatCh.First.Piece = Pieces.ThePieces.GetPieces(seatCh.Second).Find(
-                    piece => !livePieces.Contains(piece)) ?? Piece.Null;
-            });
-
-        BottomColor = Seats.Find(seat => seat.Piece.Kind == PieceKind.King)?.Piece.Color ?? PieceColor.Red;
-        return true;
-    }
-
-    public bool SetFromFEN(string fen) => SetFromPieceChars(FENToPieceChars(fen));
-
-    public bool ChangeLayout(ChangeType ct) => SetFromFEN(GetFEN(GetFEN(), ct));
+    private string GetPieceChars() => string.Concat(SeatPieces.Select(piece => piece.Char));
 
     public Coord GetCoord(Piece piece)
-        => Seats.Find(seat => seat.Piece == piece)?.Coord ?? Coord.Null;
+    {
+        int index = SeatPieces.IndexOf(piece);
+        return index == -1 ? Coord.Null : Coord.Get(index);
+    }
 
     public List<Piece> GetLivePieces()
-        => Seats.Where(seat => !seat.IsNull).Select(seat => seat.Piece).ToList();
+        => SeatPieces.Where(piece => piece != Piece.Null).ToList();
 
     public List<Piece> GetLivePieces(PieceColor color)
         => GetLivePieces().Where(piece => piece.Color == color).ToList();
@@ -105,26 +95,22 @@ public class Board
     private List<Piece> GetLivePieces(PieceColor color, PieceKind kind, int col)
         => GetLivePieces(color, kind).Where(piece => GetCoord(piece).Col == col).ToList();
 
-    /// <summary>
-    /// 检测是否可移动, 包括直接杀将、移动后将帅未对面、未被将军
-    /// </summary>
     public bool CanMove(Coord fromCoord, Coord toCoord)
     {
-        // Debug.Assert(!IsNull(fromCoord.Row, fromCoord.Col));
-
-        Seat fromSeat = this[fromCoord];
-        var color = this[fromCoord].Piece.Color;
-        Seat toSeat = this[toCoord];
-        Piece toPiece = this[toCoord].Piece;
-
         // 如是对方将帅的位置则直接可走，不用判断是否被将军（如加以判断，则会直接走棋吃将帅）
-        if (toPiece.Kind == PieceKind.King)
+        if (this[toCoord].Kind == PieceKind.King)
             return true;
 
-        fromSeat.MoveTo(toSeat, Piece.Null);
-        bool killed = IsKilled(color);
-        toSeat.MoveTo(fromSeat, toPiece);
-        return !killed;
+        return !MoveToBoard(fromCoord, toCoord, Piece.Null).IsKilled(this[fromCoord].Color);
+    }
+
+    public Board MoveToBoard(Coord fromCoord, Coord toCoord, Piece fillPiece)
+    {
+        List<Piece> newSeatPieces = new(SeatPieces);
+        newSeatPieces[toCoord.Index] = this[fromCoord];
+        newSeatPieces[fromCoord.Index] = fillPiece;
+
+        return new(newSeatPieces);
     }
 
     public bool IsKilled(PieceColor color)
@@ -157,14 +143,13 @@ public class Board
         Debug.Assert(!IsNull(fromCoord.Row, fromCoord.Col));
 
         string zhStr;
-        Seat fromSeat = this[fromCoord], toSeat = this[toCoord];
-        Piece fromPiece = fromSeat.Piece;
+        Piece fromPiece = this[fromCoord];
         PieceColor color = fromPiece.Color;
         PieceKind kind = fromPiece.Kind;
         char name = fromPiece.Name;
         int fromRow = fromCoord.Row, fromCol = fromCoord.Col,
             toRow = toCoord.Row, toCol = toCoord.Col;
-        bool isSameRow = fromRow == toRow, isBottomColor = BottomColor == color;
+        bool isSameRow = fromRow == toRow, isBottomColor = IsBottom(color);
 
         List<Piece> livePieces = GetLivePieces(color, kind, fromCol);
         if (livePieces.Count > 1 && kind > PieceKind.Bishop)
@@ -194,7 +179,7 @@ public class Board
         Debug.Assert(zhStr.Length == 4);
 
         PieceColor color = GetColor_Num(zhStr[3]);
-        bool isBottomColor = BottomColor == color;
+        bool isBottomColor = IsBottom(color);
         int index = 0, movDir = MoveDir(zhStr[2]),
             absMovDir = movDir * (isBottomColor ? 1 : -1);
 
@@ -247,7 +232,7 @@ public class Board
             toRow += absMovDir * rowInc;
         }
 
-        return new(fromCoord, this[toRow, toCol].Coord);
+        return new(fromCoord, Coord.Get(toRow, toCol));
     }
 
     private void SortPieces(List<Piece> pieces, bool isBottomColor)
@@ -282,7 +267,7 @@ public class Board
             Coord.ColChars.IndexOf(iccs[2]));
 
     public CoordPair GetCoordPair(int frow, int fcol, int trow, int tcol)
-        => new(this[frow, fcol].Coord, this[trow, tcol].Coord);
+        => new(Coord.Get(frow, fcol), Coord.Get(trow, tcol));
 
     public CoordPair GetCoordPair(string pgnText, FileExtType fileExtType)
         => fileExtType switch
@@ -305,12 +290,8 @@ public class Board
     public static char MoveChar(bool isSameRow, bool isGo) => MoveChars[isSameRow ? 1 : (isGo ? 2 : 0)];
     public static int MoveDir(char movCh) => MoveChars.IndexOf(movCh) - 1;
 
-    public static string PGNZHChars() 
+    public static string PGNZHChars()
         => $"{Piece.NameChars[0]}{Piece.NameChars[1]}{NumChars[0]}{NumChars[1]}{PositionChars}{MoveChars}";
-
-    // 仅供测试使用
-    public string AllSeatsString() => string.Join(" ",
-            Seats.Select(seat => $"{seat}{Coord.Null}"));
 
     public override string ToString()
     {
@@ -355,7 +336,7 @@ public class Board
         GetLivePieces().ForEach(piece =>
             textBlankBoard[Coord.GetDoubleIndex(GetCoord(piece))] = piece.PrintName);
 
-        int index = BottomColor == PieceColor.Red ? 0 : 1;
+        int index = IsBottom(PieceColor.Red) ? 0 : 1;
         return preStr[index] + textBlankBoard.ToString() + sufStr[index];
     }
 }

@@ -12,6 +12,10 @@ public abstract class Piece
     private static readonly string[] ChChars = { "KABNRCP", "kabnrcp" };
     private static readonly string ColorChars = "无红黑";
 
+    private static int[] KindPieceNums = { 1, 2, 2, 2, 2, 2, 5 };
+    private static List<Type> PieceType = new List<Type> {
+            typeof(King), typeof(Advisor), typeof(Bishop), typeof(Knight), typeof(Rook), typeof(Cannon), typeof(Pawn) };
+
     protected Piece(PieceColor color, PieceKind kind) { Color = color; Kind = kind; }
 
     public PieceColor Color { get; }
@@ -20,9 +24,9 @@ public abstract class Piece
     virtual public char Name { get => NameChars[(int)Color][(int)Kind]; }
     virtual public char PrintName { get => Name; }
 
-    virtual public List<Coord> PutCoord(Board board) => Coord.Coords;
+    virtual public List<Coord> PutCoord(bool isBottom) => Coord.Coords;
     public List<Coord> MoveCoord(Board board)
-        => RuleMoveCoord(board).Where(coord => board[coord].Piece.Color != Color).ToList();
+        => RuleMoveCoord(board).Where(coord => !board.IsColor(coord, Color)).ToList();
     abstract protected List<Coord> RuleMoveCoord(Board board);
 
     public List<Coord> CanMoveCoord(Board board)
@@ -48,10 +52,10 @@ public class King : Piece
 {
     public King(PieceColor color) : base(color, PieceKind.King) { }
 
-    override public List<Coord> PutCoord(Board board)
-        => Enumerable.Range(board.BottomColor == Color ? 0 : 7, 3)
+    override public List<Coord> PutCoord(bool isBottom)
+        => Enumerable.Range(isBottom ? 0 : 7, 3)
              .Select(row => Enumerable.Range(3, 3)
-                                            .Select(col => board[row, col].Coord))
+                                            .Select(col => Coord.Get(row, col)))
              .SelectMany(coords => coords)
              .ToList();
 
@@ -62,13 +66,13 @@ public class King : Piece
         bool isBottom = coord.IsBottom;
         int fRow = coord.Row, fCol = coord.Col;
         if (fCol > 3)
-            coords.Add(board[fRow, fCol - 1].Coord);
+            coords.Add(Coord.Get(fRow, fCol - 1));
         if (fCol < 5)
-            coords.Add(board[fRow, fCol + 1].Coord);
+            coords.Add(Coord.Get(fRow, fCol + 1));
         if (fRow < (isBottom ? 2 : 9))
-            coords.Add(board[fRow + 1, fCol].Coord);
+            coords.Add(Coord.Get(fRow + 1, fCol));
         if (fRow > (isBottom ? 0 : 7))
-            coords.Add(board[fRow - 1, fCol].Coord);
+            coords.Add(Coord.Get(fRow - 1, fCol));
 
         return coords;
     }
@@ -78,18 +82,17 @@ public class Advisor : Piece
 {
     public Advisor(PieceColor color) : base(color, PieceKind.Advisor) { }
 
-    override public List<Coord> PutCoord(Board board)
+    override public List<Coord> PutCoord(bool isBottom)
     {
         List<Coord> coords = new();
-        bool isBottomColor = board.BottomColor == Color;
-        int minRow = isBottomColor ? 0 : 7,
-            maxRow = isBottomColor ? 2 : 9;
+        int minRow = isBottom ? 0 : 7,
+            maxRow = isBottom ? 2 : 9;
 
         for (int row = minRow; row <= maxRow; row += 2)
             for (int col = 3; col <= 5; col += 2)
-                coords.Add(board[row, col].Coord);
+                coords.Add(Coord.Get(row, col));
 
-        coords.Add(board[minRow + 1, 4].Coord);
+        coords.Add(Coord.Get(minRow + 1, 4));
         return coords;
     }
 
@@ -100,13 +103,13 @@ public class Advisor : Piece
         bool isBottom = coord.IsBottom;
         int fRow = coord.Row, fCol = coord.Col;
         if (fCol != 4)
-            coords.Add(board[isBottom ? 1 : 8, 4].Coord);
+            coords.Add(Coord.Get(isBottom ? 1 : 8, 4));
         else
         {
-            coords.Add(board[fRow - 1, fCol - 1].Coord);
-            coords.Add(board[fRow - 1, fCol + 1].Coord);
-            coords.Add(board[fRow + 1, fCol - 1].Coord);
-            coords.Add(board[fRow + 1, fCol + 1].Coord);
+            coords.Add(Coord.Get(fRow - 1, fCol - 1));
+            coords.Add(Coord.Get(fRow - 1, fCol + 1));
+            coords.Add(Coord.Get(fRow + 1, fCol - 1));
+            coords.Add(Coord.Get(fRow + 1, fCol + 1));
         }
 
         return coords;
@@ -117,19 +120,18 @@ public class Bishop : Piece
 {
     public Bishop(PieceColor color) : base(color, PieceKind.Bishop) { }
 
-    override public List<Coord> PutCoord(Board board)
+    override public List<Coord> PutCoord(bool isBottom)
     {
         List<Coord> coords = new();
-        bool isBottomColor = board.BottomColor == Color;
-        int minRow = isBottomColor ? 0 : 5,
-            midRow = isBottomColor ? 2 : 7,
-            maxRow = isBottomColor ? 4 : 9;
+        int minRow = isBottom ? 0 : 5,
+            midRow = isBottom ? 2 : 7,
+            maxRow = isBottom ? 4 : 9;
         for (int row = minRow; row <= maxRow; row += 4)
             for (int col = 2; col < Coord.ColCount; col += 4)
-                coords.Add(board[row, col].Coord);
+                coords.Add(Coord.Get(row, col));
 
         for (int col = 0; col < Coord.ColCount; col += 4)
-            coords.Add(board[midRow, col].Coord);
+            coords.Add(Coord.Get(midRow, col));
 
         return coords;
     }
@@ -144,7 +146,7 @@ public class Bishop : Piece
         void AddRowCol(int row, int col)
         {
             if (board.IsNull((row + fRow) / 2, (col + fCol) / 2))
-                coords.Add(board[row, col].Coord);
+                coords.Add(Coord.Get(row, col));
         }
 
         if (fRow < maxRow)
@@ -192,7 +194,7 @@ public class Knight : Piece
         return allToLegRowCols.Where(
                 toLeg => Coord.IsValid(toLeg.to.row, toLeg.to.col)
                     && (board.IsNull(toLeg.leg.row, toLeg.leg.col)))
-                .Select(toLeg => board[toLeg.to.row, toLeg.to.col].Coord)
+                .Select(toLeg => Coord.Get(toLeg.to.row, toLeg.to.col))
                 .ToList();
     }
 }
@@ -209,7 +211,7 @@ public class Rook : Piece
         int fRow = coord.Row, fCol = coord.Col;
         bool AddRowCol(int row, int col)
         {
-            coords.Add(board[row, col].Coord);
+            coords.Add(Coord.Get(row, col));
             return board.IsNull(row, col);
         }
 
@@ -250,13 +252,13 @@ public class Cannon : Piece
             if (!skiped)
             {
                 if (isNull)
-                    coords.Add(board[row, col].Coord);
+                    coords.Add(Coord.Get(row, col));
                 else
                     skiped = true;
             }
             else if (!isNull)
             {
-                coords.Add(board[row, col].Coord);
+                coords.Add(Coord.Get(row, col));
                 return true;
             }
 
@@ -290,21 +292,20 @@ public class Pawn : Piece
 {
     public Pawn(PieceColor color) : base(color, PieceKind.Pawn) { }
 
-    override public List<Coord> PutCoord(Board board)
+    override public List<Coord> PutCoord(bool isBottom)
     {
         List<Coord> coords = new();
-        bool isBottomColor = board.BottomColor == Color;
-        int minRow = isBottomColor ? 3 : 5,
-            maxRow = isBottomColor ? 4 : 6;
+        int minRow = isBottom ? 3 : 5,
+            maxRow = isBottom ? 4 : 6;
         for (int row = minRow; row <= maxRow; ++row)
             for (int col = 0; col < Coord.ColCount; col += 2)
-                coords.Add(board[row, col].Coord);
+                coords.Add(Coord.Get(row, col));
 
-        minRow = isBottomColor ? 5 : 0;
-        maxRow = isBottomColor ? 9 : 4;
+        minRow = isBottom ? 5 : 0;
+        maxRow = isBottom ? 9 : 4;
         for (int row = minRow; row <= maxRow; ++row)
             for (int col = 0; col < Coord.ColCount; ++col)
-                coords.Add(board[row, col].Coord);
+                coords.Add(Coord.Get(row, col));
 
         return coords;
     }
@@ -314,22 +315,22 @@ public class Pawn : Piece
         List<Coord> coords = new();
         Coord coord = board.GetCoord(this);
         bool isBottom = coord.IsBottom,
-            isBottomColor = board.BottomColor == Color;
+            isBottomColor = board.IsBottom(Color);
         int fRow = coord.Row, fCol = coord.Col;
 
         // 已过河
         if (isBottomColor != isBottom)
         {
             if (fCol > 0)
-                coords.Add(board[fRow, fCol - 1].Coord);
+                coords.Add(Coord.Get(fRow, fCol - 1));
             if (fCol < Coord.ColCount - 1)
-                coords.Add(board[fRow, fCol + 1].Coord);
+                coords.Add(Coord.Get(fRow, fCol + 1));
         }
 
         if (isBottomColor && fRow < Coord.RowCount - 1)
-            coords.Add(board[fRow + 1, fCol].Coord);
+            coords.Add(Coord.Get(fRow + 1, fCol));
         else if (!isBottomColor && fRow > 0)
-            coords.Add(board[fRow - 1, fCol].Coord);
+            coords.Add(Coord.Get(fRow - 1, fCol));
 
         return coords;
     }
@@ -341,6 +342,6 @@ public class NullPiece : Piece
 
     override public char Char { get { return '_'; } }
     override public char Name { get { return '空'; } }
-    override public List<Coord> PutCoord(Board board) => new();
+    override public List<Coord> PutCoord(bool isBottom) => new();
     override protected List<Coord> RuleMoveCoord(Board board) => new();
 }

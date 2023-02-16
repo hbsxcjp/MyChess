@@ -6,17 +6,22 @@ public class ManualMoveEnum : IEnumerator
 {
     private readonly Queue<Move> _moveQueue;
     private readonly ManualMove _manualMove;
-    private Move _curMove;
-    private int _id;
+    private readonly bool _enumMoveDone;
+    private int _id; // 设置ID的临时变量
 
     public ManualMoveEnum(ManualMove manualMove)
     {
-        _manualMove = manualMove;
         _moveQueue = new();
-        _curMove = manualMove.CurMove; // 消除未赋值警示
+        _manualMove = manualMove;
+        _enumMoveDone = manualMove.EnumMoveDone;
 
+        Current = manualMove.CurMove; // 消除未赋值警示
         Reset();
     }
+
+    object IEnumerator.Current { get => Current; }
+
+    public Move Current { get; set; }
 
     public void Reset()
     {
@@ -31,8 +36,9 @@ public class ManualMoveEnum : IEnumerator
     {
         if (_moveQueue.Count == 0)
         {
-            if (_manualMove.EnumMoveDone)
+            if (_enumMoveDone)
                 _manualMove.BackStart();
+
             return false;
         }
 
@@ -40,18 +46,14 @@ public class ManualMoveEnum : IEnumerator
         return true;
     }
 
-    object IEnumerator.Current { get => Current; }
-
-    public Move Current { get => _curMove; }
-
     private void SetCurrentEnqueueAfterMoves(Move curMove)
     {
-        _curMove = curMove;
-        _curMove.Id = _id++;
+        Current = curMove;
+        curMove.Id = _id++;
         // 根据枚举特性判断是否执行着法
-        if (_manualMove.EnumMoveDone)
-            _manualMove.GoTo(_curMove.Before);
+        if (_enumMoveDone)
+            _manualMove.GoTo(curMove.Before);
 
-        _curMove.AfterMoves()?.ForEach(move => _moveQueue.Enqueue(move));
+        curMove.AfterMoves()?.ForEach(move => _moveQueue.Enqueue(move));
     }
 }

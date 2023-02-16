@@ -14,7 +14,7 @@ public class AspectTest
             "第09局",
             "布局陷阱--飞相局对金钩炮",
             "- 北京张强 (和) 上海胡荣华 (1993.4.27于南京)"})
-            manuals.Add(new(Manual.GetFileName(fileName, FileExtType.Xqf)));
+            manuals.Add(Manual.GetManual(Manual.GetFileName(fileName, FileExtType.Xqf)));
 
         Aspects aspects = new(manuals);
         MemoryStream stream = new();

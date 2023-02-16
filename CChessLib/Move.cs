@@ -9,15 +9,23 @@ public class Move
     private Move(CoordPair coordPair, Move? before = null, string? remark = null, bool visible = true)
     {
         Before = before;
-        _afterMoves = null;
 
-        MoveInfo = new(coordPair, remark, visible);
+        CoordPair = coordPair;
+        Remark = remark;
+        Visible = visible;
+        EatPiece = Piece.Null;
+
+        _afterMoves = null;
     }
 
-    public MoveInfo MoveInfo { get; }
+    // 对象属性
+    public Move? Before { get; }
+    public CoordPair CoordPair { get; }
 
     public int Id { get; set; }
-    public Move? Before { get; }
+    public string? Remark { get; set; }
+    public bool Visible { get; set; }
+    public Piece EatPiece { get; set; }
 
     public int BeforeNum
     {
@@ -39,43 +47,16 @@ public class Move
     {
         Move move = new(coordPair, this, remark, visible);
         (_afterMoves ??= new()).Add(move);
+
         return move;
     }
 
     // 后置着法列表
-    public List<Move>? AfterMoves(VisibleType vtype = VisibleType.All)
-    {
-        if (_afterMoves == null || vtype == VisibleType.All)
-            return _afterMoves;
-
-        return _afterMoves.Where(move => (vtype == VisibleType.False) == move.MoveInfo.Visible).ToList();
-    }
+    public List<Move>? AfterMoves() { return _afterMoves; }
 
     // 同步变着列表
-    public List<Move>? OtherMoves(VisibleType vtype = VisibleType.True) => Before?.AfterMoves(vtype) ?? null;
-
-    public void ClearAfterMovesError(ManualMove manualMove)
-    {
-        if (_afterMoves != null)
-            _afterMoves.RemoveAll(move => !manualMove.AcceptCoordPair(move.MoveInfo.CoordPair));
-    }
-
-    public void Done(Board board)
-    {
-        CoordPair coordPair = MoveInfo.CoordPair;
-        Seat toSeat = board[coordPair.ToCoord];
-        MoveInfo.EatPiece = board[coordPair.ToCoord].Piece;
-
-        board[coordPair.FromCoord].MoveTo(toSeat, Piece.Null);
-    }
-
-    public void Undo(Board board)
-    {
-        CoordPair coordPair = MoveInfo.CoordPair;
-        board[coordPair.ToCoord].MoveTo(board[coordPair.FromCoord],
-            MoveInfo.EatPiece);
-    }
+    public List<Move>? OtherMoves() => Before?._afterMoves ?? null;
 
     public override string ToString()
-       => $"{new string('\t', BeforeNum)}{Before?.Id}-{MoveInfo.CoordPair}.{Id} {MoveInfo.Remark}\n";
+       => $"{new string('\t', BeforeNum)}{Before?.Id}-{CoordPair}.{Id} {Remark}\n";
 }

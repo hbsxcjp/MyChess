@@ -40,24 +40,20 @@ public class ManualTest
     {
         List<Manual> manuals = new();
         for (int i = 0; i < manualStrings.GetLength(0); i++)
-            manuals.Add(new(Manual.GetFileName(manualStrings[i, 0], FileExtType.Xqf)));
+            manuals.Add(Manual.GetManual(Manual.GetFileName(manualStrings[i, 0], FileExtType.Xqf)));
 
         return manuals;
     }
 
     private Manual GetManual(int index, FileExtType fileExtType)
     {
-        if (fileExtType == FileExtType.Xqf)
-            return Manuals[index];
-
-        Manual manual = new();
-        MemoryStream stream = new();
-
-        Manuals[index].SetStream(stream, fileExtType);
-        stream.Seek(0, SeekOrigin.Begin);
-        manual.SetFromStream(stream, fileExtType);
-
-        return manual;
+        Manual manual = Manuals[index];
+        return (fileExtType) switch
+        {
+            FileExtType.Xqf => manual,
+            FileExtType.Cm => new(manual.GetBytes()),
+            _ => new(manual.GetString(fileExtType), fileExtType)
+        };
     }
 
     [Theory]

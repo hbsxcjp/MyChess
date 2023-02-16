@@ -1,6 +1,6 @@
 namespace CChess;
 
-public class CoordPair
+public struct CoordPair
 {
     public static readonly CoordPair Null = new(Coord.Null, Coord.Null);
     public const int RowColICCSLength = 4;
@@ -17,7 +17,8 @@ public class CoordPair
     public string Iccs { get => $"{FromCoord.Iccs}{ToCoord.Iccs}"; }
     public string RowCol { get => $"{FromCoord.RowCol}{ToCoord.RowCol}"; }
 
-    public bool Equals(CoordPair other) => FromCoord == other.FromCoord && ToCoord == other.ToCoord;
+    public bool Equals(CoordPair other) 
+        => FromCoord.Index == other.FromCoord.Index && ToCoord.Index == other.ToCoord.Index;
 
     public override string ToString() => $"[{FromCoord},{ToCoord}]";
 }

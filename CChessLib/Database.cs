@@ -44,7 +44,8 @@ public class Database
     {
         IEnumerable<Manual> manuals = fileNames.Select(fileName =>
         {
-            Manual manual = new(fileName);
+            // Manual manual = new(fileName);
+            Manual manual = Manual.GetManual(fileName);
             manual.SetDatabaseField(fileName);
             return manual;
         });
@@ -495,7 +496,7 @@ public class EccoData
             }
         }
 
-        string rowCol = success ? manual.ManualMove.CurMove.MoveInfo.CoordPair.RowCol : "";
+        string rowCol = success ? manual.ManualMove.CurMove.CoordPair.RowCol : "";
 #if WRITERESULTTEXT
         sw.Write($"{(success ? "失败" : "OK ")}:{zhStr} {isGo}: {rowCol}");
 #endif

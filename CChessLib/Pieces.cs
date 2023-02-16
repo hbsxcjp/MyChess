@@ -3,14 +3,17 @@ namespace CChess;
 public class Pieces
 {
     private Piece[][][] _pieces;
-    public const int ColorNum = 2;
-    public const int KindNum = 7;
-
-    public static readonly Pieces ThePieces = new();
+    public static readonly Pieces pieces = new();
 
     private Pieces()
     {
-        static Piece[] getKindPieces(PieceColor color, Type type, int num)
+        const int ColorNum = 2;
+        const int KindNum = 7;
+        int[] KindPieceNums = { 1, 2, 2, 2, 2, 2, 5 };
+        List<Type> PieceType = new List<Type> {
+            typeof(King), typeof(Advisor), typeof(Bishop), typeof(Knight), typeof(Rook), typeof(Cannon), typeof(Pawn) };
+
+        Piece[] getKindPieces(PieceColor color, Type type, int num)
         {
             var kindPieces = new Piece[num];
             var constructorInfo = type.GetConstructor(new Type[] { typeof(PieceColor) });
@@ -21,14 +24,11 @@ public class Pieces
             return kindPieces;
         }
 
-        static Piece[][] getColorPieces(PieceColor color)
+        Piece[][] getColorPieces(PieceColor color)
         {
-            Type[] pieceType = { typeof(King), typeof(Advisor), typeof(Bishop),
-                    typeof(Knight), typeof(Rook), typeof(Cannon), typeof(Pawn) };
-            int[] KindNums = { 1, 2, 2, 2, 2, 2, 5 };
             Piece[][] colorPieces = new Piece[KindNum][];
             for (int k = 0; k < KindNum; k++)
-                colorPieces[k] = getKindPieces(color, pieceType[k], KindNums[k]);
+                colorPieces[k] = getKindPieces(color, PieceType[k], KindPieceNums[k]);
 
             return colorPieces;
         }
@@ -38,12 +38,34 @@ public class Pieces
             _pieces[c] = getColorPieces((PieceColor)c);
     }
 
+    public static Pieces ThePieces { get => pieces; }
+
     public Piece GetKing(PieceColor color) => _pieces[(int)color][(int)PieceKind.King][0];
 
-    public List<Piece> GetPieces(PieceColor color, PieceKind kind)
-        => _pieces[(int)color][(int)kind].ToList();
+    public List<Piece> GetSeatPieces(string pieceChars)
+    {
+        List<Piece> pieces = new();
+        foreach (char ch in pieceChars)
+        {
+            if (ch == Piece.Null.Char)
+                pieces.Add(Piece.Null);
+            else
+            {
+                foreach (Piece piece in _pieces[(int)Piece.GetColor(ch)][(int)Piece.GetKind(ch)])
+                {
+                    if (!pieces.Contains(piece))
+                    {
+                        pieces.Add(piece);
+                        break;
+                    }
+                }
+            }
+        }
 
-    public List<Piece> GetPieces(char ch) => GetPieces(Piece.GetColor(ch), Piece.GetKind(ch));
+        return pieces;
+    }
+
+    public static List<Piece> GetSeatPieces() => Coord.Coords.Select(coord => Piece.Null).ToList();
 
     public List<Piece> GetPieces()
         => _pieces.SelectMany(colorPieces => colorPieces)
