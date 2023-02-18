@@ -6,7 +6,7 @@ using System.Text;
 
 namespace CChess;
 
-public class ManualMove : IEnumerable
+public class ManualMove// : IEnumerable
 {
     public ManualMove(string fen)
     {
@@ -420,7 +420,7 @@ public class ManualMove : IEnumerable
         return RootBoard.ToString() + result;
     }
 
-    IEnumerator IEnumerable.GetEnumerator() => (IEnumerator)GetEnumerator();
+    // IEnumerator IEnumerable.GetEnumerator() => (IEnumerator)GetEnumerator();
 
-    public ManualMoveEnum GetEnumerator() => new(this);
+    // public ManualMoveEnum GetEnumerator() => new(this);
 }

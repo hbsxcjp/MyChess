@@ -1,10 +1,12 @@
 namespace CChess;
 
-public enum VisibleType { All, True, False }
+// public enum VisibleType { All, True, False }
 
 public class Move
 {
     private List<Move>? _afterMoves;
+
+    public static Move RootMove() => new(CoordPair.Null);
 
     private Move(CoordPair coordPair, Move? before = null, string? remark = null, bool visible = true)
     {
@@ -23,38 +25,25 @@ public class Move
     public Move? Before { get; }
     public CoordPair CoordPair { get; }
 
-    public int BeforeNum
+    public List<Move> BeforeMoves
     {
         get
         {
-            int count = 0;
-            Move? move = this;
-            while ((move = move.Before) != null)
-                count++;
-
-            return count;
-        }
-    }
-    public List<CoordPair> BeforeCoordPairs
-    {
-        get
-        {
-            List<CoordPair> beforeCoordPairs = new();
+            List<Move> beforeMoves = new();
             Move move = this;
             while (move.Before != null)
             {
-                beforeCoordPairs.Insert(0, move.CoordPair);
+                beforeMoves.Insert(0, move);
                 move = move.Before;
             }
 
-            return beforeCoordPairs;
+            return beforeMoves;
         }
     }
 
-    public int AfterNum { get { return _afterMoves?.Count ?? 0; } }
-    public bool HasAfter { get { return _afterMoves != null; } }
+    public int AfterNum => _afterMoves?.Count ?? 0;
+    public bool HasAfter => _afterMoves != null;
 
-    public static Move RootMove() => new(CoordPair.Null);
     public Move AddAfter(CoordPair coordPair, string? remark = null, bool visible = true)
     {
         Move move = new(coordPair, this, remark, visible);
@@ -63,10 +52,8 @@ public class Move
         return move;
     }
 
-    // 后置着法列表
     public List<Move>? AfterMoves() { return _afterMoves; }
 
-    // 同步变着列表
     public List<Move>? OtherMoves() => Before?._afterMoves;
 
     // 代替ManualMove枚举器
@@ -75,18 +62,18 @@ public class Move
         List<Move> allAfterMoves = new(100);
         Queue<Move> moveQueue = new();
         _afterMoves?.ForEach(aMove => moveQueue.Enqueue(aMove));
-        int id = 0;
         while (moveQueue.Count > 0)
         {
             Move move = moveQueue.Dequeue();
-            move.Id = ++id;
             allAfterMoves.Add(move);
             move._afterMoves?.ForEach(aMove => moveQueue.Enqueue(aMove));
         }
 
+        int id = 0;
+        allAfterMoves.ForEach(move => move.Id = ++id);
         return allAfterMoves;
     }
 
     public override string ToString()
-       => $"{new string('\t', BeforeNum)}{Before?.Id}-{CoordPair}.{Id} {Remark}\n";
+       => $"{new string('\t', BeforeMoves.Count)}{Before?.Id}-{CoordPair}.{Id} {Remark}\n";
 }
