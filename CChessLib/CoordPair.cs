@@ -17,7 +17,7 @@ public struct CoordPair
     public string Iccs { get => $"{FromCoord.Iccs}{ToCoord.Iccs}"; }
     public string RowCol { get => $"{FromCoord.RowCol}{ToCoord.RowCol}"; }
 
-    public bool Equals(CoordPair other) 
+    public bool Equals(CoordPair other)
         => FromCoord.Index == other.FromCoord.Index && ToCoord.Index == other.ToCoord.Index;
 
     public override string ToString() => $"[{FromCoord},{ToCoord}]";

@@ -26,7 +26,7 @@ public class BoardTest
         }
 
         StringBuilder result = new();
-        Board board = new(fen);
+        Board board = new(Board.FENToPieceChars(fen));
         foreach (var ct in new List<ChangeType> {
                     ChangeType.NoChange, 
                     ChangeType.Symmetry_V,
@@ -34,7 +34,7 @@ public class BoardTest
                     ChangeType.NoChange, 
                     ChangeType.Exchange})
         {
-            Board ctBoard = new(Board.GetFEN(board.GetFEN(), ct));
+            Board ctBoard = new(Board.FENToPieceChars(Board.GetFEN(board.GetFEN(), ct)));
             result.Append($"{ct}: \n{ctBoard.GetFEN()}\n{ctBoard}{CanMoveCoordString(ctBoard)}\n");
         }
 

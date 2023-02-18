@@ -8,13 +8,12 @@ public abstract class Piece
 {
     public static readonly Piece Null = new NullPiece();
 
+    public const char NullCh = '_';
+    public const char NullName = '空';
+
     public static readonly string[] NameChars = { "帅仕相马车炮兵", "将士象马车炮卒" };
     private static readonly string[] ChChars = { "KABNRCP", "kabnrcp" };
     private static readonly string ColorChars = "无红黑";
-
-    private static int[] KindPieceNums = { 1, 2, 2, 2, 2, 2, 5 };
-    private static List<Type> PieceType = new List<Type> {
-            typeof(King), typeof(Advisor), typeof(Bishop), typeof(Knight), typeof(Rook), typeof(Cannon), typeof(Pawn) };
 
     protected Piece(PieceColor color, PieceKind kind) { Color = color; Kind = kind; }
 
@@ -26,7 +25,7 @@ public abstract class Piece
 
     virtual public List<Coord> PutCoord(bool isBottom) => Coord.Coords;
     public List<Coord> MoveCoord(Board board)
-        => RuleMoveCoord(board).Where(coord => !board.IsColor(coord, Color)).ToList();
+        => RuleMoveCoord(board).Where(coord => board[coord].Color != Color).ToList();
     abstract protected List<Coord> RuleMoveCoord(Board board);
 
     public List<Coord> CanMoveCoord(Board board)
@@ -340,8 +339,8 @@ public class NullPiece : Piece
 {
     public NullPiece() : base(PieceColor.NoColor, PieceKind.NoKind) { }
 
-    override public char Char { get { return '_'; } }
-    override public char Name { get { return '空'; } }
+    override public char Char { get => Piece.NullCh; }
+    override public char Name { get => Piece.NullName; }
     override public List<Coord> PutCoord(bool isBottom) => new();
     override protected List<Coord> RuleMoveCoord(Board board) => new();
 }

@@ -6,8 +6,6 @@ namespace CChess;
 
 public class Board
 {
-    private readonly List<Piece> SeatPieces;
-
     private const char FENSplitChar = '/';
     private static readonly string[] NumChars = { "一二三四五六七八九", "１２３４５６７８９" };
     private const string PositionChars = "前中后";
@@ -17,25 +15,48 @@ public class Board
     {
         SeatPieces = Pieces.GetSeatPieces();
     }
-    public Board(List<Piece> seatPieces)
+    public Board(Board board)
     {
-        SeatPieces = seatPieces;
+        SeatPieces = new(board.SeatPieces);
     }
-    public Board(string fen)
+    public Board(string pieceChars)
     {
-        SeatPieces = Pieces.ThePieces.GetSeatPieces(FENToPieceChars(fen));
+        SeatPieces = Pieces.ThePieces.GetSeatPieces(pieceChars);
     }
 
     public Piece this[Coord coord] => SeatPieces[coord.Index];
 
+    private List<Piece> SeatPieces { get; }
     private PieceColor BottomColor
     {
         get => SeatPieces.Find(piece => piece.Kind == PieceKind.King)?.Color ?? PieceColor.Red;
     }
 
     public bool IsBottom(PieceColor color) => BottomColor == color;
-    public bool IsColor(Coord coord, PieceColor color) => this[coord].Color == color;
     public bool IsNull(int row, int col) => this[Coord.Get(row, col)] == Piece.Null;
+
+    public Board GetBoard(Coord fromCoord, Coord toCoord)
+    {
+        Board board = new(this);
+        board.MovePiece(fromCoord, toCoord);
+
+        return board;
+    }
+
+    public Board GetBoard(Move move)
+    {
+        Board board = new(this);
+        move.BeforeCoordPairs.ForEach(coordPair
+            => board.MovePiece(coordPair.FromCoord, coordPair.ToCoord));
+
+        return board;
+    }
+
+    private void MovePiece(Coord fromCoord, Coord toCoord)
+    {
+        SeatPieces[toCoord.Index] = SeatPieces[fromCoord.Index];
+        SeatPieces[fromCoord.Index] = Piece.Null;
+    }
 
     public string GetFEN() => PieceCharsToFEN(GetPieceChars());
 
@@ -45,13 +66,14 @@ public class Board
                 Enumerable.Range(0, Coord.RowCount)
                 .Select(row => pieceChars.Substring(
                     (Coord.RowCount - 1 - row) * Coord.ColCount, Coord.ColCount))),
-            $"{Piece.Null.Char}+",
+            $"{Piece.NullCh}+",
             match => match.Value.Length.ToString());
+
     public static string FENToPieceChars(string fen)
         => Regex.Replace(
             string.Concat(fen.Split(FENSplitChar).Reverse()),
             "\\d{1}",
-            match => new string(Piece.Null.Char, int.Parse(match.Captures[0].Value)));
+            match => new string(Piece.NullCh, int.Parse(match.Captures[0].Value)));
 
     public static string GetFEN(string fen, ChangeType ct)
     {
@@ -101,16 +123,7 @@ public class Board
         if (this[toCoord].Kind == PieceKind.King)
             return true;
 
-        return !MoveToBoard(fromCoord, toCoord, Piece.Null).IsKilled(this[fromCoord].Color);
-    }
-
-    public Board MoveToBoard(Coord fromCoord, Coord toCoord, Piece fillPiece)
-    {
-        List<Piece> newSeatPieces = new(SeatPieces);
-        newSeatPieces[toCoord.Index] = this[fromCoord];
-        newSeatPieces[fromCoord.Index] = fillPiece;
-
-        return new(newSeatPieces);
+        return !GetBoard(fromCoord, toCoord).IsKilled(this[fromCoord].Color);
     }
 
     public bool IsKilled(PieceColor color)
@@ -253,20 +266,21 @@ public class Board
             .SelectMany(group => group.AsEnumerable())
             .ToList();
 
-    public CoordPair GetCoordPairFromRowCol(string rowCol)
+    public static CoordPair GetCoordPairFromRowCol(string rowCol)
         => GetCoordPair(
             int.Parse(rowCol[0].ToString()),
             int.Parse(rowCol[1].ToString()),
             int.Parse(rowCol[2].ToString()),
             int.Parse(rowCol[3].ToString()));
-    public CoordPair GetCoordPairFromIccs(string iccs)
+
+    public static CoordPair GetCoordPairFromIccs(string iccs)
         => GetCoordPair(
             int.Parse(iccs[1].ToString()),
             Coord.ColChars.IndexOf(iccs[0]),
             int.Parse(iccs[3].ToString()),
             Coord.ColChars.IndexOf(iccs[2]));
 
-    public CoordPair GetCoordPair(int frow, int fcol, int trow, int tcol)
+    public static CoordPair GetCoordPair(int frow, int fcol, int trow, int tcol)
         => new(Coord.Get(frow, fcol), Coord.Get(trow, tcol));
 
     public CoordPair GetCoordPair(string pgnText, FileExtType fileExtType)
@@ -337,7 +351,7 @@ public class Board
             textBlankBoard[Coord.GetDoubleIndex(GetCoord(piece))] = piece.PrintName);
 
         int index = IsBottom(PieceColor.Red) ? 0 : 1;
-        return preStr[index] + textBlankBoard.ToString() + sufStr[index];
+        return $"{preStr[index]}{textBlankBoard.ToString()}{sufStr[index]}";
     }
 }
 

@@ -8,16 +8,11 @@ namespace CChess;
 
 public class ManualMove : IEnumerable
 {
-    private Board _board;
-    private readonly Move _rootMove;
-
     public ManualMove(string fen)
     {
-        _board = new(fen);
-        _rootMove = Move.RootMove();
-
-        CurMove = _rootMove;
-        EnumMoveDone = false;
+        RootBoard = new(Board.FENToPieceChars(fen));
+        RootMove = Move.RootMove();
+        CurMove = RootMove;
     }
 
     public ManualMove(string fen, Stream stream, (byte Version, byte KeyXYf, byte KeyXYt, uint KeyRMKSize, byte[] F32Keys) xQFKey)
@@ -98,7 +93,7 @@ public class ManualMove : IEnumerable
             int frow = fcolrow % 10, fcol = fcolrow / 10, trow = tcolrow % 10,
                 tcol = tcolrow / 10;
 
-            CoordPair coordPair = GetCoordPair(frow, fcol, trow, tcol);
+            CoordPair coordPair = Board.GetCoordPair(frow, fcol, trow, tcol);
             bool hasNext = (tag & 0x80) != 0, hasOther = (tag & 0x40) != 0;
 
             var curCoordPair = CurMove.CoordPair;
@@ -120,32 +115,27 @@ public class ManualMove : IEnumerable
                 isOther = !hasNext;
                 if (isOther && !hasOther && beforeMoves.Count > 0)
                 {
-                    var beforeMove = beforeMoves.Pop(); // 最后时，将回退到根
-                    while (beforeMove != CurMove)
-                        Back();
+                    CurMove = beforeMoves.Pop(); // 最后时，将回退到根
                 }
             }
         }
 
         void ClearError()
         {
-            bool AcceptCoordPair(CoordPair coordPair)
-                => _board[coordPair.FromCoord].CanMoveCoord(_board).Contains(coordPair.ToCoord);
+            bool AcceptCoordPair(Move move)
+            {
+                Board board = RootBoard.GetBoard(move.Before);
+                return board[move.CoordPair.FromCoord].CanMoveCoord(board).Contains(move.CoordPair.ToCoord);
+            }
 
             void ClearAfterMovesError(Move move)
-                => move.AfterMoves()?.RemoveAll(move => !AcceptCoordPair(move.CoordPair));
+                => move.AfterMoves()?.RemoveAll(move => !AcceptCoordPair(move));
 
-            EnumMoveDone = true;
-            ClearAfterMovesError(_rootMove);
-            foreach (var move in this)
-            {
-                DoMove(move);
-                ClearAfterMovesError(move);
-                UndoMove(move);
-            }
+            ClearAfterMovesError(RootMove);
+            // foreach (var move in this)
+            RootMove.AllAfterMoves().ForEach(move => ClearAfterMovesError(move));
         }
         ClearError(); // 清除XQF带来的错误着法
-        // }
     }
 
     public ManualMove(string fen, BinaryReader reader) : this(fen)
@@ -161,20 +151,20 @@ public class ManualMove : IEnumerable
         }
 
         var (rootRemark, rootAfterNum) = readRemarkAfterNum(reader);
-        _rootMove.Remark = rootRemark;
+        RootMove.Remark = rootRemark;
 
         Queue<(Move, int)> moveAfterNumQueue = new();
-        moveAfterNumQueue.Enqueue((_rootMove, rootAfterNum));
+        moveAfterNumQueue.Enqueue((RootMove, rootAfterNum));
         while (moveAfterNumQueue.Count > 0)
         {
             var (beforeMove, beforeAfterNum) = moveAfterNumQueue.Dequeue();
             for (int i = 0; i < beforeAfterNum; ++i)
             {
                 bool visible = reader.ReadBoolean();
-                CoordPair coordPair = _board.GetCoordPairFromRowCol(reader.ReadString());
+                CoordPair coordPair = Board.GetCoordPairFromRowCol(reader.ReadString());
                 var (remark, afterNum) = readRemarkAfterNum(reader);
 
-                var move = beforeMove.AddMove(coordPair, remark, visible);
+                var move = beforeMove.AddAfter(coordPair, remark, visible);
                 if (afterNum > 0)
                     moveAfterNumQueue.Enqueue((move, afterNum));
             }
@@ -194,9 +184,9 @@ public class ManualMove : IEnumerable
 
             var rootRemark = rootMoveMatch.Groups[1].Value;
             if (rootRemark.Length > 0)
-                _rootMove.Remark = rootRemark;
+                RootMove.Remark = rootRemark;
             Queue<(Move, int)> moveAfterNumQueue = new();
-            moveAfterNumQueue.Enqueue((_rootMove, Convert.ToInt32(rootMoveMatch.Groups[2].Value)));
+            moveAfterNumQueue.Enqueue((RootMove, Convert.ToInt32(rootMoveMatch.Groups[2].Value)));
 
             int matchIndex = 0;
             movePattern = @"([+-])(\d{4})" + remarkAfterNumPattern;
@@ -208,10 +198,10 @@ public class ManualMove : IEnumerable
                 {
                     Match match = matches[matchIndex++];
                     bool visible = match.Groups[1].Value == "+";
-                    CoordPair coordPair = _board.GetCoordPairFromRowCol(match.Groups[2].Value);
+                    CoordPair coordPair = Board.GetCoordPairFromRowCol(match.Groups[2].Value);
                     string remark = match.Groups[3].Value, afterNumStr = match.Groups[4].Value;
 
-                    var move = beforeMove.AddMove(coordPair, remark.Length > 0 ? remark : null, visible);
+                    var move = beforeMove.AddAfter(coordPair, remark.Length > 0 ? remark : null, visible);
                     if (afterNumStr.Length > 0)
                         moveAfterNumQueue.Enqueue((move, Convert.ToInt32(afterNumStr)));
                 }
@@ -222,9 +212,9 @@ public class ManualMove : IEnumerable
         string remarkPattern = @"(?:{([\s\S]+?)})";
         var remarkMatch = Regex.Match(moveString, "^" + remarkPattern);
         if (remarkMatch.Success)
-            _rootMove.Remark = remarkMatch.Groups[1].Value;
+            RootMove.Remark = remarkMatch.Groups[1].Value;
 
-        List<Move> allMoves = new() { _rootMove };
+        List<Move> allMoves = new() { RootMove };
         string pgnPattern = (fileExtType == FileExtType.PGNIccs
             ? @"(?:[" + Coord.ColChars + @"]\d){2}"
             : (fileExtType == FileExtType.PGNRowCol ? @"\d{4}" : "[" + Board.PGNZHChars() + @"]{4}"));
@@ -239,45 +229,37 @@ public class ManualMove : IEnumerable
             string pgnText = match.Groups[2].Value;
             bool visible = match.Groups[3].Value.Length == 0;
             string? remark = match.Groups[4].Success ? match.Groups[4].Value : null;
-            if (fileExtType == FileExtType.PGNZh)
-                GoTo(allMoves[id]);
 
-            allMoves.Add(allMoves[id].AddMove(_board.GetCoordPair(pgnText, fileExtType), remark, visible));
+            Board board = RootBoard.GetBoard(allMoves[id]);
+            allMoves.Add(allMoves[id].AddAfter(board.GetCoordPair(pgnText, fileExtType), remark, visible));
         }
     }
 
     public ManualMove(string fen, string rowCols) : this(fen)
     {
         int lenght = rowCols.Length;
-        Move move = _rootMove;
+        Move move = RootMove;
         for (int i = 0; i < lenght; i += CoordPair.RowColICCSLength)
-            move = move.AddMove(_board.GetCoordPair(rowCols[i..(i + CoordPair.RowColICCSLength)], FileExtType.PGNRowCol));
+            move = move.AddAfter(Board.GetCoordPairFromRowCol(rowCols[i..(i + CoordPair.RowColICCSLength)]));
     }
 
+    public Board RootBoard { get; }
+    public Move RootMove { get; }
     public Move CurMove { get; set; }
-    public bool EnumMoveDone { get; set; }
     public string? CurRemark { get => CurMove.Remark; set { CurMove.Remark = value?.Trim(); } }
-    public string UniversalFEN
-    {
-        get => Board.GetFEN(_board.GetFEN(), _board.IsBottom(PieceColor.Red)
-            ? ChangeType.NoChange : ChangeType.Exchange);
-    }
 
     public void AddMove(CoordPair coordPair, string? remark = null, bool visible = true)
-        => GoMove(CurMove.AddMove(coordPair, remark, visible));
+        => GoMove(CurMove.AddAfter(coordPair, remark, visible));
 
     public bool AddMove(string zhStr)
     {
-        var coordPair = _board.GetCoordPairFromZhStr(zhStr);
+        var coordPair = RootBoard.GetBoard(CurMove).GetCoordPairFromZhStr(zhStr);
         if (coordPair.Equals(CoordPair.Null))
             return false;
 
         AddMove(coordPair);
         return true;
     }
-
-    public CoordPair GetCoordPair(int frow, int fcol, int trow, int tcol)
-        => _board.GetCoordPair(frow, fcol, trow, tcol);
 
     public bool Go() // 前进
     {
@@ -299,7 +281,6 @@ public class ManualMove : IEnumerable
             || (!isLeft && index == otherMoves.Count - 1))
             return false;
 
-        UndoMove(CurMove);
         GoMove(otherMoves[index + (isLeft ? -1 : 1)]);
         return true;
     }
@@ -313,8 +294,7 @@ public class ManualMove : IEnumerable
         if (CurMove.Before == null)
             return false;
 
-        UndoMove(CurMove);
-        CurMove = CurMove.Before;
+        GoMove(CurMove.Before);
         return true;
     }
     public void BackStart() // 回退到开始
@@ -322,38 +302,8 @@ public class ManualMove : IEnumerable
         while (Back())
             ;
     }
-    public void GoTo(Move? move) // 转至指定move
-    {
-        if (CurMove == move || move == null)
-            return;
 
-        BackStart();
-        CurMove = move;
-
-        List<Move> beforeMoves = new();
-        while (move.Before != null)
-        {
-            beforeMoves.Insert(0, move);
-            move = move.Before;
-        }
-        beforeMoves.ForEach(move => DoMove(move));
-    }
-
-    private void GoMove(Move move) => DoMove(CurMove = move);
-
-    private void DoMove(Move move)
-    {
-        CoordPair coordPair = move.CoordPair;
-        move.EatPiece = _board[coordPair.ToCoord];
-
-        _board = _board.MoveToBoard(coordPair.FromCoord, coordPair.ToCoord, Piece.Null);
-    }
-    private void UndoMove(Move move)
-    {
-        CoordPair coordPair = move.CoordPair;
-
-        _board = _board.MoveToBoard(coordPair.ToCoord, coordPair.FromCoord, move.EatPiece);
-    }
+    private void GoMove(Move move) => CurMove = move;
 
     public void WriteCM(BinaryWriter writer)
     {
@@ -365,66 +315,70 @@ public class ManualMove : IEnumerable
             writer.Write((byte)afterNum);
         }
 
-        writeRemarkAfterNum(writer, _rootMove.Remark, _rootMove.AfterNum);
-        foreach (var move in this)
+        writeRemarkAfterNum(writer, RootMove.Remark, RootMove.AfterNum);
+        RootMove.AllAfterMoves().ForEach(move =>
         {
             writer.Write(move.Visible);
             writer.Write(move.CoordPair.RowCol);
             writeRemarkAfterNum(writer, move.Remark, move.AfterNum);
-        }
+        });
     }
 
     public string GetString(FileExtType fileExtType)
     {
-        string result = "";
         if (fileExtType == FileExtType.Text)
         {
-            static string GetRemarkAfterNum(Move move)
-                => (move.Remark == null ? "" : "{" + move.Remark + "}") +
-                 (move.AfterNum == 0 ? "" : "(" + move.AfterNum.ToString() + ")") + " ";
+            string GetRemarkAfterNum(Move move)
+                => $"{(move.Remark == null ? "" : $"{{{move.Remark}}}")}{(move.AfterNum == 0 ? "" : $"({move.AfterNum})")} ";
 
-            static string GetMoveString(Move move)
-                 => $"{(move.Visible ? "+" : "-")}{move.CoordPair.RowCol}";
-
-            result = GetRemarkAfterNum(_rootMove);
-            foreach (var move in this)
-                result += GetMoveString(move) + GetRemarkAfterNum(move);
-
-            return result;
+            return GetRemarkAfterNum(RootMove) +
+                    string.Concat(RootMove.AllAfterMoves().Select(move
+                        => $"{(move.Visible ? "+" : "-")}{move.CoordPair.RowCol}{GetRemarkAfterNum(move)}"));
         }
 
-        if (_rootMove.Remark != null && _rootMove.Remark.Length > 0)
-            result += "{" + _rootMove.Remark + "}\n";
+        string GetPGNText(Move move, FileExtType fileExtType = FileExtType.PGNZh)
+            => fileExtType switch
+            {
+                FileExtType.PGNIccs => move.CoordPair.Iccs,
+                FileExtType.PGNRowCol => move.CoordPair.RowCol,
+                _ => move.Before == null ? string.Empty
+                    : RootBoard.GetBoard(move.Before).GetZhStrFromCoordPair(move.CoordPair),
+            };
 
-        EnumMoveDone = fileExtType == FileExtType.PGNZh;
-        foreach (var move in this)
-            result += move.Before?.Id.ToString() + "-"
-                + GetPGNText(move.CoordPair, fileExtType)
-                + (move.Visible ? "" : "_")
-                + (move.Remark == null ? " " : "{" + move.Remark + "} ");
-
-        return result;
+        return ((RootMove.Remark != null && RootMove.Remark.Length > 0) ? $"{{{RootMove.Remark}}}\n" : "") +
+            string.Concat(RootMove.AllAfterMoves().Select(move =>
+                 move.Before?.Id.ToString() + "-"
+                    + GetPGNText(move, fileExtType)
+                    + (move.Visible ? "" : "_")
+                    + (move.Remark == null ? " " : "{" + move.Remark + "} ")));
     }
 
     public string GetRowCols()
     {
-        StringBuilder rowCols = new();
-        var afterMoves = _rootMove.AfterMoves();
-        while (afterMoves != null && afterMoves.Count > 0)
+        StringBuilder result = new();
+        var afterMoves = RootMove.AfterMoves();
+        while (afterMoves?.Count > 0)
         {
-            rowCols.Append(afterMoves[0].CoordPair.RowCol);
+            result.Append(afterMoves[0].CoordPair.RowCol);
             afterMoves = afterMoves[0].AfterMoves();
         }
 
-        return rowCols.ToString();
+        return result.ToString();
     }
 
     public List<(string fen, string rowCol)> GetFENRowCols()
     {
         List<(string fen, string rowCol)> aspects = new();
-        EnumMoveDone = true;
-        foreach (var move in this)
-            aspects.Add((UniversalFEN, move.CoordPair.RowCol));
+        string UniversalFEN(Move move)
+        {
+            Board board = RootBoard.GetBoard(move);
+            return Board.GetFEN(board.GetFEN(), board.IsBottom(PieceColor.Red)
+                ? ChangeType.NoChange : ChangeType.Exchange);
+        }
+
+        // foreach (var move in this)
+        RootMove.AllAfterMoves().ForEach(move =>
+            aspects.Add((UniversalFEN(move), move.CoordPair.RowCol)));
 
         return aspects;
     }
@@ -432,9 +386,10 @@ public class ManualMove : IEnumerable
     public string ToString(bool showMove = false, bool isOrder = false)
     {
         int moveCount = 0, remarkCount = 0, maxRemarkCount = 0;
-        string moveString = _rootMove.ToString();
-        List<Move> allMoves = new();
-        foreach (var move in this)
+        StringBuilder result = new(RootMove.ToString());
+        List<Move> allMoves = RootMove.AllAfterMoves();
+        // foreach (var move in this)
+        allMoves.ForEach(move =>
         {
             ++moveCount;
             if (move.Remark != null)
@@ -445,11 +400,11 @@ public class ManualMove : IEnumerable
             if (showMove)
             {
                 if (isOrder)
-                    moveString += move.ToString();
-                else
-                    allMoves.Add(move);
+                    result.Append(move.ToString());
+                // else
+                // allMoves.Add(move);
             }
-        }
+        });
 
         if (showMove && !isOrder)
         {
@@ -458,20 +413,12 @@ public class ManualMove : IEnumerable
                 () => "",
                 (move, loop, subString) => subString += move.ToString(),
                 (finalSubString) => results.Add(finalSubString));
-            moveString += string.Concat(results);
+            result.Append(string.Concat(results));
         }
-        moveString += $"着法数量【{moveCount}】\t注解数量【{remarkCount}】\t注解最长【{maxRemarkCount}】\n\n";
+        result.Append($"着法数量【{moveCount}】\t注解数量【{remarkCount}】\t注解最长【{maxRemarkCount}】\n\n");
 
-        return _board.ToString() + moveString;
+        return RootBoard.ToString() + result;
     }
-
-    private string GetPGNText(CoordPair coordPair, FileExtType fileExtType)
-        => fileExtType switch
-        {
-            FileExtType.PGNIccs => coordPair.Iccs,
-            FileExtType.PGNRowCol => coordPair.RowCol,
-            _ => _board.GetZhStrFromCoordPair(coordPair),
-        };
 
     IEnumerator IEnumerable.GetEnumerator() => (IEnumerator)GetEnumerator();
 

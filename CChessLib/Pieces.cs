@@ -3,7 +3,7 @@ namespace CChess;
 public class Pieces
 {
     private Piece[][][] _pieces;
-    public static readonly Pieces pieces = new();
+    private static readonly Pieces pieces = new();
 
     private Pieces()
     {
@@ -44,10 +44,10 @@ public class Pieces
 
     public List<Piece> GetSeatPieces(string pieceChars)
     {
-        List<Piece> pieces = new();
+        List<Piece> pieces = new(pieceChars.Length);
         foreach (char ch in pieceChars)
         {
-            if (ch == Piece.Null.Char)
+            if (ch == Piece.NullCh)
                 pieces.Add(Piece.Null);
             else
             {

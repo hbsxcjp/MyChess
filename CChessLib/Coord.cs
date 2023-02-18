@@ -4,10 +4,9 @@ public enum ChangeType { Exchange, Rotate, Symmetry_H, Symmetry_V, NoChange = -1
 
 public struct Coord
 {
-    public static readonly Coord Null = new(-10); // (-1, -1)
-    private static readonly List<Coord> coords =
-        Enumerable.Range(0, RowCount * ColCount)
-            .Select(index => new Coord(index)).ToList();
+    public static readonly Coord Null = new(-10);  // (-1, -1)
+    public static readonly List<Coord> Coords =
+        Enumerable.Range(0, RowCount * ColCount).Select(index => new Coord(index)).ToList();
 
     public const string ColChars = "ABCDEFGHI";
     public const int RowCount = 10;
@@ -21,10 +20,9 @@ public struct Coord
     public string RowCol { get => $"{Row}{Col}"; }
     public string Iccs { get => $"{ColChars[Col]}{Row}"; }
     public bool IsBottom { get => (Row << 1) < RowCount; }
-    public static List<Coord> Coords { get => coords; }
 
-    public static Coord Get(int index) => Coords[index];
-    public static Coord Get(int row, int col) => Get(row * ColCount + col);
+    public static Coord Get(int index) => new(index);
+    public static Coord Get(int row, int col) => new(row * ColCount + col);
 
     public static string GetRowCol(string rowCol, ChangeType ct)
     {
@@ -47,11 +45,6 @@ public struct Coord
 
     public static string RowCols(string iccses)
     {
-        // System.Text.StringBuilder builder = new();
-        // for (int i = 0; i < iccses.Length - 1; i += 2)
-        //     builder.Append($"{iccses[i + 1]}{ColChars.IndexOf(iccses[i])}");
-
-        // return builder.ToString();
         return Enumerable.Range(0, iccses.Length / 2)
                 .Select(i => $"{iccses[i * 2 + 1]}{ColChars.IndexOf(iccses[i * 2])}")
                 .ToString() ?? String.Empty;
