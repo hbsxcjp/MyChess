@@ -4,12 +4,16 @@ using System.Text.RegularExpressions;
 
 namespace CChess;
 
-public enum FileExtType { Xqf, Cm, Text, PGNRowCol, PGNIccs, PGNZh, }
+public enum FileExtType { xqf, cm, txt, pgnrc, pgniccs, pgnzh, }
+
+public enum InfoKey
+{
+    source, title, game, date, site, black, rowCols, red, eccoSn, eccoName, win,
+    opening, writer, author, type, version, FEN, moveString
+}
 
 public class Manual
 {
-    private static readonly List<string> FileExtName
-        = new() { ".XQF", ".cm", ".txt", ".pgnrc", ".pgniccs", ".pgnzh" };
     private const string FEN = "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR";
 
     public Manual()
@@ -90,6 +94,7 @@ public class Manual
             for (int i = 0; i != PIECENUM; ++i)
                 head_QiziXY[i] -= KeyXY; // 保持为8位无符号整数，<256
         }
+
         int[] KeyBytes = new int[]{
                     (headKeysSum & headKeyMask) | headKeyOrA,
                     (headKeyXY & headKeyMask) | headKeyOrB,
@@ -115,24 +120,27 @@ public class Manual
         // System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         Encoding codec = Encoding.GetEncoding("gb2312"); // "gb2312"
-        string GetInfoString(ReadOnlySpan<byte> name)
-            => codec.GetString(name).Replace('\0', ' ').Trim();
         string[] result = { "未知", "红胜", "黑胜", "和棋" };
         string[] typestr = { "全局", "开局", "中局", "残局" };
-        SetInfoValue(ManualField.FEN, $"{Board.PieceCharsToFEN(pieceChars.ToString())} r - - 0 1"); // 可能存在不是红棋先走的情况？
-        SetInfoValue(ManualField.Version, Version.ToString());
-        SetInfoValue(ManualField.Win, result[headPlayResult].Trim());
-        SetInfoValue(ManualField.Type, typestr[headCodeA_H[0]].Trim());
-        SetInfoValue(ManualField.Title, GetInfoString(TitleA));
-        SetInfoValue(ManualField.Event, GetInfoString(Event));
-        SetInfoValue(ManualField.Date, GetInfoString(Date));
-        SetInfoValue(ManualField.Site, GetInfoString(Site));
-        SetInfoValue(ManualField.Red, GetInfoString(Red));
-        SetInfoValue(ManualField.Black, GetInfoString(Black));
-        SetInfoValue(ManualField.Opening, GetInfoString(Opening));
-        SetInfoValue(ManualField.Writer, GetInfoString(RMKWriter));
-        SetInfoValue(ManualField.Author, GetInfoString(Author));
-        // SetBoard();
+        string GetInfoString(ReadOnlySpan<byte> name)
+            => codec.GetString(name).Replace('\0', ' ').Trim();
+        (new List<(InfoKey field, string value)>
+            {
+                (InfoKey.FEN, $"{Board.PieceCharsToFEN(pieceChars.ToString())} r - - 0 1"), // 可能存在不是红棋先走的情况？
+                (InfoKey.version, Version.ToString()),
+                (InfoKey.win, result[headPlayResult].Trim()),
+                (InfoKey.type, typestr[headCodeA_H[0]].Trim()),
+                (InfoKey.title, GetInfoString(TitleA)),
+                (InfoKey.game, GetInfoString(Event)),
+                (InfoKey.date, GetInfoString(Date)),
+                (InfoKey.site, GetInfoString(Site)),
+                (InfoKey.red, GetInfoString(Red)),
+                (InfoKey.black, GetInfoString(Black)),
+                (InfoKey.opening, GetInfoString(Opening)),
+                (InfoKey.writer, GetInfoString(RMKWriter)),
+                (InfoKey.author, GetInfoString(Author))
+            }).ForEach(fieldValue
+                => SetInfoValue(fieldValue.field, fieldValue.value));
 
         ManualMove = new(GetFEN(), stream, (Version, KeyXYf, KeyXYt, KeyRMKSize, F32Keys));
     }
@@ -150,15 +158,15 @@ public class Manual
             Info[key] = value;
         }
 
-        ManualMove = new(GetFEN(), reader);
+        ManualMove = new(GetFEN(), bytes[(int)reader.BaseStream.Position..]);
     }
 
-    public Manual(string manualString, FileExtType fileExtType = FileExtType.Text)
+    public Manual(string manualString, FileExtType fileExtType = FileExtType.txt)
     {
         Info = new();
         int infoEndPos = manualString.IndexOf("\n\n");
 
-        string infoString= manualString[..infoEndPos];
+        string infoString = manualString[..infoEndPos];
         var matches = Regex.Matches(infoString, @"\[(\S+) ""(.*)""\]");
         foreach (Match match in matches.Cast<Match>())
             Info[match.Groups[1].Value] = match.Groups[2].Value;
@@ -171,15 +179,22 @@ public class Manual
     public Manual(Dictionary<string, string> info)
     {
         Info = info;
-        string moveStrKey = Database.GetInfoKey(ManualField.MoveString);
-        if (Info.ContainsKey(moveStrKey))
-            ManualMove = new(GetFEN(), Info[moveStrKey], FileExtType.Text);
-        else
-            ManualMove = new(GetFEN(), GetInfoValue(ManualField.RowCols));
+        string moveString = GetInfoValue(InfoKey.moveString);
+        ManualMove = (moveString.Length > 0
+                ? new(GetFEN(), moveString, FileExtType.txt)
+                : new(GetFEN(), GetInfoValue(InfoKey.rowCols)));
     }
 
     public Dictionary<string, string> Info { get; }
     public ManualMove ManualMove { get; }
+
+    private static List<string> FileExtNames
+        => Enumerable.Range(0, (int)FileExtType.pgnzh + 1)
+            .Select(index => $".{((FileExtType)index)}").ToList();
+
+    public static List<string> InfoKeys
+        => Enumerable.Range(0, (int)InfoKey.moveString + 1)
+            .Select(index => ((InfoKey)index).ToString()).ToList();
 
     public static Manual GetManual(string fileName)
     {
@@ -190,9 +205,9 @@ public class Manual
         FileExtType fileExtType = GetFileExtType(fileName);
         switch (fileExtType)
         {
-            case FileExtType.Xqf:
+            case FileExtType.xqf:
                 return new(stream);
-            case FileExtType.Cm:
+            case FileExtType.cm:
                 {
                     byte[] bytes = new byte[stream.Length];
                     stream.Write(bytes);
@@ -222,50 +237,40 @@ public class Manual
             writer.Write(kv.Value);
         }
 
-        ManualMove.WriteCM(writer);
+        stream.Write(ManualMove.GetBytes());
         return stream.ToArray();
     }
 
+    public string GetRowCols() => ManualMove.GetRowCols();
+
     public List<(string fen, string rowCol)> GetFENRowCols() => ManualMove.GetFENRowCols();
 
-    public bool InfoHas(ManualField field) => Info.ContainsKey(Database.GetInfoKey(field));
+    public static string GetInfoKey(InfoKey field) => InfoKeys[(int)field];
+    public string GetInfoValue(InfoKey field)
+        => Info.ContainsKey(GetInfoKey(field)) ? Info[GetInfoKey(field)] : string.Empty;
 
-    public string GetInfoValue(ManualField field) => Info[Database.GetInfoKey(field)];
-
-    public void SetInfoValue(ManualField field, string value) => Info[Database.GetInfoKey(field)] = value;
-
-    public void SetDatabaseField(string fileName)
-    {
-        SetInfoValue(ManualField.Source, fileName);
-        SetInfoValue(ManualField.RowCols, ManualMove.GetRowCols());
-        SetInfoValue(ManualField.MoveString, GetMoveString());
-    }
+    public void SetInfoValue(InfoKey field, string value) => Info[GetInfoKey(field)] = value;
 
     private static FileExtType GetFileExtType(string fileName)
-        => (FileExtType)(FileExtName.IndexOf(Path.GetExtension(fileName)));
+        => (FileExtType)(FileExtNames.IndexOf(Path.GetExtension(fileName)));
 
     public static string GetFileName(string fileName, FileExtType fileExtType)
-        => fileName + FileExtName[(int)fileExtType];
+        => $"{fileName}{FileExtNames[(int)fileExtType]}";
 
     private string GetFEN()
-        => (InfoHas(ManualField.FEN) ? GetInfoValue(ManualField.FEN) : FEN).Split(' ')[0];
+        => GetInfoValue(InfoKey.FEN).Split(' ')[0];
 
     private string GetInfoString()
-    {
-        string result = "";
-        foreach (var item in Info)
-            result += "[" + item.Key + " \"" + item.Value + "\"]\n";
+        => string.Concat(Info.Select(keyValue
+            => $"[{keyValue.Key} \"{keyValue.Value}\"]\n"));
 
-        return result;
-    }
-    
-    public string GetString(FileExtType fileExtType = FileExtType.Text)
-    => GetInfoString() + "\n" + GetMoveString(fileExtType);
-
-    public string GetMoveString(FileExtType fileExtType = FileExtType.Text)
+    public string GetMoveString(FileExtType fileExtType = FileExtType.txt)
         => ManualMove.GetString(fileExtType);
 
+    public string GetString(FileExtType fileExtType = FileExtType.txt)
+        => $"{GetInfoString()}\n{GetMoveString(fileExtType)}";
+
     public string ToString(bool showMove = false, bool isOrder = false)
-        => GetInfoString() + ManualMove.ToString(showMove, isOrder);
+        => $"{GetInfoString()}{ManualMove.ToString(showMove, isOrder)}";
 
 }

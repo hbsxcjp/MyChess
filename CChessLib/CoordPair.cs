@@ -1,6 +1,6 @@
 namespace CChess;
 
-public struct CoordPair
+public class CoordPair
 {
     public static readonly CoordPair Null = new(Coord.Null, Coord.Null);
     public const int RowColICCSLength = 4;
@@ -10,6 +10,10 @@ public struct CoordPair
         FromCoord = fromCoord;
         ToCoord = toCoord;
     }
+
+    public CoordPair(int frow, int fcol, int trow, int tcol)
+        : this(Coord.Get(frow, fcol), Coord.Get(trow, tcol))
+    { }
 
     public Coord FromCoord { get; }
     public Coord ToCoord { get; }

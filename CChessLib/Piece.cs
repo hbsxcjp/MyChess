@@ -31,7 +31,7 @@ public abstract class Piece
     public List<Coord> CanMoveCoord(Board board)
     {
         Coord fromCoord = board.GetCoord(this);
-        return MoveCoord(board).Where(toCoord => board.CanMove(fromCoord, toCoord)).ToList();
+        return MoveCoord(board).Where(toCoord => board.CanMove(new(fromCoord, toCoord))).ToList();
     }
 
     public static PieceColor GetColor(char ch) => char.IsUpper(ch) ? PieceColor.Red : PieceColor.Black;

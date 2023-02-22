@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Collections.Concurrent;
-using System.Collections;
+// using System.Collections;
 using System.Text.RegularExpressions;
 using System.Text;
 
@@ -70,17 +70,18 @@ public class ManualMove// : IEnumerable
         }
 
         stream.Seek(1024, SeekOrigin.Begin);
-        CurRemark = __readDataAndGetRemark();
+        RootMove.Remark = __readDataAndGetRemark()?.Trim();
 
         if ((tag & 0x80) == 0) // 无左子树
             return;
 
         // 有左子树
         Stack<Move> beforeMoves = new();
-        beforeMoves.Push(CurMove);
+        beforeMoves.Push(RootMove);
         bool isOther = false;
+        Move beforeMove = RootMove;
         // 当前棋子为根，且有后继棋子时，表明深度搜索已经回退到根，已经没有后续棋子了
-        while (!(CurMove.Before == null && CurMove.HasAfter))
+        while (!(beforeMove.Before == null && beforeMove.HasAfter))
         {
             var remark = __readDataAndGetRemark();
             //# 一步棋的起点和终点有简单的加密计算，读入时需要还原
@@ -93,52 +94,38 @@ public class ManualMove// : IEnumerable
             int frow = fcolrow % 10, fcol = fcolrow / 10, trow = tcolrow % 10,
                 tcol = tcolrow / 10;
 
-            CoordPair coordPair = Board.GetCoordPair(frow, fcol, trow, tcol);
+            CoordPair coordPair = new(frow, fcol, trow, tcol);
             bool hasNext = (tag & 0x80) != 0, hasOther = (tag & 0x40) != 0;
 
-            var curCoordPair = CurMove.CoordPair;
-            if (curCoordPair.FromCoord.Row == frow && curCoordPair.FromCoord.Col == fcol
-                && curCoordPair.ToCoord.Row == trow && curCoordPair.ToCoord.Col == tcol)
+            if (beforeMove.CoordPair.Equals(coordPair))
             {
-                Debug.WriteLine("Error: " + coordPair.ToString() + CurRemark);
+                Debug.WriteLine("Error: " + coordPair.ToString() + beforeMove.Remark);
             }
             else
             {
                 if (isOther)
-                    Back();
-                AddMove(coordPair, remark, true);
-                //Debug.WriteLine("CurMove: " + CurMove.ToString());
+                    beforeMove = beforeMove.Before ?? beforeMove;
 
+                beforeMove = beforeMove.AddAfter(coordPair, remark);
                 if (hasNext && hasOther)
-                    beforeMoves.Push(CurMove);
+                    beforeMoves.Push(beforeMove);
 
                 isOther = !hasNext;
                 if (isOther && !hasOther && beforeMoves.Count > 0)
                 {
-                    CurMove = beforeMoves.Pop(); // 最后时，将回退到根
+                    beforeMove = beforeMoves.Pop(); // 最后时，将回退到根
                 }
             }
         }
 
-        void ClearError()
-        {
-            bool AcceptCoordPair(Move move)
-            {
-                Board board = RootBoard.GetBoard(move.Before);
-                return board[move.CoordPair.FromCoord].CanMoveCoord(board).Contains(move.CoordPair.ToCoord);
-            }
-
-            void ClearAfterMovesError(Move move)
-                => move.AfterMoves()?.RemoveAll(move => !AcceptCoordPair(move));
-
-            ClearAfterMovesError(RootMove);
-            // foreach (var move in this)
-            RootMove.AllAfterMoves().ForEach(move => ClearAfterMovesError(move));
-        }
-        ClearError(); // 清除XQF带来的错误着法
+        List<Move> allMoves = RootMove.AllAfterMoves;
+        allMoves.Insert(0, RootMove);
+        allMoves.ForEach(move
+            => move.AfterMoves?.RemoveAll(move
+                => !RootBoard.WithMove(move.Before).CanMove(move.CoordPair)));
     }
 
-    public ManualMove(string fen, BinaryReader reader) : this(fen)
+    public ManualMove(string fen, byte[] bytes) : this(fen)
     {
         static (string? remark, int afterNum) readRemarkAfterNum(BinaryReader reader)
         {
@@ -150,6 +137,8 @@ public class ManualMove// : IEnumerable
             return (remark, afterNum);
         }
 
+        using var reader = new BinaryReader(
+            new MemoryStream(bytes), Encoding.UTF8, true);
         var (rootRemark, rootAfterNum) = readRemarkAfterNum(reader);
         RootMove.Remark = rootRemark;
 
@@ -173,66 +162,10 @@ public class ManualMove// : IEnumerable
 
     public ManualMove(string fen, string moveString, FileExtType fileExtType) : this(fen)
     {
-        string movePattern;
-        MatchCollection matches;
-        if (fileExtType == FileExtType.Text)
-        {
-            string remarkAfterNumPattern = @"(?:{([\s\S]+?)})?(?:\((\d+)\))? ";
-            var rootMoveMatch = Regex.Match(moveString, "^" + remarkAfterNumPattern);
-            if (!rootMoveMatch.Success)
-                return;
-
-            var rootRemark = rootMoveMatch.Groups[1].Value;
-            if (rootRemark.Length > 0)
-                RootMove.Remark = rootRemark;
-            Queue<(Move, int)> moveAfterNumQueue = new();
-            moveAfterNumQueue.Enqueue((RootMove, Convert.ToInt32(rootMoveMatch.Groups[2].Value)));
-
-            int matchIndex = 0;
-            movePattern = @"([+-])(\d{4})" + remarkAfterNumPattern;
-            matches = Regex.Matches(moveString, movePattern);
-            while (moveAfterNumQueue.Count > 0 && matchIndex < matches.Count)
-            {
-                var (beforeMove, beforeAfterNum) = moveAfterNumQueue.Dequeue();
-                for (int i = 0; i < beforeAfterNum; ++i)
-                {
-                    Match match = matches[matchIndex++];
-                    bool visible = match.Groups[1].Value == "+";
-                    CoordPair coordPair = Board.GetCoordPairFromRowCol(match.Groups[2].Value);
-                    string remark = match.Groups[3].Value, afterNumStr = match.Groups[4].Value;
-
-                    var move = beforeMove.AddAfter(coordPair, remark.Length > 0 ? remark : null, visible);
-                    if (afterNumStr.Length > 0)
-                        moveAfterNumQueue.Enqueue((move, Convert.ToInt32(afterNumStr)));
-                }
-            }
-            return;
-        }
-
-        string remarkPattern = @"(?:{([\s\S]+?)})";
-        var remarkMatch = Regex.Match(moveString, "^" + remarkPattern);
-        if (remarkMatch.Success)
-            RootMove.Remark = remarkMatch.Groups[1].Value;
-
-        List<Move> allMoves = new() { RootMove };
-        string pgnPattern = (fileExtType == FileExtType.PGNIccs
-            ? @"(?:[" + Coord.ColChars + @"]\d){2}"
-            : (fileExtType == FileExtType.PGNRowCol ? @"\d{4}" : "[" + Board.PGNZHChars() + @"]{4}"));
-        movePattern = @"(\d+)\-(" + pgnPattern + @")(_?)" + remarkPattern + @"?\s+";
-        matches = Regex.Matches(moveString, movePattern);
-        foreach (Match match in matches.Cast<Match>())
-        {
-            if (!match.Success)
-                break;
-
-            int id = Convert.ToInt32(match.Groups[1].Value);
-            string pgnText = match.Groups[2].Value;
-            bool visible = match.Groups[3].Value.Length == 0;
-            string? remark = match.Groups[4].Success ? match.Groups[4].Value : null;
-
-            Board board = RootBoard.GetBoard(allMoves[id]);
-            allMoves.Add(allMoves[id].AddAfter(board.GetCoordPair(pgnText, fileExtType), remark, visible));
-        }
+        if (fileExtType == FileExtType.txt)
+            SetRootMoveFromPGNText(fen, moveString);
+        else
+            SetRootMoveFromPGNExt(fen, moveString, fileExtType);
     }
 
     public ManualMove(string fen, string rowCols) : this(fen)
@@ -245,34 +178,29 @@ public class ManualMove// : IEnumerable
 
     public Board RootBoard { get; }
     public Move RootMove { get; }
-    public Move CurMove { get; set; }
-    public string? CurRemark { get => CurMove.Remark; set { CurMove.Remark = value?.Trim(); } }
-
-    public void AddMove(CoordPair coordPair, string? remark = null, bool visible = true)
-        => GoMove(CurMove.AddAfter(coordPair, remark, visible));
+    public Move CurMove { get; private set; }
 
     public bool AddMove(string zhStr)
     {
-        var coordPair = RootBoard.GetBoard(CurMove).GetCoordPairFromZhStr(zhStr);
+        var coordPair = RootBoard.WithMove(CurMove).GetCoordPairFromZhStr(zhStr);
         if (coordPair.Equals(CoordPair.Null))
             return false;
 
-        AddMove(coordPair);
-        return true;
+        return AddMove(coordPair);
     }
 
     public bool Go() // 前进
     {
-        var afterMoves = CurMove.AfterMoves();
+        var afterMoves = CurMove.AfterMoves;
         if (afterMoves == null)
             return false;
 
-        GoMove(afterMoves[0]);
+        CurMove = afterMoves[0];
         return true;
     }
     public bool GoOther(bool isLeft) // 变着
     {
-        var otherMoves = CurMove.OtherMoves();
+        var otherMoves = CurMove.OtherMoves;
         if (otherMoves == null)
             return false;
 
@@ -281,7 +209,7 @@ public class ManualMove// : IEnumerable
             || (!isLeft && index == otherMoves.Count - 1))
             return false;
 
-        GoMove(otherMoves[index + (isLeft ? -1 : 1)]);
+        CurMove = otherMoves[index + (isLeft ? -1 : 1)];
         return true;
     }
     public void GoEnd() // 前进到底
@@ -294,7 +222,7 @@ public class ManualMove// : IEnumerable
         if (CurMove.Before == null)
             return false;
 
-        GoMove(CurMove.Before);
+        CurMove = CurMove.Before;
         return true;
     }
     public void BackStart() // 回退到开始
@@ -303,9 +231,7 @@ public class ManualMove// : IEnumerable
             ;
     }
 
-    private void GoMove(Move move) => CurMove = move;
-
-    public void WriteCM(BinaryWriter writer)
+    public byte[] GetBytes()
     {
         static void writeRemarkAfterNum(BinaryWriter writer, string? remark, int afterNum)
         {
@@ -315,38 +241,42 @@ public class ManualMove// : IEnumerable
             writer.Write((byte)afterNum);
         }
 
+        MemoryStream stream = new();
+        using var writer = new BinaryWriter(stream, Encoding.UTF8, true);
         writeRemarkAfterNum(writer, RootMove.Remark, RootMove.AfterNum);
-        RootMove.AllAfterMoves().ForEach(move =>
+        RootMove.AllAfterMoves.ForEach(move =>
         {
             writer.Write(move.Visible);
             writer.Write(move.CoordPair.RowCol);
             writeRemarkAfterNum(writer, move.Remark, move.AfterNum);
         });
+
+        return stream.ToArray();
     }
 
     public string GetString(FileExtType fileExtType)
     {
-        if (fileExtType == FileExtType.Text)
+        if (fileExtType == FileExtType.txt)
         {
             string GetRemarkAfterNum(Move move)
                 => $"{(move.Remark == null ? "" : $"{{{move.Remark}}}")}{(move.AfterNum == 0 ? "" : $"({move.AfterNum})")} ";
 
             return GetRemarkAfterNum(RootMove) +
-                    string.Concat(RootMove.AllAfterMoves().Select(move
+                    string.Concat(RootMove.AllAfterMoves.Select(move
                         => $"{(move.Visible ? "+" : "-")}{move.CoordPair.RowCol}{GetRemarkAfterNum(move)}"));
         }
 
-        string GetPGNText(Move move, FileExtType fileExtType = FileExtType.PGNZh)
+        string GetPGNText(Move move, FileExtType fileExtType = FileExtType.pgnzh)
             => fileExtType switch
             {
-                FileExtType.PGNIccs => move.CoordPair.Iccs,
-                FileExtType.PGNRowCol => move.CoordPair.RowCol,
+                FileExtType.pgniccs => move.CoordPair.Iccs,
+                FileExtType.pgnrc => move.CoordPair.RowCol,
                 _ => move.Before == null ? string.Empty
-                    : RootBoard.GetBoard(move.Before).GetZhStrFromCoordPair(move.CoordPair),
+                    : RootBoard.WithMove(move.Before).GetZhStrFromCoordPair(move.CoordPair),
             };
 
         return ((RootMove.Remark != null && RootMove.Remark.Length > 0) ? $"{{{RootMove.Remark}}}\n" : "") +
-            string.Concat(RootMove.AllAfterMoves().Select(move =>
+            string.Concat(RootMove.AllAfterMoves.Select(move =>
                  move.Before?.Id.ToString() + "-"
                     + GetPGNText(move, fileExtType)
                     + (move.Visible ? "" : "_")
@@ -356,11 +286,11 @@ public class ManualMove// : IEnumerable
     public string GetRowCols()
     {
         StringBuilder result = new();
-        var afterMoves = RootMove.AfterMoves();
+        var afterMoves = RootMove.AfterMoves;
         while (afterMoves?.Count > 0)
         {
             result.Append(afterMoves[0].CoordPair.RowCol);
-            afterMoves = afterMoves[0].AfterMoves();
+            afterMoves = afterMoves[0].AfterMoves;
         }
 
         return result.ToString();
@@ -371,23 +301,104 @@ public class ManualMove// : IEnumerable
         List<(string fen, string rowCol)> aspects = new();
         string UniversalFEN(Move move)
         {
-            Board board = RootBoard.GetBoard(move);
+            Board board = RootBoard.WithMove(move);
             return Board.GetFEN(board.GetFEN(), board.IsBottom(PieceColor.Red)
                 ? ChangeType.NoChange : ChangeType.Exchange);
         }
 
-        // foreach (var move in this)
-        RootMove.AllAfterMoves().ForEach(move =>
+        RootMove.AllAfterMoves.ForEach(move =>
             aspects.Add((UniversalFEN(move), move.CoordPair.RowCol)));
 
         return aspects;
+    }
+
+    private void SetRootMoveFromPGNText(string fen, string moveString)
+    {
+        string movePattern;
+        MatchCollection matches;
+        string remarkAfterNumPattern = @"(?:{([\s\S]+?)})?(?:\((\d+)\))? ";
+        var rootMoveMatch = Regex.Match(moveString, "^" + remarkAfterNumPattern);
+        if (!rootMoveMatch.Success)
+            return;
+
+        var rootRemark = rootMoveMatch.Groups[1].Value;
+        if (rootRemark.Length > 0)
+            RootMove.Remark = rootRemark;
+        Queue<(Move, int)> moveAfterNumQueue = new();
+        moveAfterNumQueue.Enqueue((RootMove, Convert.ToInt32(rootMoveMatch.Groups[2].Value)));
+
+        int matchIndex = 0;
+        movePattern = @"([+-])(\d{4})" + remarkAfterNumPattern;
+        matches = Regex.Matches(moveString, movePattern);
+        while (moveAfterNumQueue.Count > 0 && matchIndex < matches.Count)
+        {
+            var (beforeMove, beforeAfterNum) = moveAfterNumQueue.Dequeue();
+            for (int i = 0; i < beforeAfterNum; ++i)
+            {
+                Match match = matches[matchIndex++];
+                bool visible = match.Groups[1].Value == "+";
+                CoordPair coordPair = Board.GetCoordPairFromRowCol(match.Groups[2].Value);
+                string remark = match.Groups[3].Value, afterNumStr = match.Groups[4].Value;
+
+                var move = beforeMove.AddAfter(coordPair, remark.Length > 0 ? remark : null, visible);
+                if (afterNumStr.Length > 0)
+                    moveAfterNumQueue.Enqueue((move, Convert.ToInt32(afterNumStr)));
+            }
+        }
+    }
+
+    private void SetRootMoveFromPGNExt(string fen, string moveString, FileExtType fileExtType)
+    {
+        CoordPair GetCoordPair(Board board, string pgnText, FileExtType fileExtType)
+            => fileExtType switch
+            {
+                FileExtType.pgniccs => Board.GetCoordPairFromIccs(pgnText),
+                FileExtType.pgnrc => Board.GetCoordPairFromRowCol(pgnText),
+                _ => board.GetCoordPairFromZhStr(pgnText)
+            };
+
+        string remarkPattern = @"(?:{([\s\S]+?)})";
+        var remarkMatch = Regex.Match(moveString, "^" + remarkPattern);
+        if (remarkMatch.Success)
+            RootMove.Remark = remarkMatch.Groups[1].Value;
+
+        string movePattern;
+        MatchCollection matches;
+        List<Move> allMoves = new() { RootMove };
+        string pgnPattern = (fileExtType == FileExtType.pgniccs
+            ? @"(?:[" + Coord.ColChars + @"]\d){2}"
+            : (fileExtType == FileExtType.pgnrc ? @"\d{4}" : "[" + Board.PGNZHChars() + @"]{4}"));
+        movePattern = @"(\d+)\-(" + pgnPattern + @")(_?)" + remarkPattern + @"?\s+";
+        matches = Regex.Matches(moveString, movePattern);
+        foreach (Match match in matches.Cast<Match>())
+        {
+            if (!match.Success)
+                break;
+
+            int id = Convert.ToInt32(match.Groups[1].Value);
+            string pgnText = match.Groups[2].Value;
+            bool visible = match.Groups[3].Value.Length == 0;
+            string? remark = match.Groups[4].Success ? match.Groups[4].Value : null;
+
+            Board board = RootBoard.WithMove(allMoves[id]);
+            allMoves.Add(allMoves[id].AddAfter(GetCoordPair(board, pgnText, fileExtType), remark, visible));
+        }
+    }
+
+    private bool AddMove(CoordPair coordPair, string? remark = null, bool visible = true)
+    {
+        bool canMove = RootBoard.WithMove(CurMove).CanMove(coordPair);
+        if (canMove)
+            CurMove = CurMove.AddAfter(coordPair, remark, visible);
+
+        return canMove;
     }
 
     public string ToString(bool showMove = false, bool isOrder = false)
     {
         int moveCount = 0, remarkCount = 0, maxRemarkCount = 0;
         StringBuilder result = new(RootMove.ToString());
-        List<Move> allMoves = RootMove.AllAfterMoves();
+        List<Move> allMoves = RootMove.AllAfterMoves;
         // foreach (var move in this)
         allMoves.ForEach(move =>
         {

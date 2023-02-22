@@ -5,49 +5,9 @@ namespace CChess;
 
 public class Aspects
 {
-    private readonly Dictionary<string, Dictionary<string, List<int>>> _aspectDict;
+    public Aspects() { FENRowCols = new(); }
 
-    public Aspects() { _aspectDict = new(); }
-
-    public Aspects(List<Manual> manuals) : this()
-    {
-        foreach (Manual manual in manuals)
-            Add(manual);
-    }
-
-    public Aspects(string fileName) : this()
-    {
-        if (!File.Exists(fileName))
-            return;
-
-        using var stream = File.Open(fileName, FileMode.Open);
-        SetFromStream(stream);
-    }
-    public void Write(string fileName)
-    {
-        using var stream = File.Open(fileName, FileMode.Create);
-        SetStream(stream);
-    }
-
-    public void SetStream(Stream stream)
-    {
-        using var writer = new BinaryWriter(stream, Encoding.UTF8, true);
-        writer.Write(_aspectDict.Count);
-        foreach (var fenData in _aspectDict)
-        {
-            writer.Write(fenData.Key);
-            writer.Write(fenData.Value.Count);
-            foreach (var aspectData in fenData.Value)
-            {
-                writer.Write(aspectData.Key);
-                writer.Write(aspectData.Value.Count);
-                foreach (var x in aspectData.Value)
-                    writer.Write(x);
-            }
-        }
-    }
-
-    public void SetFromStream(Stream stream)
+    public Aspects(Stream stream) : this()
     {
         using var reader = new BinaryReader(stream, Encoding.UTF8, true);
         int fenCount = reader.ReadInt32();
@@ -66,23 +26,55 @@ public class Aspects
 
                 aspectData.TryAdd(rowCol, valueList);
             }
-            _aspectDict.TryAdd(fen, aspectData);
+            FENRowCols.TryAdd(fen, aspectData);
         }
     }
 
-    public void Add(Manual manual)
+    public Aspects(List<Manual> manuals) : this()
     {
-        // Manual manual = new(fileName);
-        foreach (var fenRowCols in manual.GetFENRowCols())
-            Join(fenRowCols);
+        manuals.ForEach(manual => Add(manual));
+    }
 
-        // 以下同步方式与非同步方式的耗时基本相同，同步字典并行运行时被锁定？
-        //var aspectList = (new Manual(fileName)).GetFENRowCols();
-        //Parallel.ForEach<(string fen, int data), bool>(
-        //    aspectList,
-        //    () => true,
-        //    (aspect, loop, x) => Join(aspect),
-        //    (x) => x = true);
+    public Dictionary<string, Dictionary<string, List<int>>> FENRowCols { get; }
+
+    public static Aspects GetAspects(string fileName)
+    {
+        if (!File.Exists(fileName))
+            return new();
+
+        using var stream = File.Open(fileName, FileMode.Open);
+        return new(stream);
+    }
+
+    public void Write(string fileName)
+    {
+        using var stream = File.Open(fileName, FileMode.Create);
+        DataStream.CopyTo(stream);
+    }
+
+    public Stream DataStream
+    {
+        get
+        {
+            MemoryStream stream = new();
+            using var writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            writer.Write(FENRowCols.Count);
+            foreach (var fenData in FENRowCols)
+            {
+                writer.Write(fenData.Key);
+                writer.Write(fenData.Value.Count);
+                foreach (var aspectData in fenData.Value)
+                {
+                    writer.Write(aspectData.Key);
+                    writer.Write(aspectData.Value.Count);
+                    foreach (var x in aspectData.Value)
+                        writer.Write(x);
+                }
+            }
+
+            stream.Seek(0, SeekOrigin.Begin);
+            return stream;
+        }
     }
 
     public List<(string rowCol, List<int> valueList)>? GetAspectData(string fen)
@@ -91,21 +83,24 @@ public class Aspects
         if (!finded)
             return null;
 
-        return _aspectDict[findFen].Select(
-            rowColValue => (Coord.GetRowCol(rowColValue.Key, findCt), rowColValue.Value)).ToList();
+        return FENRowCols[findFen].Select(rowColValue
+             => (Coord.GetRowCol(rowColValue.Key, findCt), rowColValue.Value)).ToList();
     }
 
-    private bool Join((string fen, string rowCol) fenRowCols)
+    public void Add(Manual manual)
+        => manual.GetFENRowCols().ForEach(fenRowCol => Join(fenRowCol));
+
+    private void Join((string fen, string rowCol) fenRowCol)
     {
-        var (fen, rowCol) = fenRowCols;
+        var (fen, rowCol) = fenRowCol;
         Dictionary<string, List<int>> aspectData;
         var (finded, findCt, findFen) = FindCtFens(fen);
         if (finded)
-            aspectData = _aspectDict[findFen];
+            aspectData = FENRowCols[findFen];
         else
         {
             aspectData = new();
-            _aspectDict.Add(fen, aspectData);
+            FENRowCols.Add(fen, aspectData);
         }
 
         rowCol = Coord.GetRowCol(rowCol, findCt);
@@ -115,18 +110,16 @@ public class Aspects
         }
         else
             aspectData.TryAdd(rowCol, new List<int>() { 1 });
-
-        return true;
     }
 
     private (bool finded, ChangeType findCt, string findFen) FindCtFens(string fen)
     {
-        if (_aspectDict.ContainsKey(fen))
+        if (FENRowCols.ContainsKey(fen))
             return (true, ChangeType.NoChange, fen);
 
         ChangeType ct = ChangeType.Symmetry_H;
         fen = Board.GetFEN(fen, ct);
-        if (_aspectDict.ContainsKey(fen))
+        if (FENRowCols.ContainsKey(fen))
             return (true, ct, fen);
 
         return (false, ChangeType.NoChange, fen);
@@ -134,10 +127,10 @@ public class Aspects
 
     public bool Equal(Aspects aspects)
     {
-        var akeys = _aspectDict.Keys;
-        var bkeys = aspects._aspectDict.Keys;
-        var avalues = _aspectDict.Values;
-        var bvalues = aspects._aspectDict.Values;
+        var akeys = FENRowCols.Keys;
+        var bkeys = aspects.FENRowCols.Keys;
+        var avalues = FENRowCols.Values;
+        var bvalues = aspects.FENRowCols.Values;
 
         int count = akeys.Count;
         if (count != bkeys.Count || count != avalues.Count || count != bvalues.Count)
@@ -182,26 +175,16 @@ public class Aspects
 
     override public string ToString()
     {
-        static string FenDataToString(KeyValuePair<string, Dictionary<string, List<int>>> fenData,
+        static string FenDataToString(KeyValuePair<string, Dictionary<string, List<int>>> fenRowcol,
               ParallelLoopState loop, string subString)
-        {
-            subString += fenData.Key + " [";
-            foreach (var aspectData in fenData.Value)
-            {
-                subString += aspectData.Key + "(";
-                foreach (var value in aspectData.Value)
-                    subString += value.ToString() + ' ';
-
-                subString = subString.TrimEnd() + ") ";
-            }
-
-            return subString.TrimEnd() + "]\n";
-        }
+            => $"{subString}{fenRowcol.Key} [" +
+                string.Concat(fenRowcol.Value.Select(rowcolData =>
+                    $"{rowcolData.Key}({string.Concat(rowcolData.Value.Select(value => $"{value} ")).TrimEnd()}) ")).TrimEnd() + "]\n";
 
         // 非常有效地提升了速度! 
         BlockingCollection<string> subStringCollection = new();
         Parallel.ForEach(
-            _aspectDict,
+            FENRowCols,
             () => "",
             FenDataToString,
             (finalSubString) => subStringCollection.Add(finalSubString));

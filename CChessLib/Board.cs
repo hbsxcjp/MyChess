@@ -35,27 +35,27 @@ public class Board
     public bool IsBottom(PieceColor color) => BottomColor == color;
     public bool IsNull(int row, int col) => this[Coord.Get(row, col)] == Piece.Null;
 
-    public Board GetBoard(Coord fromCoord, Coord toCoord)
+    public Board WithMove(CoordPair coordPair)
     {
         Board board = new(this);
-        board.MovePiece(fromCoord, toCoord);
+        board.MovePiece(coordPair);
 
         return board;
     }
 
-    public Board GetBoard(Move move)
+    public Board WithMove(Move move)
     {
         Board board = new(this);
         move.BeforeMoves.ForEach(move
-            => board.MovePiece(move.CoordPair.FromCoord, move.CoordPair.ToCoord));
+            => board.MovePiece(move.CoordPair));
 
         return board;
     }
 
-    private void MovePiece(Coord fromCoord, Coord toCoord)
+    private void MovePiece(CoordPair coordPair)
     {
-        SeatPieces[toCoord.Index] = SeatPieces[fromCoord.Index];
-        SeatPieces[fromCoord.Index] = Piece.Null;
+        SeatPieces[coordPair.ToCoord.Index] = SeatPieces[coordPair.FromCoord.Index];
+        SeatPieces[coordPair.FromCoord.Index] = Piece.Null;
     }
 
     public string GetFEN() => PieceCharsToFEN(GetPieceChars());
@@ -117,13 +117,13 @@ public class Board
     private List<Piece> GetLivePieces(PieceColor color, PieceKind kind, int col)
         => GetLivePieces(color, kind).Where(piece => GetCoord(piece).Col == col).ToList();
 
-    public bool CanMove(Coord fromCoord, Coord toCoord)
+    public bool CanMove(CoordPair coordPair)
     {
         // 如是对方将帅的位置则直接可走，不用判断是否被将军（如加以判断，则会直接走棋吃将帅）
-        if (this[toCoord].Kind == PieceKind.King)
+        if (this[coordPair.ToCoord].Kind == PieceKind.King)
             return true;
 
-        return !GetBoard(fromCoord, toCoord).IsKilled(this[fromCoord].Color);
+        return !WithMove(coordPair).IsKilled(this[coordPair.FromCoord].Color);
     }
 
     public bool IsKilled(PieceColor color)
@@ -267,29 +267,18 @@ public class Board
             .ToList();
 
     public static CoordPair GetCoordPairFromRowCol(string rowCol)
-        => GetCoordPair(
+        => new(
             int.Parse(rowCol[0].ToString()),
             int.Parse(rowCol[1].ToString()),
             int.Parse(rowCol[2].ToString()),
             int.Parse(rowCol[3].ToString()));
 
     public static CoordPair GetCoordPairFromIccs(string iccs)
-        => GetCoordPair(
+        => new(
             int.Parse(iccs[1].ToString()),
             Coord.ColChars.IndexOf(iccs[0]),
             int.Parse(iccs[3].ToString()),
             Coord.ColChars.IndexOf(iccs[2]));
-
-    public static CoordPair GetCoordPair(int frow, int fcol, int trow, int tcol)
-        => new(Coord.Get(frow, fcol), Coord.Get(trow, tcol));
-
-    public CoordPair GetCoordPair(string pgnText, FileExtType fileExtType)
-        => fileExtType switch
-        {
-            FileExtType.PGNIccs => GetCoordPairFromIccs(pgnText),
-            FileExtType.PGNRowCol => GetCoordPairFromRowCol(pgnText),
-            _ => GetCoordPairFromZhStr(pgnText)
-        };
 
     public static char GetColChar(PieceColor color, int col) => NumChars[(int)color][col];
     public static int GetCol(PieceColor color, char colChar) => NumChars[(int)color].IndexOf(colChar);

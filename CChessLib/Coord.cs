@@ -2,7 +2,7 @@ namespace CChess;
 
 public enum ChangeType { Exchange, Rotate, Symmetry_H, Symmetry_V, NoChange = -1, }
 
-public struct Coord
+public class Coord
 {
     public static readonly Coord Null = new(-10);  // (-1, -1)
     public static readonly List<Coord> Coords =
@@ -21,8 +21,8 @@ public struct Coord
     public string Iccs { get => $"{ColChars[Col]}{Row}"; }
     public bool IsBottom { get => (Row << 1) < RowCount; }
 
-    public static Coord Get(int index) => new(index);
-    public static Coord Get(int row, int col) => new(row * ColCount + col);
+    public static Coord Get(int index) => Coords[index];
+    public static Coord Get(int row, int col) => Coords[row * ColCount + col];
 
     public static string GetRowCol(string rowCol, ChangeType ct)
     {
@@ -43,12 +43,9 @@ public struct Coord
         };
     }
 
-    public static string RowCols(string iccses)
-    {
-        return Enumerable.Range(0, iccses.Length / 2)
-                .Select(i => $"{iccses[i * 2 + 1]}{ColChars.IndexOf(iccses[i * 2])}")
-                .ToString() ?? String.Empty;
-    }
+    public static string GetRowCols(string iccses)
+        => string.Concat(Enumerable.Range(0, iccses.Length / 2)
+                .Select(i => $"{iccses[i * 2 + 1]}{ColChars.IndexOf(iccses[i * 2])}"));
 
     public static int GetCol(int col, bool isBottomColor) => isBottomColor ? SymmetryCol(col) : col;
 

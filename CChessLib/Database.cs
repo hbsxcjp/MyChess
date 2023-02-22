@@ -6,33 +6,24 @@ using Microsoft.Data.Sqlite;
 
 namespace CChess;
 
-public enum ManualField
-{
-    Source, Title, Event, Date, Site, Black, RowCols, Red, EccoSn, EccoName, Win,
-    Opening, Writer, Author, Type, Version, FEN, MoveString
-}
 public class Database
 {
-    private static readonly string[] _infoKeys = {
-            "source", "title", "event", "date", "site", "black", "rowCols", "red", "eccoSn", "eccoName", "win",
-            "opening", "writer", "author", "type", "version", "FEN", "moveString" };
-    private readonly string _manualTableName = "manual";
+    private readonly string ManualTableName = "manual";
+    private readonly string DataFileName = "data.db";
 
     public List<Manual> GetManuals(string condition = "1")
     {
-        static Dictionary<string, string> GetInfo(SqliteDataReader reader)
+        Dictionary<string, string> GetInfo(SqliteDataReader reader)
         {
-            Dictionary<string, string> info = new();
-            for (int index = 0; index < reader.FieldCount; ++index)
-                if (!reader.IsDBNull(index))
-                    info[reader.GetName(index)] = reader.GetString(index);
-
-            return info;
+            return new(Enumerable.Range(0, reader.FieldCount)
+                .Where(index => !reader.IsDBNull(index))
+                .Select(index =>
+                    new KeyValuePair<string, string>(reader.GetName(index), reader.GetString(index))));
         }
 
         List<Manual> manuals = new();
         using SqliteConnection connection = GetSqliteConnection();
-        SqliteCommand command = new(ManualSelectCommandText(condition), connection);
+        SqliteCommand command = new($"SELECT * FROM {ManualTableName} WHERE {condition}", connection);
         using SqliteDataReader reader = command.ExecuteReader();
         while (reader.Read())
             manuals.Add(new(GetInfo(reader)));
@@ -40,41 +31,29 @@ public class Database
         return manuals;
     }
 
-    public void StorageFileManual(IEnumerable<string> fileNames)
-    {
-        IEnumerable<Manual> manuals = fileNames.Select(fileName =>
-        {
-            // Manual manual = new(fileName);
-            Manual manual = Manual.GetManual(fileName);
-            manual.SetDatabaseField(fileName);
-            return manual;
-        });
+    public void StorageManuals(IEnumerable<Manual> manuals)
+        => StorageInfos(manuals.Select(manual => manual.Info));
 
-        InsertInfoList(manuals.Select(manual => manual.Info));
-    }
-    public static string GetInfoKey(ManualField field) => _infoKeys[(int)field];
-
-    private void InsertInfoList(IEnumerable<Dictionary<string, string>> infoList, bool unequal = true)
+    private void StorageInfos(IEnumerable<Dictionary<string, string>> infos)
     {
         using SqliteConnection connection = GetSqliteConnection();
         using var transaction = connection.BeginTransaction();
 
         var command = connection.CreateCommand();
         // 要求：所有Info的Keys都相同
-        var infoKeys = infoList.First().Keys;
-        static string ParamName(string key) => "$" + key;
+        var infoKeys = infos.First().Keys;
+        string ParamName(string key) => $"${key}";
+        string JoinComma(IEnumerable<string> someString) => string.Join(", ", someString);
+
         foreach (var key in infoKeys)
             command.Parameters.Add(new() { ParameterName = ParamName(key) });
 
-        static string JoinEnumableString(IEnumerable<string> strings) => string.Join(", ", strings);
-        var fields = JoinEnumableString(infoKeys.Select(key => $"'{key}'"));
-        command.CommandText = $"INSERT INTO {_manualTableName} ({fields}) " +
-            $"VALUES ({JoinEnumableString(infoKeys.Select(key => ParamName(key)))})";
+        command.CommandText = $"INSERT INTO {ManualTableName} ({JoinComma(infoKeys.Select(key => $"'{key}'"))}) " +
+            $"VALUES ({JoinComma(infoKeys.Select(key => ParamName(key)))})";
 
-        foreach (var info in infoList)
+        foreach (var info in infos)
         {
-            if (unequal && ExistsManual(connection,
-                FieldEqualCondition(ManualField.Source, info[GetInfoKey(ManualField.Source)])))
+            if (ExistsManual(connection, info[Manual.GetInfoKey(InfoKey.source)]))
                 continue;
 
             foreach (var key in infoKeys)
@@ -85,29 +64,28 @@ public class Database
 
         transaction.Commit();
     }
-    private bool ExistsManual(SqliteConnection connection, string condition)
+
+    private bool ExistsManual(SqliteConnection connection, string source)
     {
         SqliteCommand command = connection.CreateCommand();
-        command.CommandText = ManualSelectCommandText(condition);
+        command.CommandText = $"SELECT id FROM {ManualTableName} WHERE {Manual.GetInfoKey(InfoKey.source)} == '{source}'";
         using var reader = command.ExecuteReader();
         return reader.Read();
     }
-    private string ManualSelectCommandText(string condition) => $"SELECT * FROM {_manualTableName} WHERE {condition}";
-    private static string FieldEqualCondition(ManualField field, string value) => $" {GetInfoKey(field)} == '{value}'";
+
     private SqliteConnection GetSqliteConnection()
     {
-        string databaseFileName = "data.db";
-        bool fileExists = File.Exists(databaseFileName);
+        bool fileExists = File.Exists(DataFileName);
         if (!fileExists)
-            using (File.Create(databaseFileName)) { };
+            using (File.Create(DataFileName)) { };
 
-        SqliteConnection connection = new("Data Source=" + databaseFileName);
+        SqliteConnection connection = new("Data Source=" + DataFileName);
         connection.Open();
         if (!fileExists)
         {
             string[] commandString = new string[]{
-                        $"CREATE TABLE {_manualTableName} (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        $"{string.Join(",", _infoKeys.Select(field => field + " TEXT"))})", };
+                        $"CREATE TABLE {ManualTableName} (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        $"{string.Join(",", Manual.InfoKeys.Select(name => name + " TEXT"))})", };
             SqliteCommand command = connection.CreateCommand();
             foreach (var str in commandString)
             {
@@ -118,11 +96,12 @@ public class Database
 
         return connection;
     }
-}
 
-public class EccoData
-{
-#if WRITERESULTTEXT
+    // }
+
+    // public class EccoData
+    // {
+#if WRITERESULTTEXTa
     private StreamWriter sw = File.CreateText("TestEccoData.text");
 #endif
 
@@ -133,33 +112,34 @@ public class EccoData
     {
         const int XqbaseInfoCount = 11;
         using HttpClient client = new();
+        Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         Encoding codec = Encoding.GetEncoding("gb2312");
-        Dictionary<string, string> GetInfo(string uri)
+
+        Dictionary<string, string> GetInfo((string uri, byte[] bytes) uri_bytes)
         {
             string pattern = @"<title>(.*?)</title>.*?>([^>]+赛[^>]*?)<.*?>(\d+年\d+月(?:\d+日)?)(?: ([^<]*?))?<.*?>黑方 ([^<]*?)<.*?MoveList=(.*?)"".*?>红方 ([^<]*?)<.*?>([A-E]\d{2})\. ([^<]*?)<.*\((.*?)\)</pre>";
-            var taskA = client.GetByteArrayAsync(uri);
-            Match match = Regex.Match(codec.GetString(taskA.Result), pattern, RegexOptions.Singleline);
+            Match match = Regex.Match(codec.GetString(uri_bytes.bytes), pattern, RegexOptions.Singleline);
             if (!match.Success)
                 return new();
 
             // "source", "title", "event", "date", "site", "black", "rowCols", "red", "eccoSn", "eccoName", "win"
-            Dictionary<string, string> info = new() { { Database.GetInfoKey(ManualField.Source), uri } };
+            Dictionary<string, string> info = new();
+            info[Manual.GetInfoKey(InfoKey.source)] = uri_bytes.uri;
             for (int i = 1; i < XqbaseInfoCount; i++)
-                info[Database.GetInfoKey((ManualField)i)] = i != 6 ? match.Groups[i].Value
-                    : Coord.RowCols(match.Groups[i].Value.Replace("-", "").Replace("+", ""));
+                info[Manual.GetInfoKey((InfoKey)i)] = i != 6 ? match.Groups[i].Value
+                    : Coord.GetRowCols(match.Groups[i].Value.Replace("-", "").Replace("+", ""));
 
             return info;
         }
 
-        Task<Dictionary<string, string>>[] taskArray = new Task<Dictionary<string, string>>[end - start + 1];
-        for (int i = 0; i < taskArray.Length; i++)
-        {
-            string uri = string.Format(@"https://www.xqbase.com/xqbase/?gameid={0}", i + start);
-            taskArray[i] = Task<Dictionary<string, string>>.Factory.StartNew(() => GetInfo(uri));
-        }
+        var uris = Enumerable.Range(1, end - start + 1)
+                    .Select(id => $"https://www.xqbase.com/xqbase/?gameid={id}");
+
+        var taskArray = uris.Select(uri => client.GetByteArrayAsync(uri)).ToArray();
         Task.WaitAll(taskArray);
 
-        // InsertInfoList(taskArray.Select(task => task.Result));
+        StorageInfos(Enumerable.Zip(uris, taskArray.Select(task => task.Result))
+            .Select(uri_bytes => GetInfo(uri_bytes)));
     }
 
     static string DownHtmls()
@@ -480,7 +460,7 @@ public class EccoData
             while (!success && zhStr_preZhStr.ContainsKey(preZhStrs.First()))
             {
                 string preZhStr = zhStr_preZhStr[preZhStrs.First()];
-#if WRITERESULTTEXT
+#if WRITERESULTTEXTa
                 sw.Write($"\t\tpremv:{preZhStr}");
 #endif
                 success = manual.ManualMove.AddMove(preZhStr);
@@ -497,7 +477,7 @@ public class EccoData
         }
 
         string rowCol = success ? manual.ManualMove.CurMove.CoordPair.RowCol : "";
-#if WRITERESULTTEXT
+#if WRITERESULTTEXTa
         sw.Write($"{(success ? "失败" : "OK ")}:{zhStr} {isGo}: {rowCol}");
 #endif
 
@@ -662,7 +642,7 @@ public class EccoData
             // 设置着法正则描述字符串
             manual.Reset();
             record.Value[5] = GetRegstr(boutStrs, sn, manual);
-#if WRITERESULTTEXT
+#if WRITERESULTTEXTa
             sw.WriteLine(@"\t\tRegstr: " + record.Value[5] + "\n");
 #endif
         }
