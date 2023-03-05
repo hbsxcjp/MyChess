@@ -48,7 +48,7 @@ public class ManualTest
                     => (new List<(InfoKey field, string value)>
                         {
                             (InfoKey.source, fileNameManual.First),
-                            (InfoKey.rowCols, fileNameManual.Second.GetRowCols()),
+                            (InfoKey.rowCols, fileNameManual.Second.ManualMove.GetRowCols()),
                             (InfoKey.moveString, fileNameManual.Second.GetMoveString())
                         }).ForEach(fieldValue
                             => fileNameManual.Second.SetInfoValue(fieldValue.field, fieldValue.value)));
@@ -68,99 +68,39 @@ public class ManualTest
     }
 
     [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(3)]
-    [InlineData(4)]
-    public void TestXQFType(int index)
+    [InlineData(0, FileExtType.xqf)]
+    [InlineData(1, FileExtType.xqf)]
+    [InlineData(2, FileExtType.xqf)]
+    [InlineData(3, FileExtType.xqf)]
+    [InlineData(4, FileExtType.xqf)]
+    [InlineData(0, FileExtType.cm)]
+    [InlineData(1, FileExtType.cm)]
+    [InlineData(2, FileExtType.cm)]
+    [InlineData(3, FileExtType.cm)]
+    [InlineData(4, FileExtType.cm)]
+    [InlineData(0, FileExtType.txt)]
+    [InlineData(1, FileExtType.txt)]
+    [InlineData(2, FileExtType.txt)]
+    [InlineData(3, FileExtType.txt)]
+    [InlineData(4, FileExtType.txt)]
+    [InlineData(0, FileExtType.pgnrc)]
+    [InlineData(1, FileExtType.pgnrc)]
+    [InlineData(2, FileExtType.pgnrc)]
+    [InlineData(3, FileExtType.pgnrc)]
+    [InlineData(4, FileExtType.pgnrc)]
+    [InlineData(0, FileExtType.pgniccs)]
+    [InlineData(1, FileExtType.pgniccs)]
+    [InlineData(2, FileExtType.pgniccs)]
+    [InlineData(3, FileExtType.pgniccs)]
+    [InlineData(4, FileExtType.pgniccs)]
+    [InlineData(0, FileExtType.pgnzh)]
+    [InlineData(1, FileExtType.pgnzh)]
+    [InlineData(2, FileExtType.pgnzh)]
+    [InlineData(3, FileExtType.pgnzh)]
+    [InlineData(4, FileExtType.pgnzh)]
+    public void TestFileType(int index, FileExtType fileExtType)
     {
-        Manual manual = GetManual(index, FileExtType.xqf);
-
-        string result = manual.GetString();
-        Assert.Equal(manualStrings[index, 1], result);
-
-        string detailResult = manual.ToString(true, true);
-        Assert.Equal(manualStrings[index, 2], detailResult);
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(3)]
-    [InlineData(4)]
-    public void TestCmType(int index)
-    {
-        Manual manual = GetManual(index, FileExtType.cm);
-
-        string result = manual.GetString();
-        Assert.Equal(manualStrings[index, 1], result);
-
-        string detailResult = manual.ToString(true, true);
-        Assert.Equal(manualStrings[index, 2], detailResult);
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(3)]
-    [InlineData(4)]
-    public void TestTextType(int index)
-    {
-        Manual manual = GetManual(index, FileExtType.txt);
-
-        string result = manual.GetString();
-        Assert.Equal(manualStrings[index, 1], result);
-
-        string detailResult = manual.ToString(true, true);
-        Assert.Equal(manualStrings[index, 2], detailResult);
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(3)]
-    [InlineData(4)]
-    public void TestPGNRowColType(int index)
-    {
-        Manual manual = GetManual(index, FileExtType.pgnrc);
-
-        string result = manual.GetString();
-        Assert.Equal(manualStrings[index, 1], result);
-
-        string detailResult = manual.ToString(true, true);
-        Assert.Equal(manualStrings[index, 2], detailResult);
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(3)]
-    [InlineData(4)]
-    public void TestPGNIccsType(int index)
-    {
-        Manual manual = GetManual(index, FileExtType.pgniccs);
-
-        string result = manual.GetString();
-        Assert.Equal(manualStrings[index, 1], result);
-
-        string detailResult = manual.ToString(true, true);
-        Assert.Equal(manualStrings[index, 2], detailResult);
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(3)]
-    [InlineData(4)]
-    public void TestPGNZhType(int index)
-    {
-        Manual manual = GetManual(index, FileExtType.pgnzh);
+        Manual manual = GetManual(index, fileExtType);
 
         string result = manual.GetString();
         Assert.Equal(manualStrings[index, 1], result);

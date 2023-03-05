@@ -8,9 +8,9 @@ namespace CChess;
 
 public class ManualMove// : IEnumerable
 {
-    public ManualMove(string fen)
+    public ManualMove(string fen = "")
     {
-        RootBoard = new(Board.FENToPieceChars(fen));
+        RootBoard = new(fen);
         RootMove = Move.RootMove();
         CurMove = RootMove;
     }
@@ -180,13 +180,17 @@ public class ManualMove// : IEnumerable
     public Move RootMove { get; }
     public Move CurMove { get; private set; }
 
-    public bool AddMove(string zhStr)
+    public bool AddMove(string zhStr, bool isOther = false)
     {
-        var coordPair = RootBoard.WithMove(CurMove).GetCoordPairFromZhStr(zhStr);
-        if (coordPair.Equals(CoordPair.Null))
-            return false;
+        if (isOther)
+            Back();
 
-        return AddMove(coordPair);
+        CoordPair coordPair = RootBoard.WithMove(CurMove).GetCoordPairFromZhStr(zhStr);
+        bool success = RootBoard.WithMove(CurMove).CanMove(coordPair);
+        if (success)
+            CurMove = CurMove.AddAfter(coordPair);
+
+        return success;
     }
 
     public bool Go() // 前进
@@ -226,10 +230,7 @@ public class ManualMove// : IEnumerable
         return true;
     }
     public void BackStart() // 回退到开始
-    {
-        while (Back())
-            ;
-    }
+        => CurMove = RootMove;
 
     public byte[] GetBytes()
     {
@@ -286,11 +287,23 @@ public class ManualMove// : IEnumerable
     public string GetRowCols()
     {
         StringBuilder result = new();
-        var afterMoves = RootMove.AfterMoves;
-        while (afterMoves?.Count > 0)
+        Queue<List<Move>> afterMovesQueue = new();
+        if (RootMove.AfterMoves != null)
+            afterMovesQueue.Enqueue(RootMove.AfterMoves);
+        while (afterMovesQueue.Count > 0)
         {
-            result.Append(afterMoves[0].CoordPair.RowCol);
-            afterMoves = afterMoves[0].AfterMoves;
+            List<Move> afterMoves = afterMovesQueue.Dequeue();
+
+            result.Append(afterMoves.Count == 1
+                ? afterMoves[0].CoordPair.RowCol
+                : $"(?:{string.Join('|', afterMoves.Select(move => move.CoordPair.RowCol))})")
+                .Append('-');
+
+            afterMoves.ForEach(move =>
+            {
+                if (move.AfterMoves != null)
+                    afterMovesQueue.Enqueue(move.AfterMoves);
+            });
         }
 
         return result.ToString();
@@ -366,9 +379,9 @@ public class ManualMove// : IEnumerable
         MatchCollection matches;
         List<Move> allMoves = new() { RootMove };
         string pgnPattern = (fileExtType == FileExtType.pgniccs
-            ? @"(?:[" + Coord.ColChars + @"]\d){2}"
-            : (fileExtType == FileExtType.pgnrc ? @"\d{4}" : "[" + Board.PGNZHChars() + @"]{4}"));
-        movePattern = @"(\d+)\-(" + pgnPattern + @")(_?)" + remarkPattern + @"?\s+";
+            ? @$"(?:[{Coord.ColChars}]\d){{2}}"
+            : (fileExtType == FileExtType.pgnrc ? @"\d{4}" : Board.PGNZHCharsPattern()));
+        movePattern = @$"(\d+)\-({pgnPattern})(_?){remarkPattern}?\s+";
         matches = Regex.Matches(moveString, movePattern);
         foreach (Match match in matches.Cast<Match>())
         {
@@ -383,15 +396,6 @@ public class ManualMove// : IEnumerable
             Board board = RootBoard.WithMove(allMoves[id]);
             allMoves.Add(allMoves[id].AddAfter(GetCoordPair(board, pgnText, fileExtType), remark, visible));
         }
-    }
-
-    private bool AddMove(CoordPair coordPair, string? remark = null, bool visible = true)
-    {
-        bool canMove = RootBoard.WithMove(CurMove).CanMove(coordPair);
-        if (canMove)
-            CurMove = CurMove.AddAfter(coordPair, remark, visible);
-
-        return canMove;
     }
 
     public string ToString(bool showMove = false, bool isOrder = false)

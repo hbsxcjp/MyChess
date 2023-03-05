@@ -107,14 +107,15 @@ public class Database
 
     private char UnorderChar = '|', OrderChar = '*', SeparateChar = '/', OroneChar = '?', ExceptChar = '除';
 
-    //总界限:1~12141
     public void DownXqbaseManual(int start = 1, int end = 5)
     {
+        //总界限:1~12141
+        if (start > end || start < 1 || end > 12141)
+            return;
+
         const int XqbaseInfoCount = 11;
-        using HttpClient client = new();
         Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         Encoding codec = Encoding.GetEncoding("gb2312");
-
         Dictionary<string, string> GetInfo((string uri, byte[] bytes) uri_bytes)
         {
             string pattern = @"<title>(.*?)</title>.*?>([^>]+赛[^>]*?)<.*?>(\d+年\d+月(?:\d+日)?)(?: ([^<]*?))?<.*?>黑方 ([^<]*?)<.*?MoveList=(.*?)"".*?>红方 ([^<]*?)<.*?>([A-E]\d{2})\. ([^<]*?)<.*\((.*?)\)</pre>";
@@ -135,6 +136,7 @@ public class Database
         var uris = Enumerable.Range(1, end - start + 1)
                     .Select(id => $"https://www.xqbase.com/xqbase/?gameid={id}");
 
+        using HttpClient client = new();
         var taskArray = uris.Select(uri => client.GetByteArrayAsync(uri)).ToArray();
         Task.WaitAll(taskArray);
 
@@ -142,87 +144,260 @@ public class Database
             .Select(uri_bytes => GetInfo(uri_bytes)));
     }
 
-    static string DownHtmls()
+    public static string DownEccoHtmlsString()
     {
-        using HttpClient client = new();
-        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         Encoding codec = Encoding.GetEncoding("gb2312");
-        string eccoChars = "abcde";
-        Task<string>[] taskArray = new Task<string>[eccoChars.Length];
-        for (int i = 0; i < taskArray.Length; i++)
-        {
-            string uri = string.Format(@"https://www.xqbase.com/ecco/ecco_{0}.htm", eccoChars[i]);
-            taskArray[i] = Task<string>.Factory.StartNew(() =>
-            {
-                var taskA = client.GetByteArrayAsync(uri);
-                var html = Regex.Replace(codec.GetString(taskA.Result),
-                    @"</?(?:div|font|img|strong|center|meta|dl|dt|table|tr|td|em|p|li|dir|html|head|body|title|a|b|tbody|script|br|span)[^>]*>", "");
+        string GetCleanString(byte[] bytes)
+                 => Regex.Replace(Regex.Replace(codec.GetString(bytes),
+                    @"</?(?:div|font|img|strong|center|meta|dl|dt|table|tr|td|em|p|li|dir|html|head|body|title|a|b|tbody|script|br|span)[^>]*>", ""),
+                        @"(?:\n|\r)\s+", " ");
 
-                return Regex.Replace(html, @"(?:\n|\r)\s+", " ");
-            });
-        }
+        var uris = "abcde".Select(id => $"https://www.xqbase.com/ecco/ecco_{id}.htm");
+
+        using HttpClient client = new();
+        var taskArray = uris.Select(uri => client.GetByteArrayAsync(uri)).ToArray();
         Task.WaitAll(taskArray);
-        return string.Join("", taskArray.Select(task => task.Result));
+
+        return string.Concat(taskArray.Select(task => GetCleanString(task.Result)));
     }
 
-    static SortedDictionary<string, string[]> GetEccoRecords(string htmls)
+    public static SortedDictionary<string, List<string>> GetEccoRecords(string eccoHtmlsString)
     {
-        Regex[] regs = new Regex[] {
-                    new(@"([A-E])．(\S+?)\((共[\s\S]+?局)\)"),
-                    new(@"([A-E]\d)(?:．|\. )(?:空|([\S^\r]+?)\((共[\s\S]+?局)\)\s+([\s\S]*?))(?=[\s　]*[A-E]\d0．)"),
-                    new(@"([A-E]\d{2})．(\S+)[\s　]+(?:(?![A-E]\d|上一)([\s\S]*?)[\s　]*(无|共[\s\S]+?局)[\s\S]*?(?=上|[A-E]\d{0,2}．))?"),
-                    new(@"([A-E]\d)\d局面 =([\s\S]*?)(?=[\s　]*[A-E]\d{2}．)"),
-                };
+        // SortedDictionary<string, string[]> records = new();
+        // Regex[] regs = new Regex[] {
+        //             new(@"([A-E])．(\S+?)\((共[\s\S]+?局)\)"),
+        //             new(@"([A-E]\d)(?:．|\. )(?:空|([\S^\r]+?)\((共[\s\S]+?局)\)\s+([\s\S]*?))(?=[\s　]*[A-E]\d0．)"),
+        //             new(@"([A-E]\d{2})．(\S+)[\s　]+(?:(?![A-E]\d|上一)([\s\S]*?)[\s　]*(无|共[\s\S]+?局)[\s\S]*?(?=上|[A-E]\d{0,2}．))?"),
+        //             new(@"([A-E]\d)\d局面 =([\s\S]*?)(?=[\s　]*[A-E]\d{2}．)"),
+        //         };
 
-        SortedDictionary<string, string[]> records = new();
-        for (int gindex = 0; gindex < regs.Length; ++gindex)
+        // for (int gindex = 0; gindex < regs.Length; ++gindex)
+        // {
+        //     var matches = regs[gindex].Matches(htmls);
+        //     foreach (Match match in matches.Cast<Match>())
+        //     {
+        //         if (gindex == 3)
+        //         {
+        //             // C20 C30 C61 C72局面字符串, 供设置前置着法字符串
+        //             records[match.Groups[1].Value][3] = match.Groups[2].Value;
+        //         }
+        //         else
+        //         {
+        //             // field: SN_I, NAME_I, NUMS_I, MVSTRS_I, PRE_MVSTRS_I, REGSTR_I
+        //             string[] record = new string[] { "", "", "", "", "", "" };
+        //             for (int i = 0; i < match.Groups.Count - 1; i++)
+        //                 record[(gindex == 2 && i > 1) ? (i == 3 ? 2 : 3) : i] = match.Groups[i + 1].Value;
+
+        //             records[match.Groups[1].Value] = record;
+        //         }
+        //     }
+        // }
+
+        // foreach (var record in records)
+        // {
+        //     string sn = record.Value[0], mvstrs = record.Value[3];
+        //     if (sn.Length != 3 || mvstrs.Length < 3)
+        //         continue;
+
+        //     string sn_pre = "";
+        //     if (mvstrs[0] == '从')
+        //         // 三级局面的 C2 C3_C4 C61 C72局面 有40项
+        //         sn_pre = mvstrs[1..3];
+        //     else if (mvstrs[0] != '1')
+        //     {
+        //         // 前置省略的着法 有75项
+        //         sn_pre = sn[..2]; //  截断为两个字符长度
+        //         if (sn_pre[0] == 'C')
+        //             sn_pre = "C0"; // C0/C1/C5/C6/C7/C8/C9 => C0
+        //         else if (sn_pre == "D5")
+        //             sn_pre = "D51"; // D5 => D51
+        //     }
+        //     else
+        //         continue;
+
+        //     record.Value[4] = sn_pre;
+        // }
+
+        // field: SN_I, NAME_I, NUMS_I, MVSTRS_I
+        List<Regex> threeReg = new List<Regex> {
+            new Regex(@"([A-E])．(\S+?)\((共[\s\S]+?局)\)"),
+            new Regex(@"([A-E]\d)(?:．|\. )(?:空|([\S^\r]+?)\((共[\s\S]+?局)\)\s+([\s\S]*?))(?=[\s　]*[A-E]\d0．)"),
+            new Regex(@"([A-E]\d{2})．(\S+)[\s　]+(?:(?![A-E]\d|上一)([\s\S]*?)[\s　]*(无|共[\s\S]+?局)[\s\S]*?(?=上|[A-E]\d{0,2}．))?")
+        };
+        Regex shareReg = new(@"([A-E]\d)\d局面 =([\s\S]*?)(?=[\s　]*[A-E]\d{2}．)");
+
+        Dictionary<string, List<string>> records = new(threeReg
+                  .Select(reg => reg.Matches(eccoHtmlsString)
+                      .Select(match => new KeyValuePair<string, List<string>>(
+                          match.Groups[1].Value,
+                          match.Groups.Values.ToArray()[2..].Select(group => group.Value).ToList())))
+                  .SelectMany(kvs => kvs));
+
+        Dictionary<string, string> shareRecords = new(shareReg.Matches(eccoHtmlsString)
+            .Select(match => new KeyValuePair<string, string>(match.Groups[1].Value, match.Groups[2].Value)));
+
+        KeyValuePair<string, List<string>> GetNewRecord(KeyValuePair<string, List<string>> record)
         {
-            var matches = regs[gindex].Matches(htmls);
-            foreach (Match match in matches.Cast<Match>())
-            {
-                if (gindex == 3)
-                {
-                    // C20 C30 C61 C72局面字符串, 供设置前置着法字符串
-                    records[match.Groups[1].Value][3] = match.Groups[2].Value;
-                }
-                else
-                {
-                    // field: SN_I, NAME_I, NUMS_I, MVSTRS_I, PRE_MVSTRS_I, REGSTR_I
-                    string[] record = new string[] { "", "", "", "", "", "" };
-                    for (int i = 0; i < match.Groups.Count - 1; i++)
-                        record[(gindex == 2 && i > 1) ? (i == 3 ? 2 : 3) : i] = match.Groups[i + 1].Value;
+            if (InvalidThird(record))
+                return record;
 
-                    records[match.Groups[1].Value] = record;
+            string pre_mvstrs = string.Empty;
+            // 处理前置着法描述字符串————"红方：黑方：" // RedBlack@:40个 // 三级局面的 C2 C3_C4 C61 C72局面 有40项
+            if (record.Value[1].StartsWith('从'))
+                pre_mvstrs = shareRecords[record.Value[1][1..3]]; // 共享字典数据
+
+            // 处理其他的前置着法描述字符串 // OterPre@:75个 // 前置省略的着法 有75项 // C0/C1/C5/C6/C7/C8/C9 => C0 // D5 => D51
+            else if (record.Value[1][0] != '1')
+            {
+                string sn_pre = record.Key[..2]; //  截断为两个字符长度
+                pre_mvstrs = (sn_pre == "D5"
+                    ? records["D51"][1] // 三级目录的字段1
+                    : records[sn_pre.StartsWith('C') ? "C0" : sn_pre][2]); // 二级目录的字段2
+            }
+
+            if (pre_mvstrs != string.Empty)
+                record.Value[1] = record.Value[1].Insert(0, pre_mvstrs + " ");
+
+            if (record.Key == "B21")
+                record.Value[1] = record.Value[1].Replace('象', '相');
+            else if (record.Key == "B32")
+                record.Value[1] = record.Value[1] + "，马２进３";
+
+            return record;
+        }
+
+        return new(new Dictionary<string, List<string>>(records
+            .Select(record => GetNewRecord(record))));
+    }
+
+    public static IEnumerable<(string Sn, string Name, string MoveStr, IEnumerable<List<string>> BoutStr)> GetBoutStrs(
+        SortedDictionary<string, List<string>> records)
+    {
+        // SortedDictionary<char, (string redZh, string blackZh)> GetBoutStr(
+        //     string key, string moveStr)
+        // {
+        //             void SetBoutStrs(SortedDictionary<char, List<string>> boutStrs, string sn, string mvstrs, bool isPreMvstrs)
+        //             {
+        //                 // 捕捉一步着法: 1.着法，2.可能的“不分先后”标识，3.可能的“此前...”着法
+        //                 string mv = @"[" + Board.PGNZHCharsPattern() + @"]{4}",
+        //                     moveStr = @"(?:" + mv + @"(?:／" + mv + @")*)",
+        //                     premStr = @"(?:" + mv + @"(?:[、／和，黑可走]{1,4}" + mv + @")*)",
+        //                     rich_mvStr = "(" + moveStr + @"|……)(\s?\(不.先后[)，])?(?:[^\da-z]*?此前.*?走((?:过除)?" + premStr + @").*?\))?";
+
+        //                 // 捕捉一个回合着法：1.序号，2-4.首着、“不分先后”、“此前...”，5-7.着法、“不分先后”、“此前...”
+        //                 var matches = Regex.Matches(mvstrs, @"([\da-z]).\s?" + rich_mvStr + @"(?:，" + rich_mvStr + @")?");
+        //                 foreach (var match in matches.Cast<Match>())
+        //                 {
+        //                     char boutNo = match.Groups[1].Value[0];
+        //                     if (isPreMvstrs && sn.StartsWith("C9"))
+        //                         boutNo = char.ToUpper(boutNo);
+        //                     for (int i = 2; i < match.Groups.Count; ++i)
+        //                     {
+        //                         string qstr = match.Groups[i].Value;
+        //                         if (qstr.Length < 1 || qstr == "……")
+        //                             continue;
+
+        //                         int color = i / 5, capIndex = (i - 2) % 3;
+        //                         switch (capIndex)
+        //                         {
+        //                             case 0: // i == 2 || i == 5 // 处理回合着法
+        //                                 HandleMvstr(boutStrs, sn, isPreMvstrs, boutNo, color, qstr);
+        // #if WRITERESULTTEXTa
+        //                                     sw.WriteLine(string.Format($"\tBoutMoveStr:{qstr}")); // BoutMoveStr:1520
+        // #endif
+        //                                 break;
+        //                             case 1: // i == 3 || i == 6 // "不分先后"
+        //                                 HandleUnorder(boutStrs, boutNo, color);
+        // #if WRITERESULTTEXTa
+        //                                     sw.WriteLine(string.Format($"\tNotOrder:{qstr}")); // NotOrder:26
+        // #endif
+        //                                 break;
+        //                             default: // i == 4 || i == 7 // "此前..."
+        //                                 InsertMvstr(boutStrs, sn, isPreMvstrs, boutNo, color, qstr);
+        // #if WRITERESULTTEXTa
+        //                                     // PreInsertBout:53个     \tInsertBout:103个
+        //                                     sw.WriteLine(string.Format($"\t{(isPreMvstrs ? "Pre" : "")}InsertBout:{qstr}"));
+        // #endif
+        //                                 break;
+        //                         }
+        //                     }
+        //                 }
+        //             }
+
+        List<string> GetBoutStr(string moveStr, PieceColor color)
+        {
+            List<string> moves = new();
+            string mvPattern = Board.PGNZHCharsPattern(color),
+                movePattern = @$"(?<!：){mvPattern}(?:／{mvPattern})*",
+                preMovePattern = @$"此前[^(]*?{mvPattern}[^(]*?\)";
+            foreach (var move in Regex.Matches(moveStr, movePattern)
+                      .Select(match => match.Value))
+            {
+                if (!moves.Contains(move))
+                    moves.Add(move);
+            }
+            var result = Regex.Match(moveStr, preMovePattern).Value;
+            // moves.Add(result);
+            moves.Add(Regex.Matches(result, mvPattern).Count.ToString());
+
+            return moves;
+        }
+
+        return records
+            .Where(record => !InvalidThird(record))
+            .Select(record =>
+                (record.Key, record.Value[0], record.Value[1],
+                new PieceColor[] { PieceColor.Red, PieceColor.Black }
+                    .Select(color => GetBoutStr(record.Value[1], color))));
+    }
+
+    private static bool InvalidThird(KeyValuePair<string, List<string>> record)
+        => record.Key.Length < 3 || record.Value.Count < 3 || record.Value[1].Length < 3;
+
+    public static (string RowCols, string PreZhStrs) GetRowCols(List<string> boutStr)
+    {
+        Dictionary<string, string> zhStr_preZhStr = new(){
+                        { "车一平二", "马二进三" }, { "车二进六", "车一平二" },
+                        { "车八进四", "车九平八" }, { "车九平八", "马八进七" },
+                        { "马八进七", "马七退八" }, { "马七进六", "兵七进一" },
+                        { "马三进四", "兵三进一" }, { "马二进三", "马三退二" },
+                        { "炮八平七", "卒３进１" }, { "车８进５", "炮８平９" },
+                        { "车９平８", "马８进７" }, { "炮８进２", "车二退六" },
+                        { "炮８平９", "车９平８" }
+                    };
+
+        ManualMove manualMove = new();
+        List<string> preZhStrs = new();
+        foreach (string zhStrs in boutStr)
+        {
+            int count = 0;
+            foreach (string zhStr in zhStrs.Split('／'))
+            {
+                if (preZhStrs.Contains(zhStr))
+                    continue;
+
+                bool success = manualMove.AddMove(zhStr, count > 0);
+                if (!success)
+                {
+                    preZhStrs.Insert(0, zhStr);
+                    while (zhStr_preZhStr.ContainsKey(preZhStrs.First()))
+                    {
+                        string preZhStr = zhStr_preZhStr[preZhStrs.First()];
+                        preZhStrs.Insert(0, preZhStr);
+                        if (manualMove.AddMove(preZhStr))
+                            break;
+                    }
+
+                    preZhStrs.GetRange(1, preZhStrs.Count - 1)
+                        .ForEach(zhStr => manualMove.AddMove(zhStr));
                 }
+
+                count++;
             }
         }
 
-        foreach (var record in records)
-        {
-            string sn = record.Value[0], mvstrs = record.Value[3];
-            if (sn.Length != 3 || mvstrs.Length < 3)
-                continue;
-
-            string sn_pre = "";
-            if (mvstrs[0] == '从')
-                // 三级局面的 C2 C3_C4 C61 C72局面 有40项
-                sn_pre = mvstrs[1..3];
-            else if (mvstrs[0] != '1')
-            {
-                // 前置省略的着法 有75项
-                sn_pre = sn[..2]; //  截断为两个字符长度
-                if (sn_pre[0] == 'C')
-                    sn_pre = "C0"; // C0/C1/C5/C6/C7/C8/C9 => C0
-                else if (sn_pre == "D5")
-                    sn_pre = "D51"; // D5 => D51
-            }
-            else
-                continue;
-
-            record.Value[4] = sn_pre;
-        }
-
-        return records;
+        return (manualMove.GetRowCols(), string.Join('-', preZhStrs));
     }
 
     // 删除此前已加入的相同着法
@@ -378,7 +553,7 @@ public class Database
     void SetBoutStrs(SortedDictionary<char, List<string>> boutStrs, string sn, string mvstrs, bool isPreMvstrs)
     {
         // 捕捉一步着法: 1.着法，2.可能的“不分先后”标识，3.可能的“此前...”着法
-        string mv = @"[" + Board.PGNZHChars() + @"]{4}",
+        string mv = @"[" + Board.PGNZHCharsPattern() + @"]{4}",
             moveStr = @"(?:" + mv + @"(?:／" + mv + @")*)",
             premStr = @"(?:" + mv + @"(?:[、／和，黑可走]{1,4}" + mv + @")*)",
             rich_mvStr = "(" + moveStr + @"|……)(\s?\(不.先后[)，])?(?:[^\da-z]*?此前.*?走((?:过除)?" + premStr + @").*?\))?";
@@ -486,7 +661,7 @@ public class Database
 
     List<string> GetRowcolList(string mvstr, bool isOrder, Manual manual)
     {
-        string reg_mv = @$"([{Board.PGNZHChars()}]{4})",
+        string reg_mv = @$"([{Board.PGNZHCharsPattern()}]{4})",
             reg_UnOrderMv = "马二进一/车九平八|马二进三/马八进七|马八进七／马八进九|炮八平六/马八进九|" +
                 "兵三进一.兵七进一|相三进五／相七进五|仕四进五／仕六进五|马８进７/车９进１|" +
                 "马８进７/马２进３|炮８进４/炮２进４|炮８平５／炮２平５|炮８平６／炮２平４／炮８平４／炮２平６|" +
@@ -640,7 +815,7 @@ public class Database
 #endif
 
             // 设置着法正则描述字符串
-            manual.Reset();
+            manual.ManualMove.BackStart();
             record.Value[5] = GetRegstr(boutStrs, sn, manual);
 #if WRITERESULTTEXTa
             sw.WriteLine(@"\t\tRegstr: " + record.Value[5] + "\n");
@@ -648,25 +823,6 @@ public class Database
         }
     }
 
-    public void InitEccoData()
-    {
-#if WRITERESULTTEXTa
-            string htmls = DownHtmls();
-            using StreamWriter htmlsSw = File.CreateText("EccoHtmls.text");
-            htmlsSw.WriteLine(htmls);
-#else
-        using StreamReader htmlsSr = File.OpenText("EccoHtmls.text");
-        string htmls = htmlsSr.ReadToEnd();
-#endif
-        var records = GetEccoRecords(htmls);
-        SetEccoRecordRegstr(records);
-
-#if WRITERESULTTEXTa
-            int recIndex = 0;
-            foreach(var record in records)
-                sw.WriteLine(string.Format($"{++recIndex}.") + string.Join("\n\t", record.Value));
-#endif
-    }
 
 }
 

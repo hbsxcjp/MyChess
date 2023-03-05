@@ -6,22 +6,20 @@ namespace CChess;
 
 public class Board
 {
+    private const string FEN = "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR";
     private const char FENSplitChar = '/';
     private static readonly string[] NumChars = { "一二三四五六七八九", "１２３４５６７８９" };
     private const string PositionChars = "前中后";
     private const string MoveChars = "退平进";
 
-    public Board()
+    public Board(string fen = "")
     {
-        SeatPieces = Pieces.GetSeatPieces();
+        SeatPieces = Pieces.ThePieces.GetSeatPieces(FENToPieceChars(fen.Length == 0 ? FEN : fen));
     }
+
     public Board(Board board)
     {
         SeatPieces = new(board.SeatPieces);
-    }
-    public Board(string pieceChars)
-    {
-        SeatPieces = Pieces.ThePieces.GetSeatPieces(pieceChars);
     }
 
     public Piece this[Coord coord] => SeatPieces[coord.Index];
@@ -119,11 +117,18 @@ public class Board
 
     public bool CanMove(CoordPair coordPair)
     {
+        if (coordPair.FromCoord == Coord.Null || coordPair.ToCoord == Coord.Null)
+            return false;
+
+        Piece piece = this[coordPair.FromCoord];
+        if (piece == Piece.Null)
+            return false;
+
         // 如是对方将帅的位置则直接可走，不用判断是否被将军（如加以判断，则会直接走棋吃将帅）
         if (this[coordPair.ToCoord].Kind == PieceKind.King)
             return true;
 
-        return !WithMove(coordPair).IsKilled(this[coordPair.FromCoord].Color);
+        return !WithMove(coordPair).IsKilled(piece.Color);
     }
 
     public bool IsKilled(PieceColor color)
@@ -189,7 +194,9 @@ public class Board
 
     public CoordPair GetCoordPairFromZhStr(string zhStr)
     {
-        Debug.Assert(zhStr.Length == 4);
+        // Debug.Assert(zhStr.Length == 4);
+        if (zhStr.Length != 4)
+            return CoordPair.Null;
 
         PieceColor color = GetColor_Num(zhStr[3]);
         bool isBottomColor = IsBottom(color);
@@ -202,7 +209,9 @@ public class Board
         {   // 首字符为棋子名
             int col = Coord.GetCol(GetCol(color, zhStr[1]), isBottomColor);
             livePieces = GetLivePieces(color, kind, col);
-            Debug.Assert(livePieces.Count > 0);
+            // Debug.Assert(livePieces.Count > 0);
+            if (livePieces.Count == 0)
+                return CoordPair.Null;
 
             // 士、象同列时不分前后，以进、退区分棋子。移动方向为退时，修正index
             if (livePieces.Count == 2)
@@ -212,7 +221,7 @@ public class Board
         {
             kind = Piece.GetKind_Name(zhStr[1]);
             livePieces = kind == PieceKind.Pawn ? GetLivePieces_MultiPawns(color) : GetLivePieces(color, kind);
-            Debug.Assert(livePieces.Count > 1);
+            // Debug.Assert(livePieces.Count > 1);
 
             if (livePieces.Count < 2)
                 return CoordPair.Null;
@@ -244,6 +253,9 @@ public class Board
                 ? colAway : (colAway == 1 ? 2 : 1);
             toRow += absMovDir * rowInc;
         }
+
+        if (!Coord.IsValid(toRow, toCol))
+            return CoordPair.Null;
 
         return new(fromCoord, Coord.Get(toRow, toCol));
     }
@@ -293,8 +305,11 @@ public class Board
     public static char MoveChar(bool isSameRow, bool isGo) => MoveChars[isSameRow ? 1 : (isGo ? 2 : 0)];
     public static int MoveDir(char movCh) => MoveChars.IndexOf(movCh) - 1;
 
-    public static string PGNZHChars()
-        => $"{Piece.NameChars[0]}{Piece.NameChars[1]}{NumChars[0]}{NumChars[1]}{PositionChars}{MoveChars}";
+    public static string PGNZHCharsPattern()
+        => $"{PGNZHCharsPattern(PieceColor.Red)}|{PGNZHCharsPattern(PieceColor.Black)}";
+
+    public static string PGNZHCharsPattern(PieceColor color)
+        => @$"(?:[{Piece.NameChars[(int)color]}{NumChars[(int)color]}{PositionChars}]{{2}}[{MoveChars}][{NumChars[(int)color]}])";
 
     public override string ToString()
     {

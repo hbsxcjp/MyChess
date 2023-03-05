@@ -14,12 +14,10 @@ public enum InfoKey
 
 public class Manual
 {
-    private const string FEN = "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR";
-
     public Manual()
     {
         Info = new();
-        ManualMove = new(FEN);
+        ManualMove = new();
     }
 
     public Manual(Stream stream)
@@ -188,7 +186,7 @@ public class Manual
     public Dictionary<string, string> Info { get; }
     public ManualMove ManualMove { get; }
 
-    private static List<string> FileExtNames
+    public static List<string> FileExtNames
         => Enumerable.Range(0, (int)FileExtType.pgnzh + 1)
             .Select(index => $".{((FileExtType)index)}").ToList();
 
@@ -223,8 +221,6 @@ public class Manual
         }
     }
 
-    public void Reset() => ManualMove.BackStart();
-
     public byte[] GetBytes()
     {
         MemoryStream stream = new();
@@ -240,10 +236,6 @@ public class Manual
         stream.Write(ManualMove.GetBytes());
         return stream.ToArray();
     }
-
-    public string GetRowCols() => ManualMove.GetRowCols();
-
-    public List<(string fen, string rowCol)> GetFENRowCols() => ManualMove.GetFENRowCols();
 
     public static string GetInfoKey(InfoKey field) => InfoKeys[(int)field];
     public string GetInfoValue(InfoKey field)

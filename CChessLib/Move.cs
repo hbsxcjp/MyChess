@@ -74,8 +74,6 @@ public class Move
 
         return move;
     }
-    public Move? AddOther(CoordPair coordPair, string? remark = null, bool visible = true)
-        => Before?.AddAfter(coordPair, remark, visible);
 
     public override string ToString()
        => $"{new string('\t', BeforeMoves.Count)}{Before?.Id}-{CoordPair}.{Id} {Remark}\n";

@@ -88,7 +88,7 @@ public class Aspects
     }
 
     public void Add(Manual manual)
-        => manual.GetFENRowCols().ForEach(fenRowCol => Join(fenRowCol));
+        => manual.ManualMove.GetFENRowCols().ForEach(fenRowCol => Join(fenRowCol));
 
     private void Join((string fen, string rowCol) fenRowCol)
     {
