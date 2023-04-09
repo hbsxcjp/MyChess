@@ -127,8 +127,10 @@ public class Database
             Dictionary<string, string> info = new();
             info[Manual.GetInfoKey(InfoKey.source)] = uri_bytes.uri;
             for (int i = 1; i < XqbaseInfoCount; i++)
-                info[Manual.GetInfoKey((InfoKey)i)] = i != 6 ? match.Groups[i].Value
-                    : Coord.GetRowCols(match.Groups[i].Value.Replace("-", "").Replace("+", ""));
+            {
+                info[Manual.GetInfoKey((InfoKey)i)] = (i != 6 ? match.Groups[i].Value
+                    : Coord.GetRowCols(match.Groups[i].Value.Replace("-", "").Replace("+", "")));
+            }
 
             return info;
         }

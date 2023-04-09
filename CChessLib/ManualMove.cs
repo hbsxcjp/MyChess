@@ -290,6 +290,7 @@ public class ManualMove// : IEnumerable
         Queue<List<Move>> afterMovesQueue = new();
         if (RootMove.AfterMoves != null)
             afterMovesQueue.Enqueue(RootMove.AfterMoves);
+
         while (afterMovesQueue.Count > 0)
         {
             List<Move> afterMoves = afterMovesQueue.Dequeue();
@@ -304,6 +305,19 @@ public class ManualMove// : IEnumerable
                 if (move.AfterMoves != null)
                     afterMovesQueue.Enqueue(move.AfterMoves);
             });
+        }
+
+        return result.ToString();
+    }
+
+    public string GetFirstRowCols()
+    {
+        StringBuilder result = new();
+        Move tempMove = RootMove;
+        while (tempMove.AfterMoves != null)
+        {
+            tempMove = tempMove.AfterMoves[0];
+            result.Append(tempMove.CoordPair.RowCol);
         }
 
         return result.ToString();

@@ -48,7 +48,7 @@ public class ManualTest
                     => (new List<(InfoKey field, string value)>
                         {
                             (InfoKey.source, fileNameManual.First),
-                            (InfoKey.rowCols, fileNameManual.Second.ManualMove.GetRowCols()),
+                            (InfoKey.rowCols, fileNameManual.Second.ManualMove.GetFirstRowCols()),
                             (InfoKey.moveString, fileNameManual.Second.GetMoveString())
                         }).ForEach(fieldValue
                             => fileNameManual.Second.SetInfoValue(fieldValue.field, fieldValue.value)));
