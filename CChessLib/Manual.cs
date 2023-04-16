@@ -109,11 +109,13 @@ public class Manual
         {
             int xy = head_QiziXY[i];
             if (xy <= 89)
+            {
                 // 用单字节坐标表示, 将字节变为十进制,
                 // 十位数为X(0-8),个位数为Y(0-9),棋盘的左下角为原点(0, 0)
-                pieceCharBuilder[(10 - 1 - xy % 10) * 9 + xy / 10] = pieChars[i];
+                pieceCharBuilder[xy % 10 * 9 + xy / 10] = pieChars[i];
+            }
         }
-        string pieceChars = pieceCharBuilder.ToString();
+        string fen = Board.GetFEN(Board.PieceCharsToFEN(pieceCharBuilder.ToString()), ChangeType.Symmetry_V);
 
         Info = new();
         // System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
@@ -125,7 +127,7 @@ public class Manual
             => codec.GetString(name).Replace('\0', ' ').Trim();
         (new List<(InfoKey field, string value)>
             {
-                (InfoKey.FEN, $"{Board.PieceCharsToFEN(pieceChars)} r - - 0 1"), // 可能存在不是红棋先走的情况？
+                (InfoKey.FEN, $"{fen} r - - 0 1"), // 可能存在不是红棋先走的情况？
                 (InfoKey.version, Version.ToString()),
                 (InfoKey.win, result[headPlayResult].Trim()),
                 (InfoKey.type, typestr[headCodeA_H[0]].Trim()),
@@ -141,7 +143,7 @@ public class Manual
             }).ForEach(fieldValue
                 => SetInfoValue(fieldValue.field, fieldValue.value));
 
-        ManualMove = new(GetFEN(), stream, (Version, KeyXYf, KeyXYt, KeyRMKSize, F32Keys));
+        ManualMove = new(fen, stream, (Version, KeyXYf, KeyXYt, KeyRMKSize, F32Keys));
     }
 
     public Manual(byte[] bytes)
@@ -257,13 +259,13 @@ public class Manual
         => string.Concat(Info.Select(keyValue
             => $"[{keyValue.Key} \"{keyValue.Value}\"]\n"));
 
-    public string GetMoveString(FileExtType fileExtType = FileExtType.txt)
-        => ManualMove.GetString(fileExtType);
+    public string GetMoveString(FileExtType fileExtType = FileExtType.txt, ChangeType ct = ChangeType.NoChange)
+        => ManualMove.GetString(fileExtType, ct);
 
-    public string GetString(FileExtType fileExtType = FileExtType.txt)
-        => $"{GetInfoString()}\n{GetMoveString(fileExtType)}";
+    public string GetString(FileExtType fileExtType = FileExtType.txt, ChangeType ct = ChangeType.NoChange)
+        => $"{GetInfoString()}\n{GetMoveString(fileExtType, ct)}";
 
-    public string ToString(bool showMove = false, bool isOrder = false)
-        => $"{GetInfoString()}{ManualMove.ToString(showMove, isOrder)}";
+    public string ToString(bool showMove = false, bool isOrder = false, ChangeType ct = ChangeType.NoChange)
+        => $"{GetInfoString()}{ManualMove.ToString(showMove, isOrder, ct)}";
 
 }

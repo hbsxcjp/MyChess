@@ -20,9 +20,12 @@ public class CoordPair
 
     public string Iccs { get => $"{FromCoord.Iccs}{ToCoord.Iccs}"; }
     public string RowCol { get => $"{FromCoord.RowCol}{ToCoord.RowCol}"; }
+    public string SymmetryVRowCol { get => $"{FromCoord.SymmetryVRowCol}{ToCoord.SymmetryVRowCol}"; }
 
     public bool Equals(CoordPair other)
         => FromCoord.Index == other.FromCoord.Index && ToCoord.Index == other.ToCoord.Index;
 
     public override string ToString() => $"[{FromCoord},{ToCoord}]";
+    public string SymmetryVToString() => $"[{FromCoord.SymmetryVToString()},{ToCoord.SymmetryVToString()}]";
+
 }

@@ -34,8 +34,8 @@ public class BoardTest
             return string.Join("\n", livePieces.Select(piece =>
             {
                 List<Coord> canMoveCoords = piece.CanMoveCoord(board);
-                return $"{piece}{board.GetCoord(piece).SymmetryRowToString()} CanMoveCoord: " +
-                               string.Join("", canMoveCoords.Select(coord => coord.SymmetryRowToString()));
+                return $"{piece}{board.GetCoord(piece).SymmetryVToString()} CanMoveCoord: " +
+                               string.Join("", canMoveCoords.Select(coord => coord.SymmetryVToString()));
             }));
         }
 

@@ -102,10 +102,10 @@ public class ManualTest
     {
         Manual manual = GetManual(index, fileExtType);
 
-        string result = manual.GetString();
+        string result = manual.GetString(FileExtType.txt, ChangeType.Symmetry_V);
         Assert.Equal(manualStrings[index, 1], result);
 
-        string detailResult = manual.ToString(true, true);
+        string detailResult = manual.ToString(true, true, ChangeType.Symmetry_V);
         Assert.Equal(manualStrings[index, 2], detailResult);
     }
 

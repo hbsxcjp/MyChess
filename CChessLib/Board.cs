@@ -45,7 +45,7 @@ public class Board
     public Board WithMove(Move move)
     {
         Board board = new(this);
-        move.BeforeMoves.ForEach(move
+        move.UntilThis?.ForEach(move
             => board.MovePiece(move.CoordPair.FromCoord, move.CoordPair.ToCoord));
 
         return board;
