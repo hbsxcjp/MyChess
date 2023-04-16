@@ -14,8 +14,8 @@ public class DatabaseTest
     {
         db = new();
 
-        db.DownXqbaseManual(1, 5);
-        db.StorageManuals(ManualTest.GetDataManuals());
+        // db.DownXqbaseManual(1, 5);
+        // db.StorageManuals(ManualTest.GetDataManuals());
 
         // using var writer = File.CreateText("EccoHtmls.txt");
         // string eccoHtmlsString = Database.DownEccoHtmls();

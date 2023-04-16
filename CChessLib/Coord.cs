@@ -19,7 +19,7 @@ public class Coord
     public int Col { get; }
     public string RowCol { get => $"{Row}{Col}"; }
     public string Iccs { get => $"{ColChars[Col]}{Row}"; }
-    public bool IsBottom { get => (Row << 1) < RowCount; }
+    public bool IsBottom { get => (Row << 1) > RowCount - 1; }
 
     public static Coord Get(int index) => Coords[index];
     public static Coord Get(int row, int col) => Coords[row * ColCount + col];
@@ -49,7 +49,7 @@ public class Coord
 
     public static int GetCol(int col, bool isBottomColor) => isBottomColor ? SymmetryCol(col) : col;
 
-    public static int GetDoubleIndex(Coord coord) => SymmetryRow(coord.Row) * 2 * (ColCount * 2) + coord.Col * 2;
+    public static int GetDoubleIndex(Coord coord) => coord.Row * 2 * (ColCount * 2) + coord.Col * 2;
 
     public static bool IsValid(int row, int col) => row >= 0 && row < RowCount && col >= 0 && col < ColCount;
 
@@ -57,4 +57,6 @@ public class Coord
     private static int SymmetryCol(int col) => ColCount - 1 - col;
 
     public override string ToString() => $"({Row},{Col})";
+
+    public string SymmetryRowToString() => $"({SymmetryRow(Row)},{Col})";
 }

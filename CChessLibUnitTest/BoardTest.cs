@@ -17,24 +17,38 @@ public class BoardTest
         string CanMoveCoordString(Board board)
         {
             List<Piece> livePieces = board.GetLivePieces();
-            var sortLivePieces =
-                livePieces.OrderBy(piece => piece.Color).ThenBy(piece => piece.Kind);
-            return string.Join("\n", sortLivePieces.Select(
-                piece => $"{piece}{board.GetCoord(piece)} CanMoveCoord: " +
-                string.Join("", piece.CanMoveCoord(board)
-                    .Select(coord => coord.ToString()))));
+            livePieces.Sort(delegate (Piece apiece, Piece bpiece)
+            {
+                int compColor = apiece.Color.CompareTo(bpiece.Color);
+                if (compColor != 0)
+                    return compColor;
+
+                int compKind = apiece.Kind.CompareTo(bpiece.Kind);
+                if (compKind != 0)
+                    return compKind;
+
+                Coord acoord = board.GetCoord(apiece), bcoord = board.GetCoord(bpiece);
+                int compRow = acoord.Row.CompareTo(bcoord.Row);
+                return compRow != 0 ? -compRow : acoord.Col.CompareTo(bcoord.Col);
+            });
+            return string.Join("\n", livePieces.Select(piece =>
+            {
+                List<Coord> canMoveCoords = piece.CanMoveCoord(board);
+                return $"{piece}{board.GetCoord(piece).SymmetryRowToString()} CanMoveCoord: " +
+                               string.Join("", canMoveCoords.Select(coord => coord.SymmetryRowToString()));
+            }));
         }
 
         StringBuilder result = new();
-        Board board = new(Board.FENToPieceChars(fen));
+        Board board = new(fen);
         foreach (var ct in new List<ChangeType> {
-                    ChangeType.NoChange, 
+                    ChangeType.NoChange,
                     ChangeType.Symmetry_V,
-                    ChangeType.Symmetry_H, 
-                    ChangeType.NoChange, 
+                    ChangeType.Symmetry_H,
+                    ChangeType.NoChange,
                     ChangeType.Exchange})
         {
-            Board ctBoard = new(Board.FENToPieceChars(Board.GetFEN(board.GetFEN(), ct)));
+            Board ctBoard = new(Board.GetFEN(board.GetFEN(), ct));
             result.Append($"{ct}: \n{ctBoard.GetFEN()}\n{ctBoard}{CanMoveCoordString(ctBoard)}\n");
         }
 

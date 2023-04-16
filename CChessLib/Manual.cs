@@ -103,16 +103,17 @@ public class Manual
             F32Keys[i] = (byte)(copyright[i] & KeyBytes[i % 4]); // ord(c)
 
         // 取得棋子字符串
-        StringBuilder pieceChars = new(new string('_', 90));
-        string pieChars = "RNBAKABNRCCPPPPPrnbakabnrccppppp"; // QiziXY设定的棋子顺序
+        StringBuilder pieceCharBuilder = new(new string('_', 90));
+        const string pieChars = "RNBAKABNRCCPPPPPrnbakabnrccppppp"; // QiziXY设定的棋子顺序
         for (int i = 0; i != PIECENUM; ++i)
         {
             int xy = head_QiziXY[i];
             if (xy <= 89)
                 // 用单字节坐标表示, 将字节变为十进制,
                 // 十位数为X(0-8),个位数为Y(0-9),棋盘的左下角为原点(0, 0)
-                pieceChars[xy % 10 * 9 + xy / 10] = pieChars[i];
+                pieceCharBuilder[(10 - 1 - xy % 10) * 9 + xy / 10] = pieChars[i];
         }
+        string pieceChars = pieceCharBuilder.ToString();
 
         Info = new();
         // System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
@@ -124,7 +125,7 @@ public class Manual
             => codec.GetString(name).Replace('\0', ' ').Trim();
         (new List<(InfoKey field, string value)>
             {
-                (InfoKey.FEN, $"{Board.PieceCharsToFEN(pieceChars.ToString())} r - - 0 1"), // 可能存在不是红棋先走的情况？
+                (InfoKey.FEN, $"{Board.PieceCharsToFEN(pieceChars)} r - - 0 1"), // 可能存在不是红棋先走的情况？
                 (InfoKey.version, Version.ToString()),
                 (InfoKey.win, result[headPlayResult].Trim()),
                 (InfoKey.type, typestr[headCodeA_H[0]].Trim()),

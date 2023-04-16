@@ -6,7 +6,7 @@ namespace CChess;
 
 public class Board
 {
-    private const string FEN = "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR";
+    public const string FEN = "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR";
     private const char FENSplitChar = '/';
     private static readonly string[] NumChars = { "一二三四五六七八九", "１２３４５６７８９" };
     private const string PositionChars = "前中后";
@@ -22,21 +22,22 @@ public class Board
         SeatPieces = new(board.SeatPieces);
     }
 
+    public Piece this[int index] => SeatPieces[index];
     public Piece this[Coord coord] => SeatPieces[coord.Index];
 
     private List<Piece> SeatPieces { get; }
-    private PieceColor BottomColor
+    public PieceColor BottomColor
     {
-        get => SeatPieces.Find(piece => piece.Kind == PieceKind.King)?.Color ?? PieceColor.Red;
+        get => SeatPieces.FindLast(piece => piece.Kind == PieceKind.King)?.Color ?? PieceColor.Red;
     }
 
     public bool IsBottom(PieceColor color) => BottomColor == color;
     public bool IsNull(int row, int col) => this[Coord.Get(row, col)] == Piece.Null;
 
-    public Board WithMove(CoordPair coordPair)
+    public Board WithMove(Coord fromCoord, Coord toCoord)
     {
         Board board = new(this);
-        board.MovePiece(coordPair);
+        board.MovePiece(fromCoord, toCoord);
 
         return board;
     }
@@ -45,15 +46,15 @@ public class Board
     {
         Board board = new(this);
         move.BeforeMoves.ForEach(move
-            => board.MovePiece(move.CoordPair));
+            => board.MovePiece(move.CoordPair.FromCoord, move.CoordPair.ToCoord));
 
         return board;
     }
 
-    private void MovePiece(CoordPair coordPair)
+    private void MovePiece(Coord fromCoord, Coord toCoord)
     {
-        SeatPieces[coordPair.ToCoord.Index] = SeatPieces[coordPair.FromCoord.Index];
-        SeatPieces[coordPair.FromCoord.Index] = Piece.Null;
+        SeatPieces[toCoord.Index] = SeatPieces[fromCoord.Index];
+        SeatPieces[fromCoord.Index] = Piece.Null;
     }
 
     public string GetFEN() => PieceCharsToFEN(GetPieceChars());
@@ -61,16 +62,14 @@ public class Board
     public static string PieceCharsToFEN(string pieceChars)
         => Regex.Replace(
             string.Join(FENSplitChar,
-                Enumerable.Range(0, Coord.RowCount)
-                .Select(row => pieceChars.Substring(
-                    (Coord.RowCount - 1 - row) * Coord.ColCount, Coord.ColCount))),
+                Enumerable.Range(0, Coord.RowCount).Select(row => pieceChars.Substring(row * Coord.ColCount, Coord.ColCount))),
             $"{Piece.NullCh}+",
             match => match.Value.Length.ToString());
 
-    public static string FENToPieceChars(string fen)
+    private static string FENToPieceChars(string fen)
         => Regex.Replace(
-            string.Concat(fen.Split(FENSplitChar).Reverse()),
-            "\\d{1}",
+            string.Concat(fen.Split(FENSplitChar)),
+            @"\d",
             match => new string(Piece.NullCh, int.Parse(match.Captures[0].Value)));
 
     public static string GetFEN(string fen, ChangeType ct)
@@ -115,21 +114,23 @@ public class Board
     private List<Piece> GetLivePieces(PieceColor color, PieceKind kind, int col)
         => GetLivePieces(color, kind).Where(piece => GetCoord(piece).Col == col).ToList();
 
-    public bool CanMove(CoordPair coordPair)
+    public bool CanMove(Coord fromCoord, Coord toCoord)
     {
-        if (coordPair.FromCoord == Coord.Null || coordPair.ToCoord == Coord.Null)
+        if (fromCoord == Coord.Null || toCoord == Coord.Null)
             return false;
 
-        Piece piece = this[coordPair.FromCoord];
+        Piece piece = this[fromCoord];
         if (piece == Piece.Null)
             return false;
 
         // 如是对方将帅的位置则直接可走，不用判断是否被将军（如加以判断，则会直接走棋吃将帅）
-        if (this[coordPair.ToCoord].Kind == PieceKind.King)
+        if (this[toCoord].Kind == PieceKind.King)
             return true;
 
-        return !WithMove(coordPair).IsKilled(piece.Color);
+        return !WithMove(fromCoord, toCoord).IsKilled(piece.Color);
     }
+
+    public bool CanMove(CoordPair coordPair) => CanMove(coordPair.FromCoord, coordPair.ToCoord);
 
     public bool IsKilled(PieceColor color)
     {

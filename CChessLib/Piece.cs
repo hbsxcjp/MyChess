@@ -31,9 +31,10 @@ public abstract class Piece
     public List<Coord> CanMoveCoord(Board board)
     {
         Coord fromCoord = board.GetCoord(this);
-        return MoveCoord(board).Where(toCoord => board.CanMove(new(fromCoord, toCoord))).ToList();
+        return MoveCoord(board).Where(toCoord => board.CanMove(fromCoord, toCoord)).ToList();
     }
 
+    public static PieceColor GetOtherColor(PieceColor color) => color == PieceColor.Red ? PieceColor.Black : PieceColor.Red;
     public static PieceColor GetColor(char ch) => char.IsUpper(ch) ? PieceColor.Red : PieceColor.Black;
 
     public static PieceKind GetKind(char ch) => (PieceKind)ChChars[(int)GetColor(ch)].IndexOf(ch);
@@ -52,7 +53,7 @@ public class King : Piece
     public King(PieceColor color) : base(color, PieceKind.King) { }
 
     override public List<Coord> PutCoord(bool isBottom)
-        => Enumerable.Range(isBottom ? 0 : 7, 3)
+        => Enumerable.Range(isBottom ? 7 : 0, 3)
              .Select(row => Enumerable.Range(3, 3)
                                             .Select(col => Coord.Get(row, col)))
              .SelectMany(coords => coords)
@@ -68,10 +69,10 @@ public class King : Piece
             coords.Add(Coord.Get(fRow, fCol - 1));
         if (fCol < 5)
             coords.Add(Coord.Get(fRow, fCol + 1));
-        if (fRow < (isBottom ? 2 : 9))
-            coords.Add(Coord.Get(fRow + 1, fCol));
-        if (fRow > (isBottom ? 0 : 7))
+        if (fRow > (isBottom ? 7 : 0))
             coords.Add(Coord.Get(fRow - 1, fCol));
+        if (fRow < (isBottom ? 9 : 2))
+            coords.Add(Coord.Get(fRow + 1, fCol));
 
         return coords;
     }
@@ -84,8 +85,8 @@ public class Advisor : Piece
     override public List<Coord> PutCoord(bool isBottom)
     {
         List<Coord> coords = new();
-        int minRow = isBottom ? 0 : 7,
-            maxRow = isBottom ? 2 : 9;
+        int minRow = isBottom ? 7 : 0,
+            maxRow = isBottom ? 9 : 2;
 
         for (int row = minRow; row <= maxRow; row += 2)
             for (int col = 3; col <= 5; col += 2)
@@ -102,13 +103,13 @@ public class Advisor : Piece
         bool isBottom = coord.IsBottom;
         int fRow = coord.Row, fCol = coord.Col;
         if (fCol != 4)
-            coords.Add(Coord.Get(isBottom ? 1 : 8, 4));
+            coords.Add(Coord.Get(isBottom ? 8 : 1, 4));
         else
         {
-            coords.Add(Coord.Get(fRow - 1, fCol - 1));
-            coords.Add(Coord.Get(fRow - 1, fCol + 1));
             coords.Add(Coord.Get(fRow + 1, fCol - 1));
             coords.Add(Coord.Get(fRow + 1, fCol + 1));
+            coords.Add(Coord.Get(fRow - 1, fCol - 1));
+            coords.Add(Coord.Get(fRow - 1, fCol + 1));
         }
 
         return coords;
@@ -122,9 +123,9 @@ public class Bishop : Piece
     override public List<Coord> PutCoord(bool isBottom)
     {
         List<Coord> coords = new();
-        int minRow = isBottom ? 0 : 5,
-            midRow = isBottom ? 2 : 7,
-            maxRow = isBottom ? 4 : 9;
+        int minRow = isBottom ? 5 : 0,
+            midRow = isBottom ? 7 : 2,
+            maxRow = isBottom ? 9 : 4;
         for (int row = minRow; row <= maxRow; row += 4)
             for (int col = 2; col < Coord.ColCount; col += 4)
                 coords.Add(Coord.Get(row, col));
@@ -141,26 +142,26 @@ public class Bishop : Piece
         Coord coord = board.GetCoord(this);
         bool isBottom = coord.IsBottom;
         int fRow = coord.Row, fCol = coord.Col;
-        int maxRow = isBottom ? (Coord.RowCount - 1) / 2 : Coord.RowCount - 1;
+        int maxRow = isBottom ? Coord.RowCount - 1 : (Coord.RowCount - 1) / 2;
         void AddRowCol(int row, int col)
         {
             if (board.IsNull((row + fRow) / 2, (col + fCol) / 2))
                 coords.Add(Coord.Get(row, col));
         }
 
-        if (fRow < maxRow)
-        {
-            if (fCol > 0)
-                AddRowCol(fRow + 2, fCol - 2);
-            if (fCol < Coord.ColCount - 1)
-                AddRowCol(fRow + 2, fCol + 2);
-        }
         if (fRow > 0)
         {
             if (fCol > 0)
                 AddRowCol(fRow - 2, fCol - 2);
             if (fCol < Coord.ColCount - 1)
                 AddRowCol(fRow - 2, fCol + 2);
+        }
+        if (fRow < maxRow)
+        {
+            if (fCol > 0)
+                AddRowCol(fRow + 2, fCol - 2);
+            if (fCol < Coord.ColCount - 1)
+                AddRowCol(fRow + 2, fCol + 2);
         }
 
         return coords;
@@ -179,15 +180,15 @@ public class Knight : Piece
         bool isBottom = coord.IsBottom;
         int fRow = coord.Row, fCol = coord.Col;
         ((int row, int col) to, (int row, int col) leg)[] allToLegRowCols =
-        {
-                ((fRow - 2, fCol - 1), (fRow - 1, fCol))  ,
-                ((fRow - 2, fCol + 1), (fRow - 1, fCol)),
-                ((fRow - 1, fCol - 2), (fRow, fCol - 1)),
-                ((fRow - 1, fCol + 2), (fRow, fCol + 1)),
+            {
+                ((fRow + 2, fCol - 1), (fRow + 1, fCol)),
+                ((fRow + 2, fCol + 1), (fRow + 1, fCol)),
                 ((fRow + 1, fCol - 2), (fRow, fCol - 1)),
                 ((fRow + 1, fCol + 2), (fRow, fCol + 1)),
-                ((fRow + 2, fCol - 1), (fRow + 1, fCol)),
-                ((fRow + 2, fCol + 1), (fRow + 1, fCol))
+                ((fRow - 1, fCol - 2), (fRow, fCol - 1)),
+                ((fRow - 1, fCol + 2), (fRow, fCol + 1)),
+                ((fRow - 2, fCol - 1), (fRow - 1, fCol)),
+                ((fRow - 2, fCol + 1), (fRow - 1, fCol))
             };
 
         return allToLegRowCols.Where(
@@ -214,11 +215,11 @@ public class Rook : Piece
             return board.IsNull(row, col);
         }
 
-        for (int r = fRow - 1; r >= 0; --r)
+        for (int r = fRow + 1; r < Coord.RowCount; ++r)
             if (!AddRowCol(r, fCol))
                 break;
 
-        for (int r = fRow + 1; r < Coord.RowCount; ++r)
+        for (int r = fRow - 1; r >= 0; --r)
             if (!AddRowCol(r, fCol))
                 break;
 
@@ -264,12 +265,12 @@ public class Cannon : Piece
             return false;
         }
 
-        for (int r = fRow - 1; r >= 0; --r)
+        for (int r = fRow + 1; r < Coord.RowCount; ++r)
             if (AddCoordToBreak(r, fCol))
                 break;
 
         skiped = false;
-        for (int r = fRow + 1; r < Coord.RowCount; ++r)
+        for (int r = fRow - 1; r >= 0; --r)
             if (AddCoordToBreak(r, fCol))
                 break;
 
@@ -294,14 +295,14 @@ public class Pawn : Piece
     override public List<Coord> PutCoord(bool isBottom)
     {
         List<Coord> coords = new();
-        int minRow = isBottom ? 3 : 5,
-            maxRow = isBottom ? 4 : 6;
+        int minRow = isBottom ? 5 : 3,
+            maxRow = isBottom ? 6 : 4;
         for (int row = minRow; row <= maxRow; ++row)
             for (int col = 0; col < Coord.ColCount; col += 2)
                 coords.Add(Coord.Get(row, col));
 
-        minRow = isBottom ? 5 : 0;
-        maxRow = isBottom ? 9 : 4;
+        minRow = isBottom ? 0 : 5;
+        maxRow = isBottom ? 4 : 9;
         for (int row = minRow; row <= maxRow; ++row)
             for (int col = 0; col < Coord.ColCount; ++col)
                 coords.Add(Coord.Get(row, col));
@@ -326,9 +327,9 @@ public class Pawn : Piece
                 coords.Add(Coord.Get(fRow, fCol + 1));
         }
 
-        if (isBottomColor && fRow < Coord.RowCount - 1)
+        if (!isBottomColor && fRow < Coord.RowCount - 1)
             coords.Add(Coord.Get(fRow + 1, fCol));
-        else if (!isBottomColor && fRow > 0)
+        else if (isBottomColor && fRow > 0)
             coords.Add(Coord.Get(fRow - 1, fCol));
 
         return coords;
