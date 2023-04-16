@@ -256,7 +256,7 @@ public class Manual
         => GetInfoValue(InfoKey.FEN).Split(' ')[0];
 
     private string GetInfoString()
-        => string.Concat(Info.Select(keyValue
+        => string.Concat(Info.Select(keyValue 
             => $"[{keyValue.Key} \"{keyValue.Value}\"]\n"));
 
     public string GetMoveString(FileExtType fileExtType = FileExtType.txt, ChangeType ct = ChangeType.NoChange)
