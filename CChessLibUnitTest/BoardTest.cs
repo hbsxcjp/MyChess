@@ -5,12 +5,6 @@ namespace CChessTest;
 
 public class BoardTest
 {
-    public BoardTest()
-    {
-        BitBoard bitBoard = new BitBoard();
-        var zobrist = BitConstants.Zobrist;
-    }
-
     [Theory]
     [InlineData("rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR",
         "NoChange: \nrnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR\n　　　　　　　黑　方　　　　　　　\n１　２　３　４　５　６　７　８　９\n車━馬━象━士━将━士━象━馬━車\n┃　│　│　│╲│╱│　│　│　┃\n┠─┼─┼─┼─╳─┼─┼─┼─┨\n┃　│　│　│╱│╲│　│　│　┃\n┠─砲─┼─┼─┼─┼─┼─砲─┨\n┃　│　│　│　│　│　│　│　┃\n卒─┼─卒─┼─卒─┼─卒─┼─卒\n┃　│　│　│　│　│　│　│　┃\n┠─┴─┴─┴─┴─┴─┴─┴─┨\n┃　　　　　　　　　　　　　　　┃\n┠─┬─┬─┬─┬─┬─┬─┬─┨\n┃　│　│　│　│　│　│　│　┃\n兵─┼─兵─┼─兵─┼─兵─┼─兵\n┃　│　│　│　│　│　│　│　┃\n┠─炮─┼─┼─┼─┼─┼─炮─┨\n┃　│　│　│╲│╱│　│　│　┃\n┠─┼─┼─┼─╳─┼─┼─┼─┨\n┃　│　│　│╱│╲│　│　│　┃\n车━马━相━仕━帅━仕━相━马━车\n九　八　七　六　五　四　三　二　一\n　　　　　　　红　方　　　　　　　\n红帅K(0,4) CanMoveCoord: (1,4)\n红仕A(0,3) CanMoveCoord: (1,4)\n红仕A(0,5) CanMoveCoord: (1,4)\n红相B(0,2) CanMoveCoord: (2,0)(2,4)\n红相B(0,6) CanMoveCoord: (2,4)(2,8)\n红马N(0,1) CanMoveCoord: (2,0)(2,2)\n红马N(0,7) CanMoveCoord: (2,6)(2,8)\n红车R(0,0) CanMoveCoord: (1,0)(2,0)\n红车R(0,8) CanMoveCoord: (1,8)(2,8)\n红炮C(2,1) CanMoveCoord: (1,1)(3,1)(4,1)(5,1)(6,1)(9,1)(2,0)(2,2)(2,3)(2,4)(2,5)(2,6)\n红炮C(2,7) CanMoveCoord: (1,7)(3,7)(4,7)(5,7)(6,7)(9,7)(2,6)(2,5)(2,4)(2,3)(2,2)(2,8)\n红兵P(3,0) CanMoveCoord: (4,0)\n红兵P(3,2) CanMoveCoord: (4,2)\n红兵P(3,4) CanMoveCoord: (4,4)\n红兵P(3,6) CanMoveCoord: (4,6)\n红兵P(3,8) CanMoveCoord: (4,8)\n黑将k(9,4) CanMoveCoord: (8,4)\n黑士a(9,3) CanMoveCoord: (8,4)\n黑士a(9,5) CanMoveCoord: (8,4)\n黑象b(9,2) CanMoveCoord: (7,0)(7,4)\n黑象b(9,6) CanMoveCoord: (7,4)(7,8)\n黑馬n(9,1) CanMoveCoord: (7,0)(7,2)\n黑馬n(9,7) CanMoveCoord: (7,6)(7,8)\n黑車r(9,0) CanMoveCoord: (8,0)(7,0)\n黑車r(9,8) CanMoveCoord: (8,8)(7,8)\n黑砲c(7,1) CanMoveCoord: (6,1)(5,1)(4,1)(3,1)(0,1)(8,1)(7,0)(7,2)(7,3)(7,4)(7,5)(7,6)\n黑砲c(7,7) CanMoveCoord: (6,7)(5,7)(4,7)(3,7)(0,7)(8,7)(7,6)(7,5)(7,4)(7,3)(7,2)(7,8)\n黑卒p(6,0) CanMoveCoord: (5,0)\n黑卒p(6,2) CanMoveCoord: (5,2)\n黑卒p(6,4) CanMoveCoord: (5,4)\n黑卒p(6,6) CanMoveCoord: (5,6)\n黑卒p(6,8) CanMoveCoord: (5,8)\nSymmetry_V: \nRNBAKABNR/9/1C5C1/P1P1P1P1P/9/9/p1p1p1p1p/1c5c1/9/rnbakabnr\n　　　　　　　红　方　　　　　　　\n一　二　三　四　五　六　七　八　九\n车━马━相━仕━帅━仕━相━马━车\n┃　│　│　│╲│╱│　│　│　┃\n┠─┼─┼─┼─╳─┼─┼─┼─┨\n┃　│　│　│╱│╲│　│　│　┃\n┠─炮─┼─┼─┼─┼─┼─炮─┨\n┃　│　│　│　│　│　│　│　┃\n兵─┼─兵─┼─兵─┼─兵─┼─兵\n┃　│　│　│　│　│　│　│　┃\n┠─┴─┴─┴─┴─┴─┴─┴─┨\n┃　　　　　　　　　　　　　　　┃\n┠─┬─┬─┬─┬─┬─┬─┬─┨\n┃　│　│　│　│　│　│　│　┃\n卒─┼─卒─┼─卒─┼─卒─┼─卒\n┃　│　│　│　│　│　│　│　┃\n┠─砲─┼─┼─┼─┼─┼─砲─┨\n┃　│　│　│╲│╱│　│　│　┃\n┠─┼─┼─┼─╳─┼─┼─┼─┨\n┃　│　│　│╱│╲│　│　│　┃\n車━馬━象━士━将━士━象━馬━車\n９　８　７　６　５　４　３　２　１\n　　　　　　　黑　方　　　　　　　\n红帅K(9,4) CanMoveCoord: (8,4)\n红仕A(9,3) CanMoveCoord: (8,4)\n红仕A(9,5) CanMoveCoord: (8,4)\n红相B(9,2) CanMoveCoord: (7,0)(7,4)\n红相B(9,6) CanMoveCoord: (7,4)(7,8)\n红马N(9,1) CanMoveCoord: (7,0)(7,2)\n红马N(9,7) CanMoveCoord: (7,6)(7,8)\n红车R(9,0) CanMoveCoord: (8,0)(7,0)\n红车R(9,8) CanMoveCoord: (8,8)(7,8)\n红炮C(7,1) CanMoveCoord: (6,1)(5,1)(4,1)(3,1)(0,1)(8,1)(7,0)(7,2)(7,3)(7,4)(7,5)(7,6)\n红炮C(7,7) CanMoveCoord: (6,7)(5,7)(4,7)(3,7)(0,7)(8,7)(7,6)(7,5)(7,4)(7,3)(7,2)(7,8)\n红兵P(6,0) CanMoveCoord: (5,0)\n红兵P(6,2) CanMoveCoord: (5,2)\n红兵P(6,4) CanMoveCoord: (5,4)\n红兵P(6,6) CanMoveCoord: (5,6)\n红兵P(6,8) CanMoveCoord: (5,8)\n黑将k(0,4) CanMoveCoord: (1,4)\n黑士a(0,3) CanMoveCoord: (1,4)\n黑士a(0,5) CanMoveCoord: (1,4)\n黑象b(0,2) CanMoveCoord: (2,0)(2,4)\n黑象b(0,6) CanMoveCoord: (2,4)(2,8)\n黑馬n(0,1) CanMoveCoord: (2,0)(2,2)\n黑馬n(0,7) CanMoveCoord: (2,6)(2,8)\n黑車r(0,0) CanMoveCoord: (1,0)(2,0)\n黑車r(0,8) CanMoveCoord: (1,8)(2,8)\n黑砲c(2,1) CanMoveCoord: (1,1)(3,1)(4,1)(5,1)(6,1)(9,1)(2,0)(2,2)(2,3)(2,4)(2,5)(2,6)\n黑砲c(2,7) CanMoveCoord: (1,7)(3,7)(4,7)(5,7)(6,7)(9,7)(2,6)(2,5)(2,4)(2,3)(2,2)(2,8)\n黑卒p(3,0) CanMoveCoord: (4,0)\n黑卒p(3,2) CanMoveCoord: (4,2)\n黑卒p(3,4) CanMoveCoord: (4,4)\n黑卒p(3,6) CanMoveCoord: (4,6)\n黑卒p(3,8) CanMoveCoord: (4,8)\nSymmetry_H: \nrnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR\n　　　　　　　黑　方　　　　　　　\n１　２　３　４　５　６　７　８　９\n車━馬━象━士━将━士━象━馬━車\n┃　│　│　│╲│╱│　│　│　┃\n┠─┼─┼─┼─╳─┼─┼─┼─┨\n┃　│　│　│╱│╲│　│　│　┃\n┠─砲─┼─┼─┼─┼─┼─砲─┨\n┃　│　│　│　│　│　│　│　┃\n卒─┼─卒─┼─卒─┼─卒─┼─卒\n┃　│　│　│　│　│　│　│　┃\n┠─┴─┴─┴─┴─┴─┴─┴─┨\n┃　　　　　　　　　　　　　　　┃\n┠─┬─┬─┬─┬─┬─┬─┬─┨\n┃　│　│　│　│　│　│　│　┃\n兵─┼─兵─┼─兵─┼─兵─┼─兵\n┃　│　│　│　│　│　│　│　┃\n┠─炮─┼─┼─┼─┼─┼─炮─┨\n┃　│　│　│╲│╱│　│　│　┃\n┠─┼─┼─┼─╳─┼─┼─┼─┨\n┃　│　│　│╱│╲│　│　│　┃\n车━马━相━仕━帅━仕━相━马━车\n九　八　七　六　五　四　三　二　一\n　　　　　　　红　方　　　　　　　\n红帅K(0,4) CanMoveCoord: (1,4)\n红仕A(0,3) CanMoveCoord: (1,4)\n红仕A(0,5) CanMoveCoord: (1,4)\n红相B(0,2) CanMoveCoord: (2,0)(2,4)\n红相B(0,6) CanMoveCoord: (2,4)(2,8)\n红马N(0,1) CanMoveCoord: (2,0)(2,2)\n红马N(0,7) CanMoveCoord: (2,6)(2,8)\n红车R(0,0) CanMoveCoord: (1,0)(2,0)\n红车R(0,8) CanMoveCoord: (1,8)(2,8)\n红炮C(2,1) CanMoveCoord: (1,1)(3,1)(4,1)(5,1)(6,1)(9,1)(2,0)(2,2)(2,3)(2,4)(2,5)(2,6)\n红炮C(2,7) CanMoveCoord: (1,7)(3,7)(4,7)(5,7)(6,7)(9,7)(2,6)(2,5)(2,4)(2,3)(2,2)(2,8)\n红兵P(3,0) CanMoveCoord: (4,0)\n红兵P(3,2) CanMoveCoord: (4,2)\n红兵P(3,4) CanMoveCoord: (4,4)\n红兵P(3,6) CanMoveCoord: (4,6)\n红兵P(3,8) CanMoveCoord: (4,8)\n黑将k(9,4) CanMoveCoord: (8,4)\n黑士a(9,3) CanMoveCoord: (8,4)\n黑士a(9,5) CanMoveCoord: (8,4)\n黑象b(9,2) CanMoveCoord: (7,0)(7,4)\n黑象b(9,6) CanMoveCoord: (7,4)(7,8)\n黑馬n(9,1) CanMoveCoord: (7,0)(7,2)\n黑馬n(9,7) CanMoveCoord: (7,6)(7,8)\n黑車r(9,0) CanMoveCoord: (8,0)(7,0)\n黑車r(9,8) CanMoveCoord: (8,8)(7,8)\n黑砲c(7,1) CanMoveCoord: (6,1)(5,1)(4,1)(3,1)(0,1)(8,1)(7,0)(7,2)(7,3)(7,4)(7,5)(7,6)\n黑砲c(7,7) CanMoveCoord: (6,7)(5,7)(4,7)(3,7)(0,7)(8,7)(7,6)(7,5)(7,4)(7,3)(7,2)(7,8)\n黑卒p(6,0) CanMoveCoord: (5,0)\n黑卒p(6,2) CanMoveCoord: (5,2)\n黑卒p(6,4) CanMoveCoord: (5,4)\n黑卒p(6,6) CanMoveCoord: (5,6)\n黑卒p(6,8) CanMoveCoord: (5,8)\nNoChange: \nrnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR\n　　　　　　　黑　方　　　　　　　\n１　２　３　４　５　６　７　８　９\n車━馬━象━士━将━士━象━馬━車\n┃　│　│　│╲│╱│　│　│　┃\n┠─┼─┼─┼─╳─┼─┼─┼─┨\n┃　│　│　│╱│╲│　│　│　┃\n┠─砲─┼─┼─┼─┼─┼─砲─┨\n┃　│　│　│　│　│　│　│　┃\n卒─┼─卒─┼─卒─┼─卒─┼─卒\n┃　│　│　│　│　│　│　│　┃\n┠─┴─┴─┴─┴─┴─┴─┴─┨\n┃　　　　　　　　　　　　　　　┃\n┠─┬─┬─┬─┬─┬─┬─┬─┨\n┃　│　│　│　│　│　│　│　┃\n兵─┼─兵─┼─兵─┼─兵─┼─兵\n┃　│　│　│　│　│　│　│　┃\n┠─炮─┼─┼─┼─┼─┼─炮─┨\n┃　│　│　│╲│╱│　│　│　┃\n┠─┼─┼─┼─╳─┼─┼─┼─┨\n┃　│　│　│╱│╲│　│　│　┃\n车━马━相━仕━帅━仕━相━马━车\n九　八　七　六　五　四　三　二　一\n　　　　　　　红　方　　　　　　　\n红帅K(0,4) CanMoveCoord: (1,4)\n红仕A(0,3) CanMoveCoord: (1,4)\n红仕A(0,5) CanMoveCoord: (1,4)\n红相B(0,2) CanMoveCoord: (2,0)(2,4)\n红相B(0,6) CanMoveCoord: (2,4)(2,8)\n红马N(0,1) CanMoveCoord: (2,0)(2,2)\n红马N(0,7) CanMoveCoord: (2,6)(2,8)\n红车R(0,0) CanMoveCoord: (1,0)(2,0)\n红车R(0,8) CanMoveCoord: (1,8)(2,8)\n红炮C(2,1) CanMoveCoord: (1,1)(3,1)(4,1)(5,1)(6,1)(9,1)(2,0)(2,2)(2,3)(2,4)(2,5)(2,6)\n红炮C(2,7) CanMoveCoord: (1,7)(3,7)(4,7)(5,7)(6,7)(9,7)(2,6)(2,5)(2,4)(2,3)(2,2)(2,8)\n红兵P(3,0) CanMoveCoord: (4,0)\n红兵P(3,2) CanMoveCoord: (4,2)\n红兵P(3,4) CanMoveCoord: (4,4)\n红兵P(3,6) CanMoveCoord: (4,6)\n红兵P(3,8) CanMoveCoord: (4,8)\n黑将k(9,4) CanMoveCoord: (8,4)\n黑士a(9,3) CanMoveCoord: (8,4)\n黑士a(9,5) CanMoveCoord: (8,4)\n黑象b(9,2) CanMoveCoord: (7,0)(7,4)\n黑象b(9,6) CanMoveCoord: (7,4)(7,8)\n黑馬n(9,1) CanMoveCoord: (7,0)(7,2)\n黑馬n(9,7) CanMoveCoord: (7,6)(7,8)\n黑車r(9,0) CanMoveCoord: (8,0)(7,0)\n黑車r(9,8) CanMoveCoord: (8,8)(7,8)\n黑砲c(7,1) CanMoveCoord: (6,1)(5,1)(4,1)(3,1)(0,1)(8,1)(7,0)(7,2)(7,3)(7,4)(7,5)(7,6)\n黑砲c(7,7) CanMoveCoord: (6,7)(5,7)(4,7)(3,7)(0,7)(8,7)(7,6)(7,5)(7,4)(7,3)(7,2)(7,8)\n黑卒p(6,0) CanMoveCoord: (5,0)\n黑卒p(6,2) CanMoveCoord: (5,2)\n黑卒p(6,4) CanMoveCoord: (5,4)\n黑卒p(6,6) CanMoveCoord: (5,6)\n黑卒p(6,8) CanMoveCoord: (5,8)\nExchange: \nRNBAKABNR/9/1C5C1/P1P1P1P1P/9/9/p1p1p1p1p/1c5c1/9/rnbakabnr\n　　　　　　　红　方　　　　　　　\n一　二　三　四　五　六　七　八　九\n车━马━相━仕━帅━仕━相━马━车\n┃　│　│　│╲│╱│　│　│　┃\n┠─┼─┼─┼─╳─┼─┼─┼─┨\n┃　│　│　│╱│╲│　│　│　┃\n┠─炮─┼─┼─┼─┼─┼─炮─┨\n┃　│　│　│　│　│　│　│　┃\n兵─┼─兵─┼─兵─┼─兵─┼─兵\n┃　│　│　│　│　│　│　│　┃\n┠─┴─┴─┴─┴─┴─┴─┴─┨\n┃　　　　　　　　　　　　　　　┃\n┠─┬─┬─┬─┬─┬─┬─┬─┨\n┃　│　│　│　│　│　│　│　┃\n卒─┼─卒─┼─卒─┼─卒─┼─卒\n┃　│　│　│　│　│　│　│　┃\n┠─砲─┼─┼─┼─┼─┼─砲─┨\n┃　│　│　│╲│╱│　│　│　┃\n┠─┼─┼─┼─╳─┼─┼─┼─┨\n┃　│　│　│╱│╲│　│　│　┃\n車━馬━象━士━将━士━象━馬━車\n９　８　７　６　５　４　３　２　１\n　　　　　　　黑　方　　　　　　　\n红帅K(9,4) CanMoveCoord: (8,4)\n红仕A(9,3) CanMoveCoord: (8,4)\n红仕A(9,5) CanMoveCoord: (8,4)\n红相B(9,2) CanMoveCoord: (7,0)(7,4)\n红相B(9,6) CanMoveCoord: (7,4)(7,8)\n红马N(9,1) CanMoveCoord: (7,0)(7,2)\n红马N(9,7) CanMoveCoord: (7,6)(7,8)\n红车R(9,0) CanMoveCoord: (8,0)(7,0)\n红车R(9,8) CanMoveCoord: (8,8)(7,8)\n红炮C(7,1) CanMoveCoord: (6,1)(5,1)(4,1)(3,1)(0,1)(8,1)(7,0)(7,2)(7,3)(7,4)(7,5)(7,6)\n红炮C(7,7) CanMoveCoord: (6,7)(5,7)(4,7)(3,7)(0,7)(8,7)(7,6)(7,5)(7,4)(7,3)(7,2)(7,8)\n红兵P(6,0) CanMoveCoord: (5,0)\n红兵P(6,2) CanMoveCoord: (5,2)\n红兵P(6,4) CanMoveCoord: (5,4)\n红兵P(6,6) CanMoveCoord: (5,6)\n红兵P(6,8) CanMoveCoord: (5,8)\n黑将k(0,4) CanMoveCoord: (1,4)\n黑士a(0,3) CanMoveCoord: (1,4)\n黑士a(0,5) CanMoveCoord: (1,4)\n黑象b(0,2) CanMoveCoord: (2,0)(2,4)\n黑象b(0,6) CanMoveCoord: (2,4)(2,8)\n黑馬n(0,1) CanMoveCoord: (2,0)(2,2)\n黑馬n(0,7) CanMoveCoord: (2,6)(2,8)\n黑車r(0,0) CanMoveCoord: (1,0)(2,0)\n黑車r(0,8) CanMoveCoord: (1,8)(2,8)\n黑砲c(2,1) CanMoveCoord: (1,1)(3,1)(4,1)(5,1)(6,1)(9,1)(2,0)(2,2)(2,3)(2,4)(2,5)(2,6)\n黑砲c(2,7) CanMoveCoord: (1,7)(3,7)(4,7)(5,7)(6,7)(9,7)(2,6)(2,5)(2,4)(2,3)(2,2)(2,8)\n黑卒p(3,0) CanMoveCoord: (4,0)\n黑卒p(3,2) CanMoveCoord: (4,2)\n黑卒p(3,4) CanMoveCoord: (4,4)\n黑卒p(3,6) CanMoveCoord: (4,6)\n黑卒p(3,8) CanMoveCoord: (4,8)\n")]
@@ -23,16 +17,30 @@ public class BoardTest
         string CanMoveCoordString(Board board)
         {
             List<Piece> livePieces = board.GetLivePieces();
-            var sortLivePieces =
-                livePieces.OrderBy(piece => piece.Color).ThenBy(piece => piece.Kind);
-            return string.Join("\n", sortLivePieces.Select(
-                piece => $"{piece}{board.GetCoord(piece)} CanMoveCoord: " +
-                string.Join("", piece.CanMoveCoord(board)
-                    .Select(coord => coord.ToString()))));
+            livePieces.Sort(delegate (Piece apiece, Piece bpiece)
+            {
+                int compColor = apiece.Color.CompareTo(bpiece.Color);
+                if (compColor != 0)
+                    return compColor;
+
+                int compKind = apiece.Kind.CompareTo(bpiece.Kind);
+                if (compKind != 0)
+                    return compKind;
+
+                Coord acoord = board.GetCoord(apiece), bcoord = board.GetCoord(bpiece);
+                int compRow = acoord.Row.CompareTo(bcoord.Row);
+                return compRow != 0 ? -compRow : acoord.Col.CompareTo(bcoord.Col);
+            });
+            return string.Join("\n", livePieces.Select(piece =>
+            {
+                List<Coord> canMoveCoords = piece.CanMoveCoord(board);
+                return $"{piece}{board.GetCoord(piece).SymmetryRowToString()} CanMoveCoord: " +
+                               string.Join("", canMoveCoords.Select(coord => coord.SymmetryRowToString()));
+            }));
         }
 
         StringBuilder result = new();
-        Board board = new(Board.FENToPieceChars(fen));
+        Board board = new(fen);
         foreach (var ct in new List<ChangeType> {
                     ChangeType.NoChange,
                     ChangeType.Symmetry_V,
@@ -40,7 +48,7 @@ public class BoardTest
                     ChangeType.NoChange,
                     ChangeType.Exchange})
         {
-            Board ctBoard = new(Board.FENToPieceChars(Board.GetFEN(board.GetFEN(), ct)));
+            Board ctBoard = new(Board.GetFEN(board.GetFEN(), ct));
             result.Append($"{ct}: \n{ctBoard.GetFEN()}\n{ctBoard}{CanMoveCoordString(ctBoard)}\n");
         }
 
