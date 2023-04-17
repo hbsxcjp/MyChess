@@ -246,18 +246,14 @@ public class Manual
 
     public void SetInfoValue(InfoKey field, string value) => Info[GetInfoKey(field)] = value;
 
-    private static FileExtType GetFileExtType(string fileName)
-        => (FileExtType)(FileExtNames.IndexOf(Path.GetExtension(fileName)));
+    private static FileExtType GetFileExtType(string fileName) => (FileExtType)(FileExtNames.IndexOf(Path.GetExtension(fileName)));
 
-    public static string GetFileName(string fileName, FileExtType fileExtType)
-        => $"{fileName}{FileExtNames[(int)fileExtType]}";
+    public static string GetFileName(string fileName, FileExtType fileExtType) => $"{fileName}{FileExtNames[(int)fileExtType]}";
 
-    private string GetFEN()
-        => GetInfoValue(InfoKey.FEN).Split(' ')[0];
+    private string GetFEN() => GetInfoValue(InfoKey.FEN).Split(' ')[0];
 
     private string GetInfoString()
-        => string.Concat(Info.Select(keyValue 
-            => $"[{keyValue.Key} \"{keyValue.Value}\"]\n"));
+        => string.Concat(Info.Select(keyValue => $"[{keyValue.Key} \"{keyValue.Value}\"]\n"));
 
     public string GetMoveString(FileExtType fileExtType = FileExtType.txt, ChangeType ct = ChangeType.NoChange)
         => ManualMove.GetString(fileExtType, ct);

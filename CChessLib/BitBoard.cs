@@ -50,7 +50,8 @@ public class BitBoard
                         });
     }
 
-    delegate MoveEffect GetMoveEffect(PieceColor color, PieceKind kind, int fromIndex, int toIndex);
+    delegate bool IsState(PieceColor color, PieceKind kind, int fromIndex, int toIndex);
+    // delegate MoveEffect GetMoveEffect(PieceColor color, PieceKind kind, int fromIndex, int toIndex);
 
     public PieceKind DoMove(PieceColor color, PieceKind kind, int fromIndex, int toIndex, bool isBack, PieceKind eatKind = PieceKind.NoKind)
     {
@@ -149,18 +150,19 @@ public class BitBoard
         return colorMove;
     }
 
-    // delegate MoveEffect GetMoveEffect(PieceColor color, PieceKind kind, int fromIndex, int toIndex);
+    private bool IsKilled(PieceColor color, PieceKind kind, int fromIndex, int toIndex)
+        => !(GetMove(Piece.GetOtherColor(color)) & pieces[(int)color, (int)PieceKind.King]).IsZero;
 
-    // 执行某一着后的效果
-    private bool DoMoveIsKilled(PieceColor color, PieceKind kind, int fromIndex, int toIndex)
+    // 执行某一着后的效果(委托函数可叠加)
+    private MoveEffect GetMoveEffect(PieceColor color, PieceKind kind, int fromIndex, int toIndex, IsState isState)
     {
-        bool isKilled = false;
+        MoveEffect effect = new MoveEffect { fromIndex = fromIndex, toIndex = toIndex, score = 0 };
         PieceKind eatKind = DoMove(color, kind, fromIndex, toIndex, false);
-        if (!(GetMove(Piece.GetOtherColor(color)) & pieces[(int)color, (int)PieceKind.King]).IsZero)
-            isKilled = true;
+
+        effect.score += isState(color, kind, fromIndex, toIndex) ? 0 : 1;
 
         DoMove(color, kind, fromIndex, toIndex, true, eatKind);
-        return isKilled;
+        return effect;
     }
 
     public override string ToString()
@@ -186,7 +188,7 @@ public class BitBoard
                     while (!move.IsZero)
                     {
                         int toIndex = BitConstants.TrailingZeroCount(move);
-                        if (!DoMoveIsKilled((PieceColor)color, (PieceKind)kind, index, toIndex))
+                        if (GetMoveEffect((PieceColor)color, (PieceKind)kind, index, toIndex, IsKilled).score != 0)
                             validMove |= BitConstants.Mask[toIndex];
 
                         move ^= BitConstants.Mask[toIndex];

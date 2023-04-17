@@ -16,12 +16,15 @@ public enum BitNum
     // MOVEBOARDMAXCOUNT = 256,
 }
 
-public struct MoveEffect
+public class MoveEffect : IComparable
 {
-    int score;
+    public int fromIndex;
+    public int toIndex;
 
-    PieceColor toColor;
-    PieceKind toKind;
+    public int score;
+
+    private int CompareTo(MoveEffect otherEffect) => -score.CompareTo(otherEffect.score);
+    public int CompareTo(object? obj) => obj == null ? -1 : this.CompareTo((MoveEffect)obj);
 }
 
 public static class BitConstants
