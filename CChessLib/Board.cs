@@ -329,7 +329,7 @@ public class Board
         // 文本空棋盘
         StringBuilder textBlankBoard =
             new(
-                @"┏━┯━┯━┯━┯━┯━┯━┯━┓
+@"┏━┯━┯━┯━┯━┯━┯━┯━┓
 ┃　│　│　│╲│╱│　│　│　┃
 ┠─┼─┼─┼─╳─┼─┼─┼─┨
 ┃　│　│　│╱│╲│　│　│　┃

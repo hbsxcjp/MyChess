@@ -31,7 +31,7 @@ public static class BitConstants
 {
 
     public static readonly ulong ZobristBlack = (ulong)(new Random(7)).NextInt64(long.MinValue, long.MaxValue);
-    public static readonly ulong[,,] Zobrist = CreateZobrist();
+    public static readonly ulong[][][] Zobrist = CreateZobrist();
 
     public static readonly BigInteger[] Mask = Coord.Coords.Select(
         coord => (BigInteger)1 << coord.Index).ToArray();
@@ -56,7 +56,7 @@ public static class BitConstants
     public static readonly List<BigInteger[]> PawnMove = CreatePawnMove();
 
     // 求最低位非零位的序号，调用前判断参数非零
-    public static int TrailingZeroCount(BigInteger bigInt)
+    private static int TrailingZeroCount(BigInteger bigInt)
     {
         int count = 0;
         ulong value = (ulong)(bigInt & 0XFFFFFFFFFFFFFFFFUL);// 00-63 位
@@ -69,19 +69,40 @@ public static class BitConstants
         return count + BitOperations.TrailingZeroCount(value);
     }
 
-    private static ulong[,,] CreateZobrist()
+    public static List<int> GetNonZeroIndexs(BigInteger bigInt)
     {
-        ulong[,,] zobrist = new ulong[(int)BitNum.COLORNUM, (int)BitNum.KINDNUM, (int)BitNum.BOARDLENGTH];
+        List<int> indexs = new();
+        while (!bigInt.IsZero)
+        {
+            int index = TrailingZeroCount(bigInt);
+            indexs.Add(index);
+
+            bigInt ^= BitConstants.Mask[index];
+        }
+
+        return indexs;
+    }
+
+    public static BigInteger MergeBitInt(IEnumerable<BigInteger> bigIntegers)
+        => bigIntegers.Aggregate((BigInteger)0, (result, next) => result | next);
+
+    private static ulong[][][] CreateZobrist()
+    {
+        ulong[][][] zobrist = new ulong[(int)BitNum.COLORNUM][][];//, (int)BitNum.KINDNUM, (int)BitNum.BOARDLENGTH];
         Random random = new Random();
         for (int color = 0; color < (int)BitNum.COLORNUM; ++color)
         {
+            ulong[][] colorZobrist = new ulong[(int)BitNum.KINDNUM][];
             for (int kind = 0; kind < (int)BitNum.KINDNUM; ++kind)
             {
+                ulong[] kindZobrist = new ulong[(int)BitNum.BOARDLENGTH];
                 for (int index = 0; index < (int)BitNum.BOARDLENGTH; ++index)
                 {
-                    zobrist[color, kind, index] = (ulong)random.NextInt64(long.MinValue, long.MaxValue);
+                    kindZobrist[index] = (ulong)random.NextInt64(long.MinValue, long.MaxValue);
                 }
+                colorZobrist[kind] = kindZobrist;
             }
+            zobrist[color] = colorZobrist;
         }
 
         return zobrist;
@@ -541,7 +562,7 @@ public static class BitConstants
                 result.Append($"Kind: {kind}\n");
                 for (int index = 0; index < (int)BitNum.BOARDLENGTH; ++index)
                 {
-                    result.Append($"{Zobrist[color, kind, index],18:X16}");
+                    result.Append($"{Zobrist[color][kind][index],18:X16}");
                 }
                 result.Append("\n");
             }

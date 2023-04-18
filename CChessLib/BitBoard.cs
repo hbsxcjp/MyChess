@@ -10,7 +10,7 @@ public class BitBoard
 {
     // 基本数据
     private PieceColor player;
-    private BigInteger[,] pieces;
+    private BigInteger[][] pieces;
 
     // 计算中间存储数据(基本局面改动时更新)
     private PieceColor bottomColor;
@@ -23,7 +23,9 @@ public class BitBoard
     public BitBoard(Board board)
     {
         player = PieceColor.Red;
-        pieces = new BigInteger[(int)BitNum.COLORNUM, (int)BitNum.KINDNUM];
+        pieces = new BigInteger[(int)BitNum.COLORNUM][];
+        for (int color = 0; color < (int)BitNum.COLORNUM; ++color)
+            pieces[color] = new BigInteger[(int)BitNum.KINDNUM];
 
         bottomColor = board.BottomColor;
         colorPieces = new BigInteger[(int)BitNum.COLORNUM];
@@ -31,23 +33,23 @@ public class BitBoard
         rotatePieces = 0;
 
         zobrist = player == PieceColor.Black ? BitConstants.ZobristBlack : 0;
+        for (int index = 0; index < (int)BitNum.BOARDLENGTH; ++index)
+        {
+            Piece piece = board[index];
+            if (piece != Piece.Null)
+            {
+                int color = (int)piece.Color,
+                    kind = (int)piece.Kind;
+                BigInteger turnBoard = BitConstants.Mask[index];
 
-        Enumerable.Range(0, (int)BitNum.BOARDLENGTH).Select(index => (index, board[index]))
-                .Where(indexPiece => indexPiece.Item2 != Piece.Null).ToList()
-                .ForEach(indexPiece =>
-                        {
-                            (int index, Piece piece) = indexPiece;
-                            int color = (int)piece.Color,
-                                kind = (int)piece.Kind;
-                            BigInteger turnBoard = BitConstants.Mask[index];
+                pieces[color][kind] ^= turnBoard;
+                colorPieces[color] ^= turnBoard;
+                allPieces ^= turnBoard;
+                rotatePieces ^= BitConstants.RotateMask[index];
 
-                            pieces[color, kind] ^= turnBoard;
-                            colorPieces[color] ^= turnBoard;
-                            allPieces ^= turnBoard;
-                            rotatePieces ^= BitConstants.RotateMask[index];
-
-                            zobrist ^= BitConstants.Zobrist[color, kind, index];
-                        });
+                zobrist ^= BitConstants.Zobrist[color][kind][index];
+            }
+        }
     }
 
     delegate bool IsState(PieceColor color, PieceKind kind, int fromIndex, int toIndex);
@@ -61,10 +63,10 @@ public class BitBoard
                  moveBoard = fromBoard | toBoard;
 
         // 清除原位置，置位新位置
-        pieces[(int)color, (int)kind] ^= moveBoard;
+        pieces[(int)color][(int)kind] ^= moveBoard;
         colorPieces[(int)color] ^= moveBoard;
-        zobrist ^= (BitConstants.Zobrist[(int)color, (int)kind, fromIndex] |
-                    BitConstants.Zobrist[(int)color, (int)kind, toIndex]);
+        zobrist ^= (BitConstants.Zobrist[(int)color][(int)kind][fromIndex] |
+                    BitConstants.Zobrist[(int)color][(int)kind][toIndex]);
 
         bool backToBoardHasPiece = isBack && eatKind != PieceKind.NoKind,
             goToBoardHasPiece = !isBack && !(colorPieces[toColor] & toBoard).IsZero;
@@ -74,7 +76,7 @@ public class BitBoard
             {
                 for (PieceKind toKind = PieceKind.Pawn; toKind > PieceKind.NoKind; --toKind)
                 {
-                    if (!(pieces[toColor, (int)toKind] & toBoard).IsZero)
+                    if (!(pieces[toColor][(int)toKind] & toBoard).IsZero)
                     {
                         eatKind = toKind;
                         break;
@@ -82,11 +84,11 @@ public class BitBoard
                 }
             }
 
-            pieces[toColor, (int)eatKind] ^= toBoard;
+            pieces[toColor][(int)eatKind] ^= toBoard;
             colorPieces[toColor] ^= toBoard;
             allPieces ^= fromBoard;
             rotatePieces ^= BitConstants.RotateMask[fromIndex];
-            zobrist ^= BitConstants.Zobrist[toColor, (int)eatKind, toIndex];
+            zobrist ^= BitConstants.Zobrist[toColor][(int)eatKind][toIndex];
         }
         else
         {
@@ -126,32 +128,17 @@ public class BitBoard
         return bitMove ^ (bitMove & colorPieces[(int)fromColor]);
     }
 
-    private BigInteger GetMove(PieceColor fromColor, PieceKind fromKind)
-    {
-        BigInteger kindMove = 0;
-        BigInteger piece = pieces[(int)fromColor, (int)fromKind];
-        while (!piece.IsZero)
-        {
-            int fromIndex = BitConstants.TrailingZeroCount(piece);
-            kindMove |= GetMove(fromColor, fromKind, fromIndex);
+    private BigInteger GetKindMove(BigInteger piece, PieceColor fromColor, PieceKind fromKind)
+        => BitConstants.MergeBitInt(BitConstants.GetNonZeroIndexs(piece).Select(fromIndex => GetMove(fromColor, fromKind, fromIndex)));
 
-            piece ^= BitConstants.Mask[fromIndex];
-        }
+    private BigInteger GetKindMove(PieceColor fromColor, PieceKind fromKind)
+        => GetKindMove(pieces[(int)fromColor][(int)fromKind], fromColor, fromKind);
 
-        return kindMove;
-    }
-
-    private BigInteger GetMove(PieceColor fromColor)
-    {
-        BigInteger colorMove = 0;
-        for (PieceKind fromKind = PieceKind.King; fromKind <= PieceKind.Pawn; ++fromKind)
-            colorMove |= GetMove(fromColor, fromKind);
-
-        return colorMove;
-    }
+    private BigInteger GetColorMove(PieceColor fromColor)
+        => BitConstants.MergeBitInt(pieces[(int)fromColor].Select((piece, fromKind) => GetKindMove(piece, fromColor, (PieceKind)fromKind)));
 
     private bool IsKilled(PieceColor color, PieceKind kind, int fromIndex, int toIndex)
-        => !(GetMove(Piece.GetOtherColor(color)) & pieces[(int)color, (int)PieceKind.King]).IsZero;
+        => !(GetColorMove(Piece.GetOtherColor(color)) & pieces[(int)color][(int)PieceKind.King]).IsZero;
 
     // 执行某一着后的效果(委托函数可叠加)
     private MoveEffect GetMoveEffect(PieceColor color, PieceKind kind, int fromIndex, int toIndex, IsState isState)
@@ -174,34 +161,21 @@ public class BitBoard
         {
             for (int kind = 0; kind < (int)BitNum.KINDNUM; ++kind)
             {
-                BigInteger piece = pieces[color, kind];
-                while (!piece.IsZero)
+                BigInteger piece = pieces[color][kind];
+                BitConstants.GetNonZeroIndexs(piece).ForEach(fromIndex =>
                 {
-                    int index = BitConstants.TrailingZeroCount(piece);
-                    Coord coord = Coord.Coords[index];
-                    int row = coord.Row;//(int)BitNum.BOARDROWNUM - 1 - 
-                    boardStr[row * ((int)BitNum.BOARDCOLNUM + 1) + coord.Col] = Piece.NameChars[color][kind];
+                    Coord coord = Coord.Coords[fromIndex];
+                    boardStr[coord.Row * ((int)BitNum.BOARDCOLNUM + 1) + coord.Col] = Piece.NameChars[color][kind];
 
                     // 计算可移动位置
-                    BigInteger validMove = 0;
-                    BigInteger move = GetMove((PieceColor)color, (PieceKind)kind, index);
-                    while (!move.IsZero)
-                    {
-                        int toIndex = BitConstants.TrailingZeroCount(move);
-                        if (GetMoveEffect((PieceColor)color, (PieceKind)kind, index, toIndex, IsKilled).score != 0)
-                            validMove |= BitConstants.Mask[toIndex];
-
-                        move ^= BitConstants.Mask[toIndex];
-                    }
-                    moves.Add(validMove);
-
-                    piece ^= BitConstants.Mask[index];
-                }
+                    moves.Add(BitConstants.MergeBitInt(
+                        BitConstants.GetNonZeroIndexs(GetMove((PieceColor)color, (PieceKind)kind, fromIndex))
+                        .Where(toIndex => GetMoveEffect((PieceColor)color, (PieceKind)kind, fromIndex, toIndex, IsKilled).score != 0)
+                        .Select(toIndex => BitConstants.Mask[toIndex])));
+                });
             }
         }
-        boardStr.Append(BitConstants.GetBigIntArrayString(moves.ToArray(), 8, true, false));
-
-        boardStr.Append("\n");
+        boardStr.Append(BitConstants.GetBigIntArrayString(moves.ToArray(), 8, true, false)).Append("\n");
 
         return boardStr.ToString();
     }

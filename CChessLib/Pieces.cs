@@ -7,8 +7,6 @@ public class Pieces
 
     private Pieces()
     {
-        const int ColorNum = 2;
-        const int KindNum = 7;
         int[] KindPieceNums = { 1, 2, 2, 2, 2, 2, 5 };
         List<Type> PieceType = new List<Type> {
             typeof(King), typeof(Advisor), typeof(Bishop), typeof(Knight), typeof(Rook), typeof(Cannon), typeof(Pawn) };
@@ -26,16 +24,16 @@ public class Pieces
 
         Piece[][] getColorPieces(PieceColor color)
         {
-            Piece[][] colorPieces = new Piece[KindNum][];
-            for (int k = 0; k < KindNum; k++)
-                colorPieces[k] = getKindPieces(color, PieceType[k], KindPieceNums[k]);
+            Piece[][] colorPieces = new Piece[(int)BitNum.KINDNUM][];
+            for (int kind = 0; kind < (int)BitNum.KINDNUM; kind++)
+                colorPieces[kind] = getKindPieces(color, PieceType[kind], KindPieceNums[kind]);
 
             return colorPieces;
         }
 
-        _pieces = new Piece[ColorNum][][];
-        for (int c = 0; c < ColorNum; c++)
-            _pieces[c] = getColorPieces((PieceColor)c);
+        _pieces = new Piece[(int)BitNum.COLORNUM][][];
+        for (int color = 0; color < (int)BitNum.COLORNUM; color++)
+            _pieces[color] = getColorPieces((PieceColor)color);
     }
 
     public static Pieces ThePieces { get => pieces; }
