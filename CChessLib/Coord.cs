@@ -17,8 +17,10 @@ public class Coord
     public int Index { get; }
     public int Row { get; }
     public int Col { get; }
-    public string RowCol { get => $"{Row}{Col}"; }
+
     public string Iccs { get => $"{ColChars[Col]}{Row}"; }
+    public string RowCol { get => $"{Row}{Col}"; }
+    public string SymmetryVRowCol { get => $"{SymmetryRow(Row)}{Col}"; }
     public bool IsBottom { get => (Row << 1) > RowCount - 1; }
 
     public static Coord Get(int index) => Coords[index];
@@ -45,7 +47,7 @@ public class Coord
 
     public static string GetRowCols(string iccses)
         => string.Concat(Enumerable.Range(0, iccses.Length / 2)
-                .Select(i => $"{iccses[i * 2 + 1]}{ColChars.IndexOf(iccses[i * 2])}"));
+                .Select(i => $"{(Coord.RowCount - 1 - int.Parse(iccses[i * 2 + 1].ToString()))}{ColChars.IndexOf(iccses[i * 2])}"));
 
     public static int GetCol(int col, bool isBottomColor) => isBottomColor ? SymmetryCol(col) : col;
 
@@ -58,5 +60,5 @@ public class Coord
 
     public override string ToString() => $"({Row},{Col})";
 
-    public string SymmetryRowToString() => $"({SymmetryRow(Row)},{Col})";
+    public string SymmetryVToString() => $"({(Row < 0 ? Row : SymmetryRow(Row))},{Col})";
 }

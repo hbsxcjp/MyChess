@@ -91,8 +91,8 @@ public class ManualMove// : IEnumerable
             if (fcolrow > 89 || tcolrow > 89)
                 throw new Exception("fcolrow > 89 || tcolrow > 89 ? ");
 
-            int frow = fcolrow % 10, fcol = fcolrow / 10, trow = tcolrow % 10,
-                tcol = tcolrow / 10;
+            int frow = 10 - 1 - fcolrow % 10, fcol = fcolrow / 10,
+                trow = 10 - 1 - tcolrow % 10, tcol = tcolrow / 10;//
 
             CoordPair coordPair = new(frow, fcol, trow, tcol);
             bool hasNext = (tag & 0x80) != 0, hasOther = (tag & 0x40) != 0;
@@ -255,7 +255,7 @@ public class ManualMove// : IEnumerable
         return stream.ToArray();
     }
 
-    public string GetString(FileExtType fileExtType)
+    public string GetString(FileExtType fileExtType, ChangeType ct = ChangeType.NoChange)
     {
         if (fileExtType == FileExtType.txt)
         {
@@ -264,14 +264,14 @@ public class ManualMove// : IEnumerable
 
             return GetRemarkAfterNum(RootMove) +
                     string.Concat(RootMove.AllAfterMoves.Select(move
-                        => $"{(move.Visible ? "+" : "-")}{move.CoordPair.RowCol}{GetRemarkAfterNum(move)}"));
+                        => $"{(move.Visible ? "+" : "-")}{(ct == ChangeType.Symmetry_V ? move.CoordPair.SymmetryVRowCol : move.CoordPair.RowCol)}{GetRemarkAfterNum(move)}"));
         }
 
         string GetPGNText(Move move, FileExtType fileExtType = FileExtType.pgnzh)
             => fileExtType switch
             {
                 FileExtType.pgniccs => move.CoordPair.Iccs,
-                FileExtType.pgnrc => move.CoordPair.RowCol,
+                FileExtType.pgnrc => ct == ChangeType.Symmetry_V ? move.CoordPair.SymmetryVRowCol : move.CoordPair.RowCol,
                 _ => move.Before == null ? string.Empty
                     : RootBoard.WithMove(move.Before).GetZhStrFromCoordPair(move.CoordPair),
             };
@@ -326,15 +326,18 @@ public class ManualMove// : IEnumerable
     public List<(string fen, string rowCol)> GetFENRowCols()
     {
         List<(string fen, string rowCol)> aspects = new();
-        string UniversalFEN(Move move)
+        string UniversalFEN(Move before)
         {
-            Board board = RootBoard.WithMove(move);
+            Board board = RootBoard.WithMove(before);
             return Board.GetFEN(board.GetFEN(), board.IsBottom(PieceColor.Red)
                 ? ChangeType.NoChange : ChangeType.Exchange);
         }
 
         RootMove.AllAfterMoves.ForEach(move =>
-            aspects.Add((UniversalFEN(move), move.CoordPair.RowCol)));
+        {
+            if (move.Before != null)
+                aspects.Add((UniversalFEN(move.Before), move.CoordPair.RowCol));
+        });
 
         return aspects;
     }
@@ -412,10 +415,10 @@ public class ManualMove// : IEnumerable
         }
     }
 
-    public string ToString(bool showMove = false, bool isOrder = false)
+    public string ToString(bool showMove = false, bool isOrder = false, ChangeType ct = ChangeType.NoChange)
     {
         int moveCount = 0, remarkCount = 0, maxRemarkCount = 0;
-        StringBuilder result = new(RootMove.ToString());
+        StringBuilder result = new(ct == ChangeType.Symmetry_V ? RootMove.SymmetryVToString() : RootMove.ToString());
         List<Move> allMoves = RootMove.AllAfterMoves;
         // foreach (var move in this)
         allMoves.ForEach(move =>
@@ -429,7 +432,7 @@ public class ManualMove// : IEnumerable
             if (showMove)
             {
                 if (isOrder)
-                    result.Append(move.ToString());
+                    result.Append(ct == ChangeType.Symmetry_V ? move.SymmetryVToString() : move.ToString());
                 // else
                 // allMoves.Add(move);
             }
@@ -440,7 +443,7 @@ public class ManualMove// : IEnumerable
             BlockingCollection<string> results = new();
             Parallel.ForEach<Move, string>(allMoves,
                 () => "",
-                (move, loop, subString) => subString += move.ToString(),
+                (move, loop, subString) => subString += ct == ChangeType.Symmetry_V ? move.SymmetryVToString() : move.ToString(),
                 (finalSubString) => results.Add(finalSubString));
             result.Append(string.Concat(results));
         }

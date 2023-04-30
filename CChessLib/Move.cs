@@ -25,19 +25,19 @@ public class Move
     public int Id { get; private set; }
     public List<Move>? AfterMoves { get; private set; }
 
-    public List<Move> BeforeMoves
+    public List<Move>? UntilThis
     {
         get
         {
-            List<Move> beforeMoves = new();
+            List<Move>? untilThis = null;
             Move move = this;
             while (move.Before != null)
             {
-                beforeMoves.Insert(0, move);
+                (untilThis ??= new()).Insert(0, move);
                 move = move.Before;
             }
 
-            return beforeMoves;
+            return untilThis;
         }
     }
 
@@ -76,5 +76,8 @@ public class Move
     }
 
     public override string ToString()
-       => $"{new string('\t', BeforeMoves.Count)}{Before?.Id}-{CoordPair}.{Id} {Remark}\n";
+       => $"{new string('\t', UntilThis?.Count ?? 0)}{Before?.Id}-{CoordPair}.{Id} {Remark}\n";
+
+    public string SymmetryVToString()
+       => $"{new string('\t', UntilThis?.Count ?? 0)}{Before?.Id}-{CoordPair.SymmetryVToString()}.{Id} {Remark}\n";
 }
