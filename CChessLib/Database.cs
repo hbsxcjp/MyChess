@@ -350,8 +350,7 @@ public class Database
             .Where(record => !InvalidThird(record))
             .Select(record =>
                 (record.Key, record.Value[0], record.Value[1],
-                new PieceColor[] { PieceColor.Red, PieceColor.Black }
-                    .Select(color => GetBoutStr(record.Value[1], color))));
+                    Piece.PieceColors.Select(color => GetBoutStr(record.Value[1], color))));
     }
 
     private static bool InvalidThird(KeyValuePair<string, List<string>> record)

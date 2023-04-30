@@ -134,7 +134,7 @@ public class Board
 
     public bool IsKilled(PieceColor color)
     {
-        var otherColor = color == PieceColor.Red ? PieceColor.Black : PieceColor.Red;
+        var otherColor = Piece.GetOtherColor(color);
         Coord kingCoord = GetCoord(Pieces.ThePieces.GetKing(color)),
             otherKingCoord = GetCoord(Pieces.ThePieces.GetKing(otherColor));
 
@@ -297,7 +297,7 @@ public class Board
     public static int GetCol(PieceColor color, char colChar) => NumChars[(int)color].IndexOf(colChar);
 
     public static PieceColor GetColor_Num(char numChar)
-        => NumChars[0].Contains(numChar) ? PieceColor.Red : PieceColor.Black;
+        => NumChars[(int)PieceColor.Red].Contains(numChar) ? PieceColor.Red : PieceColor.Black;
 
     public static string PreChars(int count)
         => (count == 2 ? $"{PositionChars[0]}{PositionChars[2]}"
@@ -307,7 +307,7 @@ public class Board
     public static int MoveDir(char movCh) => MoveChars.IndexOf(movCh) - 1;
 
     public static string PGNZHCharsPattern()
-        => $"{PGNZHCharsPattern(PieceColor.Red)}|{PGNZHCharsPattern(PieceColor.Black)}";
+        => string.Join('|', Piece.PieceColors.Select(color => PGNZHCharsPattern(color)));
 
     public static string PGNZHCharsPattern(PieceColor color)
         => @$"(?:[{Piece.NameChars[(int)color]}{NumChars[(int)color]}{PositionChars}]{{2}}[{MoveChars}][{NumChars[(int)color]}])";

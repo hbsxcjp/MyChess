@@ -128,17 +128,16 @@ public class BitBoard
         return bitMove ^ (bitMove & colorPieces[(int)fromColor]);
     }
 
-    private BigInteger GetKindMove(BigInteger piece, PieceColor fromColor, PieceKind fromKind)
-        => BitConstants.MergeBitInt(BitConstants.GetNonZeroIndexs(piece).Select(fromIndex => GetMove(fromColor, fromKind, fromIndex)));
-
     private BigInteger GetKindMove(PieceColor fromColor, PieceKind fromKind)
-        => GetKindMove(pieces[(int)fromColor][(int)fromKind], fromColor, fromKind);
+        => BitConstants.MergeBitInt(
+                BitConstants.GetNonZeroIndexs(pieces[(int)fromColor][(int)fromKind])
+                    .Select(fromIndex => GetMove(fromColor, fromKind, fromIndex)));
 
     private BigInteger GetColorMove(PieceColor fromColor)
-        => BitConstants.MergeBitInt(pieces[(int)fromColor].Select((piece, fromKind) => GetKindMove(piece, fromColor, (PieceKind)fromKind)));
+        => BitConstants.MergeBitInt(Piece.PieceKinds.Select(fromKind => GetKindMove(fromColor, (PieceKind)fromKind)));
 
-    private bool IsKilled(PieceColor color, PieceKind kind, int fromIndex, int toIndex)
-        => !(GetColorMove(Piece.GetOtherColor(color)) & pieces[(int)color][(int)PieceKind.King]).IsZero;
+    private bool IsNonKilled(PieceColor color, PieceKind kind, int fromIndex, int toIndex)
+        => (GetColorMove(Piece.GetOtherColor(color)) & pieces[(int)color][(int)PieceKind.King]).IsZero;
 
     // 执行某一着后的效果(委托函数可叠加)
     private MoveEffect GetMoveEffect(PieceColor color, PieceKind kind, int fromIndex, int toIndex, IsState isState)
@@ -146,7 +145,7 @@ public class BitBoard
         MoveEffect effect = new MoveEffect { fromIndex = fromIndex, toIndex = toIndex, score = 0 };
         PieceKind eatKind = DoMove(color, kind, fromIndex, toIndex, false);
 
-        effect.score += isState(color, kind, fromIndex, toIndex) ? 0 : 1;
+        effect.score += isState(color, kind, fromIndex, toIndex) ? 1 : 0;
 
         DoMove(color, kind, fromIndex, toIndex, true, eatKind);
         return effect;
@@ -165,12 +164,12 @@ public class BitBoard
                 BitConstants.GetNonZeroIndexs(piece).ForEach(fromIndex =>
                 {
                     Coord coord = Coord.Coords[fromIndex];
-                    boardStr[coord.Row * ((int)BitNum.BOARDCOLNUM + 1) + coord.Col] = Piece.NameChars[color][kind];
+                    boardStr[coord.Row * ((int)BitNum.BOARDCOLNUM + 1) + coord.Col] = Piece.GetPrintName((PieceColor)color, (PieceKind)kind);
 
                     // 计算可移动位置
                     moves.Add(BitConstants.MergeBitInt(
                         BitConstants.GetNonZeroIndexs(GetMove((PieceColor)color, (PieceKind)kind, fromIndex))
-                        .Where(toIndex => GetMoveEffect((PieceColor)color, (PieceKind)kind, fromIndex, toIndex, IsKilled).score != 0)
+                        .Where(toIndex => GetMoveEffect((PieceColor)color, (PieceKind)kind, fromIndex, toIndex, IsNonKilled).score > 0)
                         .Select(toIndex => BitConstants.Mask[toIndex])));
                 });
             }

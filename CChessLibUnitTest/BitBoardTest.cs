@@ -21,7 +21,9 @@ public class BitBoardTest
     {
         Board board = new(fen);
         BitBoard bitBoard = new(board);
-        using StreamWriter writer = File.AppendText("TestBitBoard.txt");
+
+        string fenFirstLine = fen.Split('/')[0];
+        using StreamWriter writer = File.CreateText($"TestBitBoard_{fenFirstLine}.txt");
 
         writer.Write(bitBoard);
     }

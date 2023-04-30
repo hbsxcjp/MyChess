@@ -11,6 +11,10 @@ public abstract class Piece
     public const char NullCh = '_';
     public const char NullName = '空';
 
+    public static readonly PieceColor[] PieceColors = { PieceColor.Red, PieceColor.Black };
+    public static readonly PieceKind[] PieceKinds = { PieceKind.King, PieceKind.Advisor,
+        PieceKind.Bishop, PieceKind.Knight, PieceKind.Rook, PieceKind.Cannon, PieceKind.Pawn };
+
     public static readonly string[] NameChars = { "帅仕相马车炮兵", "将士象马车炮卒" };
     private static readonly string[] ChChars = { "KABNRCP", "kabnrcp" };
     private static readonly string ColorChars = "无红黑";
@@ -19,9 +23,19 @@ public abstract class Piece
 
     public PieceColor Color { get; }
     public PieceKind Kind { get; }
+
     virtual public char Char { get => ChChars[(int)Color][(int)Kind]; }
-    virtual public char Name { get => NameChars[(int)Color][(int)Kind]; }
-    virtual public char PrintName { get => Name; }
+    virtual public char Name { get => GetName(Color, Kind); }
+    virtual public char PrintName { get => GetPrintName(Color, Kind); }
+
+    public static char GetName(PieceColor color, PieceKind kind) => NameChars[(int)color][(int)kind];
+
+    public static char GetPrintName(PieceColor color, PieceKind kind)
+    {
+        const string nrcChars = "馬車砲";
+        List<PieceKind> nrcKinds = new List<PieceKind> { PieceKind.Knight, PieceKind.Rook, PieceKind.Cannon };
+        return (color == PieceColor.Black && nrcKinds.Contains(kind) ? nrcChars[nrcKinds.IndexOf(kind)] : GetName(color, kind));
+    }
 
     virtual public List<Coord> PutCoord(bool isBottom) => Coord.Coords;
     public List<Coord> MoveCoord(Board board)
@@ -172,8 +186,6 @@ public class Knight : Piece
 {
     public Knight(PieceColor color) : base(color, PieceKind.Knight) { }
 
-    override public char PrintName { get { return Color == PieceColor.Red ? Name : '馬'; } }
-
     override protected List<Coord> RuleMoveCoord(Board board)
     {
         Coord coord = board.GetCoord(this);
@@ -203,7 +215,6 @@ public class Rook : Piece
 {
     public Rook(PieceColor color) : base(color, PieceKind.Rook) { }
 
-    override public char PrintName { get { return Color == PieceColor.Red ? Name : '車'; } }
     override protected List<Coord> RuleMoveCoord(Board board)
     {
         List<Coord> coords = new();
@@ -239,7 +250,6 @@ public class Cannon : Piece
 {
     public Cannon(PieceColor color) : base(color, PieceKind.Cannon) { }
 
-    override public char PrintName { get { return Color == PieceColor.Red ? Name : '砲'; } }
     override protected List<Coord> RuleMoveCoord(Board board)
     {
         List<Coord> coords = new();
@@ -342,6 +352,9 @@ public class NullPiece : Piece
 
     override public char Char { get => Piece.NullCh; }
     override public char Name { get => Piece.NullName; }
+    override public char PrintName { get => Piece.NullName; }
+
+
     override public List<Coord> PutCoord(bool isBottom) => new();
     override protected List<Coord> RuleMoveCoord(Board board) => new();
 }
