@@ -5,7 +5,7 @@ namespace CChessTest;
 
 public class BitBoardTest
 {
-    // [Fact]
+    [Fact]
     public void TestBitConstants()
     {
         using StreamWriter writer = File.CreateText("TestBitConstants.txt");

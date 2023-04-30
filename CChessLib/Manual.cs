@@ -166,6 +166,11 @@ public class Manual
     {
         Info = new();
         int infoEndPos = manualString.IndexOf("\n\n");
+        if (infoEndPos <= 0)
+        {
+            ManualMove = new();
+            return;
+        }
 
         string infoString = manualString[..infoEndPos];
         var matches = Regex.Matches(infoString, @"\[(\S+) ""(.*)""\]");
@@ -173,7 +178,7 @@ public class Manual
             Info[match.Groups[1].Value] = match.Groups[2].Value;
 
 
-        var moveString = manualString[(infoEndPos + 2)..];
+        string moveString = manualString[(infoEndPos + 2)..];
         ManualMove = new(GetFEN(), moveString, fileExtType);
     }
 
@@ -190,8 +195,7 @@ public class Manual
     public ManualMove ManualMove { get; }
 
     public static List<string> FileExtNames
-        => Enumerable.Range(0, (int)FileExtType.pgnzh + 1)
-            .Select(index => $".{((FileExtType)index)}").ToList();
+        => Enumerable.Range(0, (int)FileExtType.pgnzh + 1).Select(index => $".{((FileExtType)index)}").ToList();
 
     public static List<string> InfoKeys
         => Enumerable.Range(0, (int)InfoKey.moveString + 1)

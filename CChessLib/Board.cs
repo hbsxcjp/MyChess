@@ -42,10 +42,10 @@ public class Board
         return board;
     }
 
-    public Board WithMove(Move move)
+    public Board WithMove(Move? move)
     {
         Board board = new(this);
-        move.UntilThis?.ForEach(move
+        move?.UntilThis?.ForEach(move
             => board.MovePiece(move.CoordPair.FromCoord, move.CoordPair.ToCoord));
 
         return board;
