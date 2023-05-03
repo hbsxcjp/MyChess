@@ -6,31 +6,40 @@ namespace CChessTest;
 
 public class DatabaseTest
 {
-    private Database db;
-
-    private List<Manual> manuals;
-
-    public DatabaseTest()
+    private Manual GetManualFromId(int id)
     {
-        db = new();
+        List<Manual> ReadManuals() => Database.GetManuals($"id={id}");
 
-        // db.DownXqbaseManual(1, 5);
-        // db.StorageManuals(ManualTest.GetDataManuals());
+        List<Manual> manuals = ReadManuals();
+        if (manuals.Count == 0)
+        {
+            // 存储下载棋谱(重复添加)
+            Database.DownXqbaseManual(1, 5);
 
-        // using var writer = File.CreateText("EccoHtmls.txt");
-        // string eccoHtmlsString = Database.DownEccoHtmls();
-        // writer.Write(eccoHtmlsString);
+            // 存储xqf文件棋谱(重复添加)
+            List<Manual> xqfManuals = ManualTest.XqfManuals;
+            for (int index = 0; index < xqfManuals.Count; ++index)
+            {
+                Manual manual = xqfManuals[index];
+                manual.SetInfoValue(InfoKey.source, ManualTest.GetXqfFileName(index));
+                manual.SetInfoValue(InfoKey.rowCols, manual.ManualMove.GetFirstRowCols());
+                manual.SetInfoValue(InfoKey.moveString, manual.GetMoveString()); // 使用文本形式存储着法
+            }
+            Database.StorageManuals(xqfManuals);
 
-        // using var reader = File.OpenText("EccoHtmls.txt");
-        // using var writer = File.CreateText("eccoDict.txt");
-        // string eccoHtmlsString = reader.ReadToEnd();
-        // foreach (var kv in Database.GetEccoRecords(eccoHtmlsString))
-        //     writer.Write($"{string.Concat(kv.Value.Select(str => str))}\n");
+            manuals = ReadManuals();
+        }
 
-        manuals = db.GetManuals();
+        return manuals[0];
     }
 
-    // [Fact]
+    [Fact]
+    public void TestAppendManuals()
+    {
+        Database.DownXqbaseManual(12140, 12145); // 手工注释
+        // db.DownXqbaseManual(1, 12141); // 手工注释
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
@@ -71,9 +80,8 @@ public class DatabaseTest
             "[id \"10\"]\n[source \"- 北京张强 (和) 上海胡荣华 (1993.4.27于南京).xqf\"]\n[title \"挺兵对卒底炮\"]\n[game \"\u001093全国象棋锦标赛\"]\n[date \"1993.4.27\"]\n[site \"\u0004南京\"]\n[black \"上海胡荣华\"]\n[rowCols \"625221227774022497763242917042529897081890911813938403149757364657520726665646565256304071730120912126452131135356552726967853437434434292740001310120017657455755572202575602226050011334354245353713345651405051503442500022027062454464544254\"]\n[red \"\b北京张强\"]\n[win \"和棋\"]\n[opening \"\"]\n[writer \"\"]\n[author \"\"]\n[type \"全局\"]\n[version \"13\"]\n[FEN \"rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR r - - 0 1\"]\n[moveString \"(1) +6252(1) +2122(1) +7774(1) +0224(1) +9776(1) +3242(1) +9170(1) +4252(1) +9897(1) +0818(1) +9091(1) +1813(1) +9384(1) +0314(1) +9757(1) +3646(1) +5752(1) +0726(1) +6656(1) +4656(1) +5256(1) +3040(1) +7173(1) +0120(1) +9121(1) +2645(1) +2131(1) +1353(1) +5655(1) +2726(1) +9678(1) +5343(1) +7434(1) +4342(1) +9274(1) +0001(1) +3101(1) +2001(1) +7657(1) +4557(1) +5557(1) +2202(1) +5756(1) +0222(1) +6050(1) +0113(1) +3435(1) +4245(1) +3537(1) +1334(1) +5651(1) +4050(1) +5150(1) +3442(1) +5000(1) +2202(1) +7062(1) +4544(1) +6454(1) +4254 \"]\n\n(1) +6252(1) +2122(1) +7774(1) +0224(1) +9776(1) +3242(1) +9170(1) +4252(1) +9897(1) +0818(1) +9091(1) +1813(1) +9384(1) +0314(1) +9757(1) +3646(1) +5752(1) +0726(1) +6656(1) +4656(1) +5256(1) +3040(1) +7173(1) +0120(1) +9121(1) +2645(1) +2131(1) +1353(1) +5655(1) +2726(1) +9678(1) +5343(1) +7434(1) +4342(1) +9274(1) +0001(1) +3101(1) +2001(1) +7657(1) +4557(1) +5557(1) +2202(1) +5756(1) +0222(1) +6050(1) +0113(1) +3435(1) +4245(1) +3537(1) +1334(1) +5651(1) +4050(1) +5150(1) +3442(1) +5000(1) +2202(1) +7062(1) +4544(1) +6454(1) +4254 ",
         };
 
-        Assert.True(manuals.Count > index);
+        Manual manual = GetManualFromId(index + 1);
 
-        Manual manual = manuals[index];
         string result = manual.GetMoveString(FileExtType.txt, ChangeType.Symmetry_V);
         Assert.Equal(expectMoveStrings[index], result);
 
@@ -82,8 +90,21 @@ public class DatabaseTest
     }
 
     // [Fact]
-    // public void TestInitEccoData()
+    // public void TestEcco()
     // {
+    // 下载、存储开局网页信息
+    // using var writer = File.CreateText("EccoHtmls.txt");
+    // string eccoHtmlsString = Database.DownEccoHtmls();
+    // writer.Write(eccoHtmlsString);
+
+    // 读取开局网页信息，解析成开局数据
+    // using var reader = File.OpenText("EccoHtmls.txt");
+    // using var writer = File.CreateText("eccoDict.txt");
+    // string eccoHtmlsString = reader.ReadToEnd();
+    // foreach (var kv in Database.GetEccoRecords(eccoHtmlsString))
+    //     writer.Write($"{string.Concat(kv.Value.Select(str => str))}\n");
+
     //     db.InitEccoData();
     // }
+
 }

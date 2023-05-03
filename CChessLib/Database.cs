@@ -1,6 +1,7 @@
 #define WRITERESULTTEXT
 
 using System.Text;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Microsoft.Data.Sqlite;
 
@@ -8,22 +9,19 @@ namespace CChess;
 
 public class Database
 {
-    private readonly string ManualTableName = "manual";
-    private readonly string DataFileName = "data.db";
+    private static readonly string ManualTableName = "manual";
+    private static readonly string DataFileName = "data.db";
 
-    public List<Manual> GetManuals(string condition = "1")
+    public static List<Manual> GetManuals(string condition = "1")
     {
         Dictionary<string, string> GetInfo(SqliteDataReader reader)
-        {
-            return new(Enumerable.Range(0, reader.FieldCount)
+            => new(Enumerable.Range(0, reader.FieldCount)
                 .Where(index => !reader.IsDBNull(index))
-                .Select(index =>
-                    new KeyValuePair<string, string>(reader.GetName(index), reader.GetString(index))));
-        }
+                .Select(index => new KeyValuePair<string, string>(reader.GetName(index), reader.GetString(index))));
 
         List<Manual> manuals = new();
         using SqliteConnection connection = GetSqliteConnection();
-        SqliteCommand command = new($"SELECT * FROM {ManualTableName} WHERE {condition}", connection);
+        SqliteCommand command = new($"SELECT * FROM {ManualTableName} WHERE {condition};", connection);
         using SqliteDataReader reader = command.ExecuteReader();
         while (reader.Read())
             manuals.Add(new(GetInfo(reader)));
@@ -31,67 +29,126 @@ public class Database
         return manuals;
     }
 
-    public void StorageManuals(IEnumerable<Manual> manuals)
+    public static void StorageManuals(IEnumerable<Manual> manuals)
         => StorageInfos(manuals.Select(manual => manual.Info));
 
-    private void StorageInfos(IEnumerable<Dictionary<string, string>> infos)
+    private static void StorageInfos(IEnumerable<Dictionary<string, string>> infos)
     {
+        if (infos.Count() < 1)
+            return;
+
         using SqliteConnection connection = GetSqliteConnection();
-        using var transaction = connection.BeginTransaction();
+        using SqliteTransaction transaction = connection.BeginTransaction();
 
-        var command = connection.CreateCommand();
-        // 要求：所有Info的Keys都相同
-        var infoKeys = infos.First().Keys;
-        string ParamName(string key) => $"${key}";
-        string JoinComma(IEnumerable<string> someString) => string.Join(", ", someString);
-
-        foreach (var key in infoKeys)
-            command.Parameters.Add(new() { ParameterName = ParamName(key) });
-
-        command.CommandText = $"INSERT INTO {ManualTableName} ({JoinComma(infoKeys.Select(key => $"'{key}'"))}) " +
-            $"VALUES ({JoinComma(infoKeys.Select(key => ParamName(key)))})";
-
+        SqliteCommand command = connection.CreateCommand();
         foreach (var info in infos)
         {
-            if (ExistsManual(connection, info[Manual.GetInfoKey(InfoKey.source)]))
+            if (info.Count < 1)
                 continue;
 
-            foreach (var key in infoKeys)
-                command.Parameters[ParamName(key)].Value = info[key];
-
+            string fieldNames = string.Join(", ", info.Keys.Select(key => $"'{key}'")),
+                    fieldValues = string.Join(", ", info.Keys.Select(key => $"'{info[key]}'"));
+            command.CommandText = $"INSERT INTO {ManualTableName} ({fieldNames}) VALUES ({fieldValues});";
             command.ExecuteNonQuery();
         }
 
         transaction.Commit();
     }
 
-    private bool ExistsManual(SqliteConnection connection, string source)
+    public static void DownXqbaseManual(int start = 1, int end = 5)
     {
-        SqliteCommand command = connection.CreateCommand();
-        command.CommandText = $"SELECT id FROM {ManualTableName} WHERE {Manual.GetInfoKey(InfoKey.source)} == '{source}'";
-        using var reader = command.ExecuteReader();
-        return reader.Read();
+        if (start > end)
+            return;
+
+        const int MinId = 1, MaxId = 12141; // 总界限:1~12141
+        start = Math.Max(start, MinId);
+        end = Math.Min(end, MaxId);
+
+        // "source", "title", "event", "date", "site", "black", "rowCols", "red", "eccoSn", "eccoName", "win"
+        List<string> keys = Enumerable.Range((int)InfoKey.source, (int)InfoKey.win + 1)
+                                .Select(index => ((InfoKey)index).ToString()).ToList();
+        Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        Encoding codec = Encoding.GetEncoding("gb2312");
+        using HttpClient client = new();
+        async Task<Dictionary<string, string>> GetInfoAsync(int id)  // 异步方法返回任务
+        // Dictionary<string, string> GetInfo(int id)
+        {
+            string uri = $"https://www.xqbase.com/xqbase/?gameid={id}";
+            try
+            {
+                byte[] htmlBytes = await client.GetByteArrayAsync(uri); // 异步执行
+                // byte[] htmlBytes = client.GetByteArrayAsync(uri).Result;// 等待任务完成
+
+                const string pattern = @"<title>(.*?)</title>[\w\W]*?>([^>]+赛[^<]*?)<[\w\W]*?>(\d+年(?:\d+月)?(?:\d+日)?)(?: ([^<]*?))?<[\w\W]*?>黑方 ([^<]*?)<[\w\W]*?MoveList=(.*?)""[\w\W]*?>红方 ([^<]*?)<[\w\W]*?>([A-E]\d{2})\. ([^<]*?)<[\w\W]*\((.*?)\)</pre>";
+                Match match = Regex.Match(codec.GetString(htmlBytes), pattern);
+                if (!match.Success)
+                {
+                    Console.WriteLine($"Match is not success! url: {uri}");
+                    return new();
+                }
+
+                List<string> values = match.Groups.Values.Select(group => group.Value).ToList();
+                Debug.Assert(values.Count == 11);
+
+                values[(int)InfoKey.source] = uri;
+                values[(int)InfoKey.rowCols] = Coord.GetRowCols(values[(int)InfoKey.rowCols].Replace("-", "").Replace("+", ""));
+                return new(Enumerable.Zip(keys, values, (key, value) => new KeyValuePair<string, string>(key, value)));
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine($"Exception Caught! Message :{e.Message} url: {uri} ");
+                return new();
+            }
+        }
+
+        List<Dictionary<string, string>> infos = new();
+        // 如果你的工作为 I/O 绑定，请使用 async 和 await（而不使用 Task.Run）。不应使用任务并行库
+        const int step = 50; // 设置75时，无法建立SSL连接
+        for (int id = start; id <= end; id += step)
+        {
+            var tasks = Enumerable.Range(id, Math.Min(step, end - id + 1)).Select(id => GetInfoAsync(id)).ToArray();
+            Task.WaitAll(tasks);
+
+            infos.AddRange(tasks.Select(task => task.Result));
+        }
+
+        StorageInfos(infos);
+
+        // 如果你的工作属于 CPU 绑定，并且你重视响应能力，请使用 async 和 await，但在另一个线程上使用 Task.Run 生成工作。 
+        // 如果该工作同时适用于并发和并行，还应考虑使用任务并行库
+        // PLINQ 会尝试充分利用系统上的所有处理器。 方法是将数据源分区成片段，然后在多个处理器上针对单独工作线程上的每个片段执行并行查询
+        // StorageInfos(Enumerable.Range(start, end).AsParallel().WithDegreeOfParallelism(16).Select(id => GetInfo(id)));
     }
 
-    private SqliteConnection GetSqliteConnection()
+    // private bool ExistsManual(SqliteConnection connection, string source)
+    // {
+    //     SqliteCommand command = connection.CreateCommand();
+    //     command.CommandText = $"SELECT id FROM {ManualTableName} WHERE {Manual.GetInfoKey(InfoKey.source)} == '{source}'";
+    //     using var reader = command.ExecuteReader();
+    //     return reader.Read();
+    // }
+
+    private static SqliteConnection GetSqliteConnection()
     {
         bool fileExists = File.Exists(DataFileName);
-        if (!fileExists)
-            using (File.Create(DataFileName)) { };
 
         SqliteConnection connection = new("Data Source=" + DataFileName);
-        connection.Open();
+        connection.Open(); // Mode=ReadWriteCreate (默认) 创建文件（如果尚不存在）
         if (!fileExists)
         {
-            string[] commandString = new string[]{
+            string[] commandStrs = new string[]{
                         $"CREATE TABLE {ManualTableName} (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        $"{string.Join(",", Manual.InfoKeys.Select(name => name + " TEXT"))})", };
+                        $"{string.Join(", ", Manual.InfoKeys.Select(name => name + " TEXT"))});", };
+
+            using SqliteTransaction transaction = connection.BeginTransaction();
             SqliteCommand command = connection.CreateCommand();
-            foreach (var str in commandString)
+            foreach (var commandStr in commandStrs)
             {
-                command.CommandText = str;
+                command.CommandText = commandStr;
                 command.ExecuteNonQuery();
             }
+
+            transaction.Commit();
         }
 
         return connection;
@@ -106,45 +163,6 @@ public class Database
 #endif
 
     private char UnorderChar = '|', OrderChar = '*', SeparateChar = '/', OroneChar = '?', ExceptChar = '除';
-
-    public void DownXqbaseManual(int start = 1, int end = 5)
-    {
-        //总界限:1~12141
-        if (start > end || start < 1 || end > 12141)
-            return;
-
-        const int XqbaseInfoCount = 11;
-        Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-        Encoding codec = Encoding.GetEncoding("gb2312");
-        Dictionary<string, string> GetInfo((string uri, byte[] bytes) uri_bytes)
-        {
-            string pattern = @"<title>(.*?)</title>.*?>([^>]+赛[^>]*?)<.*?>(\d+年\d+月(?:\d+日)?)(?: ([^<]*?))?<.*?>黑方 ([^<]*?)<.*?MoveList=(.*?)"".*?>红方 ([^<]*?)<.*?>([A-E]\d{2})\. ([^<]*?)<.*\((.*?)\)</pre>";
-            Match match = Regex.Match(codec.GetString(uri_bytes.bytes), pattern, RegexOptions.Singleline);
-            if (!match.Success)
-                return new();
-
-            // "source", "title", "event", "date", "site", "black", "rowCols", "red", "eccoSn", "eccoName", "win"
-            Dictionary<string, string> info = new();
-            info[Manual.GetInfoKey(InfoKey.source)] = uri_bytes.uri;
-            for (int i = 1; i < XqbaseInfoCount; i++)
-            {
-                info[Manual.GetInfoKey((InfoKey)i)] = (i != 6 ? match.Groups[i].Value
-                    : Coord.GetRowCols(match.Groups[i].Value.Replace("-", "").Replace("+", "")));
-            }
-
-            return info;
-        }
-
-        var uris = Enumerable.Range(1, end - start + 1)
-                    .Select(id => $"https://www.xqbase.com/xqbase/?gameid={id}");
-
-        using HttpClient client = new();
-        var taskArray = uris.Select(uri => client.GetByteArrayAsync(uri)).ToArray();
-        Task.WaitAll(taskArray);
-
-        StorageInfos(Enumerable.Zip(uris, taskArray.Select(task => task.Result))
-            .Select(uri_bytes => GetInfo(uri_bytes)));
-    }
 
     public static string DownEccoHtmlsString()
     {

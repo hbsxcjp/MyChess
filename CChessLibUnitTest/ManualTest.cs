@@ -34,31 +34,14 @@ public class ManualTest
         }
     };
 
-    private static List<string> FileNames => Enumerable.Range(0, manualStrings.GetLength(0))
-        .Select(i => Manual.GetFileName(manualStrings[i, 0], FileExtType.xqf)).ToList();
-
-    private static List<Manual> Manuals
-        => FileNames.Select(fileName => Manual.GetManual(fileName)).ToList();
-
-    public static List<Manual> GetDataManuals()
-    {
-        List<Manual> manuals = new(Manuals);
-        Enumerable.Zip(FileNames, manuals).ToList()
-                .ForEach(fileNameManual
-                    => (new List<(InfoKey field, string value)>
-                        {
-                            (InfoKey.source, fileNameManual.First),
-                            (InfoKey.rowCols, fileNameManual.Second.ManualMove.GetFirstRowCols()),
-                            (InfoKey.moveString, fileNameManual.Second.GetMoveString())
-                        }).ForEach(fieldValue
-                            => fileNameManual.Second.SetInfoValue(fieldValue.field, fieldValue.value)));
-
-        return manuals;
-    }
+    public static string GetXqfFileName(int index) => Manual.GetFileName(manualStrings[index, 0], FileExtType.xqf);
+    private static Manual GetManualFromIndex(int index) => Manual.GetManual(GetXqfFileName(index));
+    public static List<Manual> XqfManuals
+        => Enumerable.Range(0, manualStrings.GetLength(0)).Select(index => GetManualFromIndex(index)).ToList();
 
     private Manual GetManual(int index, FileExtType fileExtType)
     {
-        Manual manual = Manuals[index];
+        Manual manual = GetManualFromIndex(index);
         return (fileExtType) switch
         {
             FileExtType.xqf => manual,
@@ -112,7 +95,7 @@ public class ManualTest
     [Fact]
     public void TestManualsAspects()
     {
-        Aspects aspects = new(Manuals);
+        Aspects aspects = new(XqfManuals);
         Aspects aspects2 = new(aspects.DataStream);
 
         Assert.True(aspects.Equal(aspects2));

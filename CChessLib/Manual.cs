@@ -185,10 +185,9 @@ public class Manual
     public Manual(Dictionary<string, string> info)
     {
         Info = info;
-        string moveString = GetInfoValue(InfoKey.moveString);
-        ManualMove = (moveString.Length > 0
-                ? new(GetFEN(), moveString, FileExtType.txt)
-                : new(GetFEN(), GetInfoValue(InfoKey.rowCols)));
+        ManualMove = (Info.ContainsKey(InfoKey.moveString.ToString())
+                ? new(GetFEN(), Info[InfoKey.moveString.ToString()], FileExtType.txt)
+                : new(GetFEN(), Info[InfoKey.rowCols.ToString()]));
     }
 
     public Dictionary<string, string> Info { get; }
@@ -244,17 +243,13 @@ public class Manual
         return stream.ToArray();
     }
 
-    public static string GetInfoKey(InfoKey field) => InfoKeys[(int)field];
-    public string GetInfoValue(InfoKey field)
-        => Info.ContainsKey(GetInfoKey(field)) ? Info[GetInfoKey(field)] : string.Empty;
-
-    public void SetInfoValue(InfoKey field, string value) => Info[GetInfoKey(field)] = value;
+    public void SetInfoValue(InfoKey field, string value) => Info[field.ToString()] = value;
 
     private static FileExtType GetFileExtType(string fileName) => (FileExtType)(FileExtNames.IndexOf(Path.GetExtension(fileName)));
 
     public static string GetFileName(string fileName, FileExtType fileExtType) => $"{fileName}{FileExtNames[(int)fileExtType]}";
 
-    private string GetFEN() => GetInfoValue(InfoKey.FEN).Split(' ')[0];
+    private string GetFEN() => Info.ContainsKey(InfoKey.FEN.ToString()) ? Info[InfoKey.FEN.ToString()].Split(' ')[0] : string.Empty;
 
     private string GetInfoString()
         => string.Concat(Info.Select(keyValue => $"[{keyValue.Key} \"{keyValue.Value}\"]\n"));

@@ -8,8 +8,8 @@ public class BitBoardTest
     [Fact]
     public void TestBitConstants()
     {
-        using StreamWriter writer = File.CreateText("TestBitConstants.txt");
-        writer.Write(BitConstants.ToString());
+        // using StreamWriter writer = File.CreateText("TestBitConstants.txt");
+        // writer.Write(BitConstants.ToString());
     }
 
     [Theory]
