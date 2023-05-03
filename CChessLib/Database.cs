@@ -79,7 +79,7 @@ public class Database
                 byte[] htmlBytes = await client.GetByteArrayAsync(uri); // 异步执行
                 // byte[] htmlBytes = client.GetByteArrayAsync(uri).Result;// 等待任务完成
 
-                const string pattern = @"<title>(.*?)</title>[\w\W]*?>([^>]+赛[^<]*?)<[\w\W]*?>(\d+年(?:\d+月)?(?:\d+日)?)(?: ([^<]*?))?<[\w\W]*?>黑方 ([^<]*?)<[\w\W]*?MoveList=(.*?)""[\w\W]*?>红方 ([^<]*?)<[\w\W]*?>([A-E]\d{2})\. ([^<]*?)<[\w\W]*\((.*?)\)</pre>";
+                const string pattern = @"<title>(.*?)</title>[\w\W]*?>([^>]+[年赛][^<]*?)<[\w\W]*?>(\d+年(?:\d+月)?(?:\d+日)?)(?: ([^<]*?))?<[\w\W]*?>黑方 ([^<]*?)<[\w\W]*?MoveList=(.*?)""[\w\W]*?>红方 ([^<]*?)<[\w\W]*?>([A-E]\d{2})\. ([^<]*?)<[\w\W]*\((.*?)\)</pre>";
                 Match match = Regex.Match(codec.GetString(htmlBytes), pattern);
                 if (!match.Success)
                 {
@@ -88,7 +88,12 @@ public class Database
                 }
 
                 List<string> values = match.Groups.Values.Select(group => group.Value).ToList();
-                Debug.Assert(values.Count == 11);
+                if (values.Count != 11)
+                {
+                    Console.WriteLine($"values.Count != 11! url: {uri}");
+                    return new();
+                }
+                // Debug.Assert(values.Count == 11);
 
                 values[(int)InfoKey.source] = uri;
                 values[(int)InfoKey.rowCols] = Coord.GetRowCols(values[(int)InfoKey.rowCols].Replace("-", "").Replace("+", ""));
@@ -103,7 +108,7 @@ public class Database
 
         List<Dictionary<string, string>> infos = new();
         // 如果你的工作为 I/O 绑定，请使用 async 和 await（而不使用 Task.Run）。不应使用任务并行库
-        const int step = 50; // 设置75时，无法建立SSL连接
+        const int step = 25; // 设置75时，无法建立SSL连接
         for (int id = start; id <= end; id += step)
         {
             var tasks = Enumerable.Range(id, Math.Min(step, end - id + 1)).Select(id => GetInfoAsync(id)).ToArray();
