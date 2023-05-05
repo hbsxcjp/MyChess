@@ -36,7 +36,7 @@ public class DatabaseTest
     [Fact]
     public void TestAppendManuals()
     {
-        Database.DownXqbaseManual(4090, 5100); // 手工注释
+        // Database.DownXqbaseManual(12140, 12200); // 手工注释
         // Database.DownXqbaseManual(1, 12141); // 手工注释
     }
 

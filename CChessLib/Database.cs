@@ -10,7 +10,7 @@ namespace CChess;
 public class Database
 {
     private static readonly string ManualTableName = "manual";
-    private static readonly string DataFileName = "data.db";
+    private static readonly string DataFileName = "../../../data.db";
 
     public static List<Manual> GetManuals(string condition = "1")
     {
@@ -63,6 +63,7 @@ public class Database
         const int MinId = 1, MaxId = 12141; // 总界限:1~12141
         start = Math.Max(start, MinId);
         end = Math.Min(end, MaxId);
+        List<int> gameIds = Enumerable.Range(start, end - start + 1).ToList();
 
         // "source", "title", "event", "date", "site", "black", "rowCols", "red", "eccoSn", "eccoName", "win"
         List<string> keys = Enumerable.Range((int)InfoKey.source, (int)InfoKey.win + 1)
@@ -99,22 +100,25 @@ public class Database
                 values[(int)InfoKey.rowCols] = Coord.GetRowCols(values[(int)InfoKey.rowCols].Replace("-", "").Replace("+", ""));
                 return new(Enumerable.Zip(keys, values, (key, value) => new KeyValuePair<string, string>(key, value)));
             }
-            catch (HttpRequestException e)
+            catch //(HttpRequestException e)
             {
-                Console.WriteLine($"Exception Caught! Message :{e.Message} url: {uri} ");
+                Console.Write($"{id} ");
+                gameIds.Add(id);
                 return new();
             }
         }
 
         List<Dictionary<string, string>> infos = new();
         // 如果你的工作为 I/O 绑定，请使用 async 和 await（而不使用 Task.Run）。不应使用任务并行库
-        const int step = 25; // 设置75时，无法建立SSL连接
-        for (int id = start; id <= end; id += step)
+        const int step = 15; // 不宜大于50
+        while (gameIds.Count > 0)
         {
-            var tasks = Enumerable.Range(id, Math.Min(step, end - id + 1)).Select(id => GetInfoAsync(id)).ToArray();
-            Task.WaitAll(tasks);
+            int count = Math.Min(gameIds.Count, step);
+            var tasks = gameIds.GetRange(0, count).Select(id => GetInfoAsync(id)).ToArray();
 
+            Task.WaitAll(tasks);
             infos.AddRange(tasks.Select(task => task.Result));
+            gameIds.RemoveRange(0, count);
         }
 
         StorageInfos(infos);
