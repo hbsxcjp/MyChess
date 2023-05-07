@@ -48,12 +48,14 @@ public class Move
         {
             List<Move> allAfterMoves = new(100);
             Queue<Move> moveQueue = new();
-            AfterMoves?.ForEach(aMove => moveQueue.Enqueue(aMove));
+            void AppendAfter(Move move) => move.AfterMoves?.ForEach(aMove => moveQueue.Enqueue(aMove));
+
+            AppendAfter(this);
             while (moveQueue.Count > 0)
             {
                 Move move = moveQueue.Dequeue();
                 allAfterMoves.Add(move);
-                move.AfterMoves?.ForEach(aMove => moveQueue.Enqueue(aMove));
+                AppendAfter(move);
             }
 
             int id = 0;

@@ -10,6 +10,7 @@ namespace CChess;
 public class Database
 {
     private static readonly string ManualTableName = "manual";
+    private static readonly string HistoryTableName = "history";
     private static readonly string DataFileName = "../../../data.db";
 
     public static List<Manual> GetManuals(string condition = "1")
@@ -147,7 +148,9 @@ public class Database
         {
             string[] commandStrs = new string[]{
                         $"CREATE TABLE {ManualTableName} (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        $"{string.Join(", ", Manual.InfoKeys.Select(name => name + " TEXT"))});", };
+                            $"{string.Join(", ", Manual.InfoKeys.Select(name => name + " TEXT"))});",
+                        $"CREATE TABLE {HistoryTableName} (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            "key INTEGER, lock INTEGER, frequency INTEGER);", };
 
             using SqliteTransaction transaction = connection.BeginTransaction();
             SqliteCommand command = connection.CreateCommand();

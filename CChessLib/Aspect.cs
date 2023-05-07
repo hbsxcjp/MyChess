@@ -5,6 +5,8 @@ namespace CChess;
 
 public class Aspects
 {
+    public Dictionary<string, Dictionary<string, List<int>>> FENRowCols { get; }
+
     public Aspects() { FENRowCols = new(); }
 
     public Aspects(Stream stream) : this()
@@ -34,8 +36,6 @@ public class Aspects
     {
         manuals.ForEach(manual => Add(manual));
     }
-
-    public Dictionary<string, Dictionary<string, List<int>>> FENRowCols { get; }
 
     public static Aspects GetAspects(string fileName)
     {

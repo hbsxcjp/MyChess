@@ -180,6 +180,17 @@ public class ManualMove// : IEnumerable
     public Move RootMove { get; }
     public Move CurMove { get; private set; }
 
+    public PieceColor StartColor
+    {
+        get
+        {
+            if (RootMove.AfterMoves == null)
+                return PieceColor.Red;
+
+            return RootBoard[RootMove.AfterMoves[0].CoordPair.FromCoord.Index].Color;
+        }
+    }
+
     public bool AddMove(string zhStr, bool isOther = false)
     {
         if (isOther)
@@ -392,19 +403,13 @@ public class ManualMove// : IEnumerable
         if (remarkMatch.Success)
             RootMove.Remark = remarkMatch.Groups[1].Value;
 
-        string movePattern;
-        MatchCollection matches;
         List<Move> allMoves = new() { RootMove };
         string pgnPattern = (fileExtType == FileExtType.pgniccs
             ? @$"(?:[{Coord.ColChars}]\d){{2}}"
             : (fileExtType == FileExtType.pgnrc ? @"\d{4}" : Board.PGNZHCharsPattern()));
-        movePattern = @$"(\d+)\-({pgnPattern})(_?){remarkPattern}?\s+";
-        matches = Regex.Matches(moveString, movePattern);
-        foreach (Match match in matches.Cast<Match>())
+        string movePattern = @$"(\d+)\-({pgnPattern})(_?){remarkPattern}?\s+";
+        foreach (Match match in Regex.Matches(moveString, movePattern))
         {
-            if (!match.Success)
-                break;
-
             int id = Convert.ToInt32(match.Groups[1].Value);
             string pgnText = match.Groups[2].Value;
             bool visible = match.Groups[3].Value.Length == 0;

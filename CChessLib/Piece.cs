@@ -8,6 +8,10 @@ public abstract class Piece
 {
     public static readonly Piece Null = new NullPiece();
 
+    public const int ColorCount = 2;
+    public const int KindCount = 7;
+    public const int LegCount = 4;
+
     public const char NullCh = '_';
     public const char NullName = '空';
 

@@ -8,7 +8,7 @@ public class BitBoardTest
     [Fact]
     public void TestBitConstants()
     {
-        // using StreamWriter writer = File.CreateText("TestBitConstants.txt");
+        // using StreamWriter writer = File.CreateText("../../../TestBitConstants.txt");
         // writer.Write(BitConstants.ToString());
     }
 
@@ -26,6 +26,13 @@ public class BitBoardTest
         using StreamWriter writer = File.CreateText($"TestBitBoard_{fenFirstLine}.txt");
 
         writer.Write(bitBoard);
+    }
+
+    [Fact]
+    public void TestHistoryDictionary()
+    {
+        HistoryDictionary historyDict = new(Database.GetManuals(" id < 10 "));
+        Console.WriteLine($"HistoryDictionary:\n{historyDict}\n");
     }
 
 }

@@ -5,17 +5,6 @@ using System.Numerics;
 
 namespace CChess;
 
-public enum BitNum
-{
-    COLORNUM = 2,
-    KINDNUM = 7,
-    BOARDROWNUM = 10,
-    BOARDCOLNUM = 9,
-    BOARDLENGTH = (BOARDROWNUM * BOARDCOLNUM),
-    LEGCOUNT = 4,
-    // MOVEBOARDMAXCOUNT = 256,
-}
-
 public class MoveEffect : IComparable
 {
     public int fromIndex;
@@ -29,30 +18,39 @@ public class MoveEffect : IComparable
 
 public static class BitConstants
 {
-
-    public static readonly ulong ZobristBlack = (ulong)(new Random(7)).NextInt64(long.MinValue, long.MaxValue);
-    public static readonly ulong[][][] Zobrist = CreateZobrist();
+    // 每次生成相同的随机数序列（但是，如果.Net版本不同，序列可能不同）
+    private const int seedKey = 100;
+    private const int seedLock = 200;
+    public static readonly ulong[][][] ZobristKey = CreateZobrist(seedKey);
+    public static readonly ulong[][][] ZobristLock = CreateZobrist(seedLock);
 
     public static readonly BigInteger[] Mask = Coord.Coords.Select(
         coord => (BigInteger)1 << coord.Index).ToArray();
     public static readonly BigInteger[] RotateMask = Coord.Coords.Select(
-        coord => (BigInteger)1 << coord.Col * (int)BitNum.BOARDROWNUM + coord.Row).ToArray();
+        coord => (BigInteger)1 << coord.Col * Coord.RowCount + coord.Row).ToArray();
 
-    // 帅仕根据所处的位置选取可移动位棋盘
+    // 根据所处的位置选取可放置的位置[isBottom:0-1]
+    private static readonly BigInteger[] KingPut = CreateKingPut();
+    private static readonly BigInteger[] AdvisorPut = CreateAdvisorPut();
+    private static readonly BigInteger[] BishopPut = CreateBishopPut();
+    private static readonly BigInteger KnightRookCannonPut = ((BigInteger)(0X3FFFFFFUL) << 64) | 0XFFFFFFFFFFFFFFFFUL;
+    private static readonly BigInteger[] PawnPut = CreatePawnPut();
+
+    // 帅仕根据所处的位置选取可移动位棋盘[index:0-89]
     public static readonly BigInteger[] KingMove = CreateKingMove();
     public static readonly BigInteger[] AdvisorMove = CreateAdvisorMove();
 
-    // 马相根据憋马腿或田心组成的四个位置状态选取可移动位棋盘
+    // 马相根据憋马腿或田心组成的四个位置状态选取可移动位棋盘[state:0-0XF][index:0-89]
     private static readonly List<BigInteger[]> BishopMove = CreateBishopMove();
     private static readonly List<BigInteger[]> KnightMove = CreateKnightMove();
 
-    // 车炮根据每行和每列的位置状态选取可移动位棋盘
+    // 车炮根据每行和每列的位置状态选取可移动位棋盘[state:0-0x1F,0X3F][index:0-89]
     private static readonly List<BigInteger[]> RookRowMove = CreateRookRowMove();
     private static readonly List<BigInteger[]> RookColMove = CreateRookColMove();
     private static readonly List<BigInteger[]> CannonRowMove = CreateCannonRowMove();
     private static readonly List<BigInteger[]> CannonColMove = CreateCannonColMove();
 
-    // 兵根据本方处于上或下的二个位置状态选取可移动位棋盘
+    // 兵根据本方处于上或下的二个位置状态选取可移动位棋盘[isBottom:0-1][index:0-89]
     public static readonly List<BigInteger[]> PawnMove = CreatePawnMove();
 
     // 求最低位非零位的序号，调用前判断参数非零
@@ -86,17 +84,17 @@ public static class BitConstants
     public static BigInteger MergeBitInt(IEnumerable<BigInteger> bigIntegers)
         => bigIntegers.Aggregate((BigInteger)0, (result, next) => result | next);
 
-    private static ulong[][][] CreateZobrist()
+    private static ulong[][][] CreateZobrist(int seed)
     {
-        ulong[][][] zobrist = new ulong[(int)BitNum.COLORNUM][][];//, (int)BitNum.KINDNUM, (int)BitNum.BOARDLENGTH];
-        Random random = new Random();
-        for (int color = 0; color < (int)BitNum.COLORNUM; ++color)
+        ulong[][][] zobrist = new ulong[Piece.ColorCount][][];
+        Random random = new Random(seed);
+        for (int color = 0; color < Piece.ColorCount; ++color)
         {
-            ulong[][] colorZobrist = new ulong[(int)BitNum.KINDNUM][];
-            for (int kind = 0; kind < (int)BitNum.KINDNUM; ++kind)
+            ulong[][] colorZobrist = new ulong[Piece.KindCount][];
+            for (int kind = 0; kind < Piece.KindCount; ++kind)
             {
-                ulong[] kindZobrist = new ulong[(int)BitNum.BOARDLENGTH];
-                for (int index = 0; index < (int)BitNum.BOARDLENGTH; ++index)
+                ulong[] kindZobrist = new ulong[Coord.Count];
+                foreach (int index in Coord.Indexs)
                 {
                     kindZobrist[index] = (ulong)random.NextInt64(long.MinValue, long.MaxValue);
                 }
@@ -108,20 +106,75 @@ public static class BitConstants
         return zobrist;
     }
 
-    private static BigInteger[] CreateKingMove()
+    private static BigInteger[] CreateKingPut()
     {
-        static bool isValidKing(int row, int col)
-        {
-            return (row < 3 || row > 6) && (col > 2 && col < 6);
-        }
-
-        BigInteger[] kingMove = new BigInteger[(int)BitNum.BOARDLENGTH];
-        for (int index = 0; index < (int)BitNum.BOARDLENGTH; ++index)
+        BigInteger[] kingPut = { 0, 0 };
+        foreach (int index in Coord.Indexs)
         {
             Coord fromCoord = Coord.Coords[index];
             int row = fromCoord.Row, col = fromCoord.Col;
-            if (!isValidKing(row, col))
-                continue;
+            if ((row < 3 || row > 6) && (col > 2 && col < 6))
+                kingPut[(index >= Coord.Indexs.Count / 2) ? 1 : 0] |= Mask[index];
+        }
+
+        return kingPut;
+    }
+
+    private static BigInteger[] CreateAdvisorPut()
+    {
+        BigInteger[] advisorPut = { 0, 0 };
+        foreach (int index in Coord.Indexs)
+        {
+            Coord fromCoord = Coord.Coords[index];
+            int row = fromCoord.Row, col = fromCoord.Col;
+            if (((row == 0 || row == 2 || row == 7 || row == 9) && (col == 3 || col == 5))
+                || ((row == 1 || row == 8) && col == 4))
+                advisorPut[(index >= Coord.Indexs.Count / 2) ? 1 : 0] |= Mask[index];
+        }
+
+        return advisorPut;
+    }
+
+    private static BigInteger[] CreateBishopPut()
+    {
+        BigInteger[] bishopPut = { 0, 0 };
+        foreach (int index in Coord.Indexs)
+        {
+            Coord fromCoord = Coord.Coords[index];
+            int row = fromCoord.Row, col = fromCoord.Col;
+            if (((row == 0 || row == 4 || row == 5 || row == 9) && (col == 2 || col == 6))
+                || ((row == 2 || row == 7) && (col == 0 || col == 4 || col == 8)))
+                bishopPut[(index >= Coord.Indexs.Count / 2) ? 1 : 0] |= Mask[index];
+        }
+
+        return bishopPut;
+    }
+
+    private static BigInteger[] CreatePawnPut()
+    {
+        BigInteger[] pawnPut = { 0, 0 };
+        for (int isBottom = 0; isBottom < 2; ++isBottom)
+        {
+            foreach (int index in Coord.Indexs)
+            {
+                Coord fromCoord = Coord.Coords[index];
+                int row = fromCoord.Row, col = fromCoord.Col;
+                if (isBottom == 1 ? (row < 5 || ((row == 5 || row == 6) && (col == 0 || col == 2 || col == 4 || col == 6 || col == 8)))
+                            : (row > 4 || ((row == 3 || row == 4) && (col == 0 || col == 2 || col == 4 || col == 6 || col == 8))))
+                    pawnPut[isBottom] |= Mask[index];
+            }
+        }
+
+        return pawnPut;
+    }
+
+    private static BigInteger[] CreateKingMove()
+    {
+        BigInteger[] kingMove = new BigInteger[Coord.Count];
+        foreach (int index in GetNonZeroIndexs(KingPut[0] | KingPut[1]))
+        {
+            Coord fromCoord = Coord.Coords[index];
+            int row = fromCoord.Row, col = fromCoord.Col;
 
             BigInteger match = 0;
             if (col > 3)
@@ -129,9 +182,9 @@ public static class BitConstants
             if (col < 5)
                 match |= Mask[index + 1];
             if (row == 0 || row == 1 || row == 7 || row == 8)
-                match |= Mask[index + (int)BitNum.BOARDCOLNUM];
+                match |= Mask[index + Coord.ColCount];
             if (row == 1 || row == 2 || row == 8 || row == 9)
-                match |= Mask[index - (int)BitNum.BOARDCOLNUM];
+                match |= Mask[index - Coord.ColCount];
 
             kingMove[index] = match;
         }
@@ -141,26 +194,18 @@ public static class BitConstants
 
     private static BigInteger[] CreateAdvisorMove()
     {
-        static bool isValidAdvisor(int row, int col)
-        {
-            return (((row == 0 || row == 2 || row == 7 || row == 9) && (col == 3 || col == 5))
-                || ((row == 1 || row == 8) && col == 4));
-        }
-
-        BigInteger[] advisorMove = new BigInteger[(int)BitNum.BOARDLENGTH];
-        for (int index = 0; index < (int)BitNum.BOARDLENGTH; ++index)
+        BigInteger[] advisorMove = new BigInteger[Coord.Count];
+        foreach (int index in GetNonZeroIndexs(AdvisorPut[0] | AdvisorPut[1]))
         {
             Coord fromCoord = Coord.Coords[index];
             int row = fromCoord.Row, col = fromCoord.Col;
-            if (!isValidAdvisor(row, col))
-                continue;
 
             BigInteger match;
             if (col == 4)
-                match = (Mask[index - (int)BitNum.BOARDCOLNUM - 1]
-                    | Mask[index - (int)BitNum.BOARDCOLNUM + 1]
-                    | Mask[index + (int)BitNum.BOARDCOLNUM - 1]
-                    | Mask[index + (int)BitNum.BOARDCOLNUM + 1]);
+                match = (Mask[index - Coord.ColCount - 1]
+                    | Mask[index - Coord.ColCount + 1]
+                    | Mask[index + Coord.ColCount - 1]
+                    | Mask[index + Coord.ColCount + 1]);
             else
                 match = Mask[row < 3 ? 13 : 76];
 
@@ -172,45 +217,37 @@ public static class BitConstants
 
     private static List<BigInteger[]> CreateBishopMove()
     {
-        static bool isValidBishop(int row, int col)
-        {
-            return (((row == 0 || row == 4 || row == 5 || row == 9) && (col == 2 || col == 6))
-                || ((row == 2 || row == 7) && (col == 0 || col == 4 || col == 8)));
-        }
-
         List<BigInteger[]> bishopMove = new();
-        for (int state = 0; state < 1 << ((int)BitNum.LEGCOUNT); ++state)
+        for (int state = 0; state < 1 << (Piece.LegCount); ++state)
         {
-            BigInteger[] allIndexMove = new BigInteger[(int)BitNum.BOARDLENGTH];
-            for (int index = 0; index < (int)BitNum.BOARDLENGTH; ++index)
+            BigInteger[] allIndexMove = new BigInteger[Coord.Count];
+            foreach (int index in GetNonZeroIndexs(BishopPut[0] | BishopPut[1]))
             {
                 Coord fromCoord = Coord.Coords[index];
                 int row = fromCoord.Row, col = fromCoord.Col;
-                if (!isValidBishop(row, col))
-                    continue;
 
                 int realState = state;
                 if (row == 0 || row == 5)
-                    realState |= (1 << ((int)BitNum.LEGCOUNT - 1) | 1 << ((int)BitNum.LEGCOUNT - 2));
-                else if (row == 4 || row == (int)BitNum.BOARDROWNUM - 1)
-                    realState |= (1 << ((int)BitNum.LEGCOUNT - 3) | 1 << ((int)BitNum.LEGCOUNT - 4));
+                    realState |= (1 << (Piece.LegCount - 1) | 1 << (Piece.LegCount - 2));
+                else if (row == 4 || row == Coord.RowCount - 1)
+                    realState |= (1 << (Piece.LegCount - 3) | 1 << (Piece.LegCount - 4));
                 if (col == 0)
-                    realState |= (1 << ((int)BitNum.LEGCOUNT - 1) | 1 << ((int)BitNum.LEGCOUNT - 3));
-                else if (col == (int)BitNum.BOARDCOLNUM - 1)
-                    realState |= (1 << ((int)BitNum.LEGCOUNT - 2) | 1 << ((int)BitNum.LEGCOUNT - 4));
+                    realState |= (1 << (Piece.LegCount - 1) | 1 << (Piece.LegCount - 3));
+                else if (col == Coord.ColCount - 1)
+                    realState |= (1 << (Piece.LegCount - 2) | 1 << (Piece.LegCount - 4));
 
                 BigInteger match = 0;
-                if (0 == (realState & (1 << ((int)BitNum.LEGCOUNT - 1))))
-                    match |= Mask[index - 2 * (int)BitNum.BOARDCOLNUM - 2];
+                if (0 == (realState & (1 << (Piece.LegCount - 1))))
+                    match |= Mask[index - 2 * Coord.ColCount - 2];
 
-                if (0 == (realState & (1 << ((int)BitNum.LEGCOUNT - 2))))
-                    match |= Mask[index - 2 * (int)BitNum.BOARDCOLNUM + 2];
+                if (0 == (realState & (1 << (Piece.LegCount - 2))))
+                    match |= Mask[index - 2 * Coord.ColCount + 2];
 
-                if (0 == (realState & (1 << ((int)BitNum.LEGCOUNT - 3))))
-                    match |= Mask[index + 2 * (int)BitNum.BOARDCOLNUM - 2];
+                if (0 == (realState & (1 << (Piece.LegCount - 3))))
+                    match |= Mask[index + 2 * Coord.ColCount - 2];
 
-                if (0 == (realState & (1 << ((int)BitNum.LEGCOUNT - 4))))
-                    match |= Mask[index + 2 * (int)BitNum.BOARDCOLNUM + 2];
+                if (0 == (realState & (1 << (Piece.LegCount - 4))))
+                    match |= Mask[index + 2 * Coord.ColCount + 2];
 
                 allIndexMove[index] = match;
             }
@@ -224,51 +261,51 @@ public static class BitConstants
     private static List<BigInteger[]> CreateKnightMove()
     {
         List<BigInteger[]> knightMove = new();
-        for (int state = 0; state < 1 << ((int)BitNum.LEGCOUNT); ++state)
+        for (int state = 0; state < 1 << (Piece.LegCount); ++state)
         {
-            BigInteger[] allIndexMove = new BigInteger[(int)BitNum.BOARDLENGTH];
-            for (int index = 0; index < (int)BitNum.BOARDLENGTH; ++index)
+            BigInteger[] allIndexMove = new BigInteger[Coord.Count];
+            foreach (int index in Coord.Indexs)
             {
                 Coord fromCoord = Coord.Coords[index];
                 int row = fromCoord.Row, col = fromCoord.Col;
                 int realState = state;
                 if (row == 0)
-                    realState |= 1 << ((int)BitNum.LEGCOUNT - 1);
-                else if (row == (int)BitNum.BOARDROWNUM - 1)
-                    realState |= 1 << ((int)BitNum.LEGCOUNT - 4);
+                    realState |= 1 << (Piece.LegCount - 1);
+                else if (row == Coord.RowCount - 1)
+                    realState |= 1 << (Piece.LegCount - 4);
                 if (col == 0)
-                    realState |= 1 << ((int)BitNum.LEGCOUNT - 2);
-                else if (col == (int)BitNum.BOARDCOLNUM - 1)
-                    realState |= 1 << ((int)BitNum.LEGCOUNT - 3);
+                    realState |= 1 << (Piece.LegCount - 2);
+                else if (col == Coord.ColCount - 1)
+                    realState |= 1 << (Piece.LegCount - 3);
 
                 BigInteger match = 0;
-                if (0 == (realState & (1 << ((int)BitNum.LEGCOUNT - 1))) && row > 1)
+                if (0 == (realState & (1 << (Piece.LegCount - 1))) && row > 1)
                 {
                     if (col > 0)
-                        match |= Mask[index - 2 * (int)BitNum.BOARDCOLNUM - 1];
-                    if (col < (int)BitNum.BOARDCOLNUM - 1)
-                        match |= Mask[index - 2 * (int)BitNum.BOARDCOLNUM + 1];
+                        match |= Mask[index - 2 * Coord.ColCount - 1];
+                    if (col < Coord.ColCount - 1)
+                        match |= Mask[index - 2 * Coord.ColCount + 1];
                 }
-                if (0 == (realState & (1 << ((int)BitNum.LEGCOUNT - 2))) && col > 1)
+                if (0 == (realState & (1 << (Piece.LegCount - 2))) && col > 1)
                 {
                     if (row > 0)
-                        match |= Mask[index - (int)BitNum.BOARDCOLNUM - 2];
-                    if (row < (int)BitNum.BOARDROWNUM - 1)
-                        match |= Mask[index + (int)BitNum.BOARDCOLNUM - 2];
+                        match |= Mask[index - Coord.ColCount - 2];
+                    if (row < Coord.RowCount - 1)
+                        match |= Mask[index + Coord.ColCount - 2];
                 }
-                if (0 == (realState & (1 << ((int)BitNum.LEGCOUNT - 3))) && col < (int)BitNum.BOARDCOLNUM - 2)
+                if (0 == (realState & (1 << (Piece.LegCount - 3))) && col < Coord.ColCount - 2)
                 {
                     if (row > 0)
-                        match |= Mask[index - (int)BitNum.BOARDCOLNUM + 2];
-                    if (row < (int)BitNum.BOARDROWNUM - 1)
-                        match |= Mask[index + (int)BitNum.BOARDCOLNUM + 2];
+                        match |= Mask[index - Coord.ColCount + 2];
+                    if (row < Coord.RowCount - 1)
+                        match |= Mask[index + Coord.ColCount + 2];
                 }
-                if (0 == (realState & (1 << ((int)BitNum.LEGCOUNT - 4))) && row < (int)BitNum.BOARDROWNUM - 2)
+                if (0 == (realState & (1 << (Piece.LegCount - 4))) && row < Coord.RowCount - 2)
                 {
                     if (col > 0)
-                        match |= Mask[index + 2 * (int)BitNum.BOARDCOLNUM - 1];
-                    if (col < (int)BitNum.BOARDCOLNUM - 1)
-                        match |= Mask[index + 2 * (int)BitNum.BOARDCOLNUM + 1];
+                        match |= Mask[index + 2 * Coord.ColCount - 1];
+                    if (col < Coord.ColCount - 1)
+                        match |= Mask[index + 2 * Coord.ColCount + 1];
                 }
 
                 allIndexMove[index] = match;
@@ -288,7 +325,7 @@ public static class BitConstants
             for (int isHigh = 0; isHigh < 2; ++isHigh)
             {
                 int direction = isHigh == 1 ? 1 : -1,
-                    endIndex = isHigh == 1 ? (isRotate ? (int)BitNum.BOARDROWNUM : (int)BitNum.BOARDCOLNUM) - 1 : 0; // 每行列数或每列行数
+                    endIndex = isHigh == 1 ? (isRotate ? Coord.RowCount : Coord.ColCount) - 1 : 0; // 每行列数或每列行数
                 bool skip = false; // 炮是否已跳
                 for (int i = direction * (rowColIndex + direction); i <= endIndex; ++i)
                 {
@@ -322,7 +359,7 @@ public static class BitConstants
         }
 
         bool isCannon = kind == PieceKind.Cannon;
-        int bitLength = isCol ? (int)BitNum.BOARDROWNUM : (int)BitNum.BOARDCOLNUM,
+        int bitLength = isCol ? Coord.RowCount : Coord.ColCount,
             stateTotal = 1 << bitLength;
         for (int rowColIndex = 0; rowColIndex < bitLength; ++rowColIndex)
         {
@@ -340,10 +377,10 @@ public static class BitConstants
                 if (isCol)
                 {
                     BigInteger colMatch = 0;
-                    for (int row = 0; row < (int)BitNum.BOARDROWNUM; ++row)
+                    for (int row = 0; row < Coord.RowCount; ++row)
                     {
                         if (0 != (match & 1 << row))
-                            colMatch |= Mask[row * (int)BitNum.BOARDCOLNUM]; // 每行的首列置位
+                            colMatch |= Mask[row * Coord.ColCount]; // 每行的首列置位
                     }
 
                     allStateMove[state] = colMatch;
@@ -390,38 +427,29 @@ public static class BitConstants
 
     private static List<BigInteger[]> CreatePawnMove()
     {
-        static bool isValidPawn(int row, int col, bool isBottom)
-        {
-            return (isBottom ? (row < 5 || ((row == 5 || row == 6) && (col == 0 || col == 2 || col == 4 || col == 6 || col == 8)))
-                             : (row > 4 || ((row == 3 || row == 4) && (col == 0 || col == 2 || col == 4 || col == 6 || col == 8))));
-        }
-
         List<BigInteger[]> pawnMove = new();
         for (int isBottom = 0; isBottom < 2; ++isBottom)
         {
-            BigInteger[] sidePawnMove = new BigInteger[(int)BitNum.BOARDLENGTH];
-            for (int index = 0; index < (int)BitNum.BOARDLENGTH; ++index)
+            BigInteger[] sidePawnMove = new BigInteger[Coord.Count];
+            foreach (int index in GetNonZeroIndexs(PawnPut[isBottom]))
             {
                 Coord fromCoord = Coord.Coords[index];
                 int row = fromCoord.Row, col = fromCoord.Col;
-
-                if (!isValidPawn(row, col, isBottom == 1))
-                    continue;
 
                 BigInteger match = 0;
                 if ((isBottom == 0 && row > 4) || (isBottom == 1 && row < 5))
                 {
                     if (col != 0)
                         match |= Mask[index - 1];
-                    if (col != (int)BitNum.BOARDCOLNUM - 1)
+                    if (col != Coord.ColCount - 1)
                         match |= Mask[index + 1];
                 }
 
-                if (isBottom == 0 && row != (int)BitNum.BOARDROWNUM - 1)
-                    match |= Mask[index + (int)BitNum.BOARDCOLNUM];
+                if (isBottom == 0 && row != Coord.RowCount - 1)
+                    match |= Mask[index + Coord.ColCount];
 
                 if (isBottom == 1 && row != 0)
-                    match |= Mask[index - (int)BitNum.BOARDCOLNUM];
+                    match |= Mask[index - Coord.ColCount];
 
                 sidePawnMove[index] = match;
             }
@@ -436,13 +464,13 @@ public static class BitConstants
         Coord fromCoord = Coord.Coords[fromIndex];
         int row = fromCoord.Row, col = fromCoord.Col;
         bool isTop = row == 0 || row == 5,
-             isBottom = row == 4 || row == (int)BitNum.BOARDROWNUM - 1,
+             isBottom = row == 4 || row == Coord.RowCount - 1,
              isLeft = col == 0,
-             isRight = col == (int)BitNum.BOARDCOLNUM - 1;
-        int state = ((isTop || isLeft || !(allPieces & Mask[fromIndex - (int)BitNum.BOARDCOLNUM - 1]).IsZero ? 1 << ((int)BitNum.LEGCOUNT - 1) : 0)
-            | (isTop || isRight || !(allPieces & Mask[fromIndex - (int)BitNum.BOARDCOLNUM + 1]).IsZero ? 1 << ((int)BitNum.LEGCOUNT - 2) : 0)
-            | (isBottom || isLeft || !(allPieces & Mask[fromIndex + (int)BitNum.BOARDCOLNUM - 1]).IsZero ? 1 << ((int)BitNum.LEGCOUNT - 3) : 0)
-            | (isBottom || isRight || !(allPieces & Mask[fromIndex + (int)BitNum.BOARDCOLNUM + 1]).IsZero ? 1 << ((int)BitNum.LEGCOUNT - 4) : 0));
+             isRight = col == Coord.ColCount - 1;
+        int state = ((isTop || isLeft || !(allPieces & Mask[fromIndex - Coord.ColCount - 1]).IsZero ? 1 << (Piece.LegCount - 1) : 0)
+            | (isTop || isRight || !(allPieces & Mask[fromIndex - Coord.ColCount + 1]).IsZero ? 1 << (Piece.LegCount - 2) : 0)
+            | (isBottom || isLeft || !(allPieces & Mask[fromIndex + Coord.ColCount - 1]).IsZero ? 1 << (Piece.LegCount - 3) : 0)
+            | (isBottom || isRight || !(allPieces & Mask[fromIndex + Coord.ColCount + 1]).IsZero ? 1 << (Piece.LegCount - 4) : 0));
 
         return BishopMove[state][fromIndex];
     }
@@ -451,10 +479,10 @@ public static class BitConstants
     {
         Coord fromCoord = Coord.Coords[fromIndex];
         int row = fromCoord.Row, col = fromCoord.Col;
-        int state = ((row == 0 || !(allPieces & Mask[fromIndex - (int)BitNum.BOARDCOLNUM]).IsZero ? 1 << ((int)BitNum.LEGCOUNT - 1) : 0)
-            | (col == 0 || !(allPieces & Mask[fromIndex - 1]).IsZero ? 1 << ((int)BitNum.LEGCOUNT - 2) : 0)
-            | (col == (int)BitNum.BOARDCOLNUM - 1 || !(allPieces & Mask[fromIndex + 1]).IsZero ? 1 << ((int)BitNum.LEGCOUNT - 3) : 0)
-            | (row == (int)BitNum.BOARDROWNUM - 1 || !(allPieces & Mask[fromIndex + (int)BitNum.BOARDCOLNUM]).IsZero ? 1 << ((int)BitNum.LEGCOUNT - 4) : 0));
+        int state = ((row == 0 || !(allPieces & Mask[fromIndex - Coord.ColCount]).IsZero ? 1 << (Piece.LegCount - 1) : 0)
+            | (col == 0 || !(allPieces & Mask[fromIndex - 1]).IsZero ? 1 << (Piece.LegCount - 2) : 0)
+            | (col == Coord.ColCount - 1 || !(allPieces & Mask[fromIndex + 1]).IsZero ? 1 << (Piece.LegCount - 3) : 0)
+            | (row == Coord.RowCount - 1 || !(allPieces & Mask[fromIndex + Coord.ColCount]).IsZero ? 1 << (Piece.LegCount - 4) : 0));
 
         return KnightMove[state][fromIndex];
     }
@@ -463,12 +491,12 @@ public static class BitConstants
     {
         Coord fromCoord = Coord.Coords[fromIndex];
         int row = fromCoord.Row, col = fromCoord.Col,
-            rowOffset = row * (int)BitNum.BOARDCOLNUM;
+            rowOffset = row * Coord.ColCount;
         List<BigInteger[]> rowMove = isCannon ? CannonRowMove : RookRowMove,
             colMove = isCannon ? CannonColMove : RookColMove;
 
         return ((rowMove[col][(int)((allPieces >> rowOffset) & 0x1FF)] << rowOffset)
-            | (colMove[row][(int)((rotatePieces >> col * (int)BitNum.BOARDROWNUM) & 0x3FF)] << col)); // 每行首列置位全体移动数列
+            | (colMove[row][(int)((rotatePieces >> col * Coord.RowCount) & 0x3FF)] << col)); // 每行首列置位全体移动数列
     }
 
     public static List<string> GetBigIntString(BigInteger bigInt, bool isRotate)
@@ -485,8 +513,8 @@ public static class BitConstants
             return result;
         }
 
-        int rowNum = isRotate ? (int)BitNum.BOARDCOLNUM : (int)BitNum.BOARDROWNUM;
-        int colNum = isRotate ? (int)BitNum.BOARDROWNUM : (int)BitNum.BOARDCOLNUM;
+        int rowNum = isRotate ? Coord.ColCount : Coord.RowCount;
+        int colNum = isRotate ? Coord.RowCount : Coord.ColCount;
         int mode = isRotate ? 0x3FF : 0x1FF;
         List<string> result = new();
         for (int row = 0; row < rowNum; ++row)
@@ -500,7 +528,7 @@ public static class BitConstants
 
     public static string GetBigIntArrayString(BigInteger[] bigInts, int colNumPerRow, bool showZero, bool isRotate)
     {
-        int rowNum = isRotate ? (int)BitNum.BOARDCOLNUM : (int)BitNum.BOARDROWNUM;
+        int rowNum = isRotate ? Coord.ColCount : Coord.RowCount;
         int length = bigInts.Length;
         colNumPerRow = Math.Min(length, colNumPerRow);
         string nullStr = "   ";
@@ -553,29 +581,45 @@ public static class BitConstants
     public static new string ToString()
     {
         StringBuilder result = new();
-        result.Append($"ZobristBlack: {ZobristBlack,18:X16}\n");
-        for (int color = 0; color < (int)BitNum.COLORNUM; ++color)
+        result.Append($"Zobrist:\n");
+        for (int color = 0; color < Piece.ColorCount; ++color)
         {
             result.Append($"Color: {color}\n");
-            for (int kind = 0; kind < (int)BitNum.KINDNUM; ++kind)
+            for (int kind = 0; kind < Piece.KindCount; ++kind)
             {
                 result.Append($"Kind: {kind}\n");
-                for (int index = 0; index < (int)BitNum.BOARDLENGTH; ++index)
+                foreach (int index in Coord.Indexs)
                 {
-                    result.Append($"{Zobrist[color][kind][index],18:X16}");
+                    result.Append($"{ZobristKey[color][kind][index],18:X16}");
+                    result.Append($"{ZobristLock[color][kind][index],18:X16}");
                 }
                 result.Append("\n");
             }
             result.Append("\n");
         }
 
-        string bigIntsString = GetBigIntArrayString(Mask, (int)BitNum.BOARDCOLNUM, true, false);
+        string bigIntsString = GetBigIntArrayString(Mask, Coord.ColCount, true, false);
         result.Append($"Mask: {Mask.Length}\n{bigIntsString}\n");
 
-        bigIntsString = GetBigIntArrayString(RotateMask, (int)BitNum.BOARDROWNUM, true, true);
+        bigIntsString = GetBigIntArrayString(RotateMask, Coord.RowCount, true, true);
         result.Append($"RotateMask: {RotateMask.Length}\n{bigIntsString}\n");
 
-        bigIntsString = GetBigIntArrayString(KingMove, (int)BitNum.BOARDCOLNUM, false, false);
+        bigIntsString = GetBigIntArrayString(KingPut, Coord.ColCount, false, false);
+        result.Append($"KingPut: \n{bigIntsString}\n");
+
+        bigIntsString = GetBigIntArrayString(AdvisorPut, Coord.ColCount, false, false);
+        result.Append($"AdvisorPut: \n{bigIntsString}\n");
+
+        bigIntsString = GetBigIntArrayString(BishopPut, Coord.ColCount, false, false);
+        result.Append($"BishopPut: \n{bigIntsString}\n");
+
+        bigIntsString = GetBigIntArrayString(new BigInteger[] { KnightRookCannonPut }, Coord.ColCount, false, false);
+        result.Append($"KnightRookCannonPut: \n{bigIntsString}\n");
+
+        bigIntsString = GetBigIntArrayString(PawnPut, Coord.ColCount, false, false);
+        result.Append($"PawnPut: \n{bigIntsString}\n");
+
+        bigIntsString = GetBigIntArrayString(KingMove, Coord.ColCount, false, false);
         result.Append($"KingMove: \n{bigIntsString}\n");
 
         bigIntsString = GetBigIntArrayString(AdvisorMove, 5, false, false);
@@ -595,31 +639,31 @@ public static class BitConstants
 
         for (int index = 0; index < RookRowMove.Count; ++index)
         {
-            bigIntsString = GetBigIntArrayString(RookRowMove[index], (int)BitNum.BOARDCOLNUM, false, false);
+            bigIntsString = GetBigIntArrayString(RookRowMove[index], Coord.ColCount, false, false);
             result.Append($"RookRowMove Col: {index:X}\n{bigIntsString}\n");
         }
 
         for (int index = 0; index < RookColMove.Count; ++index)
         {
-            bigIntsString = GetBigIntArrayString(RookColMove[index], (int)BitNum.BOARDCOLNUM, false, false);
+            bigIntsString = GetBigIntArrayString(RookColMove[index], Coord.ColCount, false, false);
             result.Append($"RookColMove Row: {index:X}\n{bigIntsString}\n");
         }
 
         for (int index = 0; index < CannonRowMove.Count; ++index)
         {
-            bigIntsString = GetBigIntArrayString(CannonRowMove[index], (int)BitNum.BOARDCOLNUM, false, false);
+            bigIntsString = GetBigIntArrayString(CannonRowMove[index], Coord.ColCount, false, false);
             result.Append($"CannonRowMove Col: {index:X}\n{bigIntsString}\n");
         }
 
         for (int index = 0; index < CannonColMove.Count; ++index)
         {
-            bigIntsString = GetBigIntArrayString(CannonColMove[index], (int)BitNum.BOARDCOLNUM, false, false);
+            bigIntsString = GetBigIntArrayString(CannonColMove[index], Coord.ColCount, false, false);
             result.Append($"CannonColMove Row: {index:X}\n{bigIntsString}\n");
         }
 
         for (int isBottom = 0; isBottom < PawnMove.Count; ++isBottom)
         {
-            bigIntsString = GetBigIntArrayString(PawnMove[isBottom], (int)BitNum.BOARDROWNUM, false, false);
+            bigIntsString = GetBigIntArrayString(PawnMove[isBottom], Coord.RowCount, false, false);
             result.Append($"PawnMove IsBottom: {isBottom}\n{bigIntsString}\n");
         }
 

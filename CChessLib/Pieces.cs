@@ -24,15 +24,15 @@ public class Pieces
 
         Piece[][] getColorPieces(PieceColor color)
         {
-            Piece[][] colorPieces = new Piece[(int)BitNum.KINDNUM][];
-            for (int kind = 0; kind < (int)BitNum.KINDNUM; kind++)
+            Piece[][] colorPieces = new Piece[Piece.KindCount][];
+            for (int kind = 0; kind < Piece.KindCount; kind++)
                 colorPieces[kind] = getKindPieces(color, PieceType[kind], KindPieceNums[kind]);
 
             return colorPieces;
         }
 
-        _pieces = new Piece[(int)BitNum.COLORNUM][][];
-        for (int color = 0; color < (int)BitNum.COLORNUM; color++)
+        _pieces = new Piece[Piece.ColorCount][][];
+        for (int color = 0; color < Piece.ColorCount; color++)
             _pieces[color] = getColorPieces((PieceColor)color);
     }
 
