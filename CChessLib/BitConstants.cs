@@ -24,6 +24,11 @@ public static class BitConstants
     public static readonly ulong[][][] ZobristKey = CreateZobrist(seedKey);
     public static readonly ulong[][][] ZobristLock = CreateZobrist(seedLock);
 
+    // 走棋方设置(利用空闲键值)
+    public static readonly ulong[] ColorZobristKey = ZobristKey[0][0][0..2];
+    public static readonly ulong[] ColorZobristLock = ZobristLock[0][0][0..2];
+    public static readonly ulong[] CollideZobristKey = ZobristKey[1][0][0..3];
+
     public static readonly BigInteger[] Mask = Coord.Coords.Select(
         coord => (BigInteger)1 << coord.Index).ToArray();
     public static readonly BigInteger[] RotateMask = Coord.Coords.Select(

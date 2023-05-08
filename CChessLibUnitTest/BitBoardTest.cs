@@ -31,8 +31,8 @@ public class BitBoardTest
     [Fact]
     public void TestHistoryDictionary()
     {
-        HistoryDictionary historyDict = new(Database.GetManuals(" id < 10 "));
-        Console.WriteLine($"HistoryDictionary:\n{historyDict}\n");
+        // HistoryRecord historyRec = new(Database.GetManuals(" id <> 108590 AND id <> 108494 "));
+        // Console.WriteLine($"HistoryRecord:\n{historyRec}\n");
     }
 
 }

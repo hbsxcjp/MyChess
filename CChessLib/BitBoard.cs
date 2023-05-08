@@ -79,7 +79,7 @@ public class BitBoard
         colors[endIndex] = fromColor;
         kinds[endIndex] = fromKind;
         colors[startIndex] = PieceColor.NoColor;
-        kinds[startIndex] = eatKind;
+        kinds[startIndex] = PieceKind.NoKind;
 
         pieces[fromColorInt][fromKindInt] ^= moveBoard;
         colorPieces[fromColorInt] ^= moveBoard;
@@ -90,8 +90,10 @@ public class BitBoard
         if (eatKind != PieceKind.NoKind)
         {
             if (isBack)
+            {
                 colors[startIndex] = Piece.GetOtherColor(fromColor);
-
+                kinds[startIndex] = eatKind;
+            }
             int eatKindInt = (int)eatKind;
             pieces[toColorInt][eatKindInt] ^= toBoard;
             colorPieces[toColorInt] ^= toBoard;
@@ -195,102 +197,5 @@ public class BitBoard
         return boardStr.ToString();
     }
 
-
-}
-
-public class HistoryDictionary
-{
-    private class MoveZobrist
-    {
-        public ulong hashLock;
-        public int frequency;
-
-        public MoveZobrist? next;
-
-        public MoveZobrist(ulong alock) { hashLock = alock; frequency = 1; next = null; }
-    }
-
-    private MoveZobrist NullMoveZobrist = new(0);
-
-    private Dictionary<ulong, MoveZobrist> historyDict;
-
-    public HistoryDictionary(List<Manual> manuals)
-    {
-        historyDict = new();
-        manuals.ForEach(manual => Append(manual));
-    }
-
-    public void Append(Manual manual)
-    {
-        BitBoard bitBoard = new(manual.ManualMove.RootBoard);
-        int player = (int)manual.ManualMove.StartColor;
-        void AddAfter(Move move)
-        {
-            if (move.AfterMoves == null)
-                return;
-
-            move.AfterMoves.ForEach(aMove =>
-            {
-                int fromIndex = aMove.CoordPair.FromCoord.Index,
-                    toIndex = aMove.CoordPair.ToCoord.Index;
-                PieceKind eatKind = bitBoard.DoMove(fromIndex, toIndex, false);
-
-                // 走棋方设置(利用空闲键值)
-                ulong hashKey = bitBoard.HashKey ^ BitConstants.ZobristKey[player][(int)PieceKind.King][0];
-                ulong hashLock = bitBoard.HashKey ^ BitConstants.ZobristLock[player][(int)PieceKind.King][0];
-                player = player == 0 ? 1 : 0;
-
-                if (historyDict.ContainsKey(hashKey))
-                {
-                    MoveZobrist? zobrist = historyDict[hashKey];
-                    while (zobrist.hashLock != hashLock)
-                    {
-                        Console.WriteLine($"zobrist.hashLock != hashLock\n");
-                        if (zobrist.next == null)
-                        {
-                            zobrist.next = new(hashLock);
-                            break;
-                        }
-
-                        zobrist = zobrist.next;
-                    }
-                    if (zobrist.hashLock == hashLock)
-                        zobrist.frequency++;
-                }
-                else
-                    historyDict.Add(hashKey, new(hashLock));
-
-                // 深度优先递归调用
-                AddAfter(aMove);
-
-                bitBoard.DoMove(fromIndex, toIndex, true, eatKind);
-            });
-        }
-
-        AddAfter(manual.ManualMove.RootMove);
-    }
-
-    public int GetFrequency(ulong hashKey, ulong hashLock)
-    {
-        if (!historyDict.ContainsKey(hashKey))
-            return 0;
-
-        MoveZobrist zobrist = historyDict[hashKey];
-        while (zobrist.hashLock != hashLock)
-        {
-            Console.WriteLine($"zobrist.hashLock != hashLock\n");
-            if (zobrist.next == null)
-                return 0;
-
-            zobrist = zobrist.next;
-        }
-
-        return zobrist.frequency;
-    }
-
-    public override string? ToString()
-    {
-        return string.Concat(historyDict.Keys.Select(key => $"{key}\n")) + $"{historyDict.Keys.Count}";
-    }
 
 }
