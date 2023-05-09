@@ -7,10 +7,10 @@ namespace CChess;
 
 public class MoveEffect : IComparable
 {
-    public int fromIndex;
-    public int toIndex;
-
     public int score;
+    public int frequency;
+
+    public MoveEffect() { score = 0; frequency = 1; }
 
     private int CompareTo(MoveEffect otherEffect) => -score.CompareTo(otherEffect.score);
     public int CompareTo(object? obj) => obj == null ? -1 : this.CompareTo((MoveEffect)obj);

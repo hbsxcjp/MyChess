@@ -18,6 +18,12 @@ public class BitBoard
     private BigInteger allPieces;
     private BigInteger rotatePieces;
 
+    // 哈希局面数据
+    private ulong hashkey;
+    private ulong hashLock;
+
+    private static HistoryRecord? historyRecord;
+
     public BitBoard(Board board)
     {
         colors = new PieceColor[Coord.Count];
@@ -51,18 +57,30 @@ public class BitBoard
             allPieces ^= turnBoard;
             rotatePieces ^= BitConstants.RotateMask[index];
 
-            HashKey ^= BitConstants.ZobristKey[color][kind][index];
-            HashLock ^= BitConstants.ZobristLock[color][kind][index];
+            hashkey ^= BitConstants.ZobristKey[color][kind][index];
+            hashLock ^= BitConstants.ZobristLock[color][kind][index];
         }
     }
 
-    public ulong HashKey { get; private set; }
-    public ulong HashLock { get; private set; }
+    public static HistoryRecord HistoryRecord
+    {
+        get
+        {
+            if (historyRecord == null)
+                historyRecord = Database.GetHistoryRecord();
 
-    delegate bool DoneState(int fromIndex, int toIndex);
-    // delegate MoveEffect GetMoveEffect(PieceColor color, PieceKind kind, int fromIndex, int toIndex);
+            return historyRecord;
+        }
+    }
+
+
+    // 着法执行后的效果设置
+    delegate void DoneMove(int fromIndex, int toIndex, MoveEffect effect);
 
     public PieceColor GetColor(int index) => colors[index];
+
+    public ulong GetHashKey(PieceColor color) => hashkey ^ BitConstants.ColorZobristKey[(int)color];
+    public ulong GetHashLock(PieceColor color) => hashLock ^ BitConstants.ColorZobristLock[(int)color];
 
     public PieceKind DoMove(int fromIndex, int toIndex, bool isBack, PieceKind eatKind = PieceKind.NoKind)
     {
@@ -84,8 +102,8 @@ public class BitBoard
         pieces[fromColorInt][fromKindInt] ^= moveBoard;
         colorPieces[fromColorInt] ^= moveBoard;
 
-        HashKey ^= (BitConstants.ZobristKey[fromColorInt][fromKindInt][fromIndex] ^ BitConstants.ZobristKey[fromColorInt][fromKindInt][toIndex]);
-        HashLock ^= (BitConstants.ZobristLock[fromColorInt][fromKindInt][fromIndex] ^ BitConstants.ZobristLock[fromColorInt][fromKindInt][toIndex]);
+        hashkey ^= (BitConstants.ZobristKey[fromColorInt][fromKindInt][fromIndex] ^ BitConstants.ZobristKey[fromColorInt][fromKindInt][toIndex]);
+        hashLock ^= (BitConstants.ZobristLock[fromColorInt][fromKindInt][fromIndex] ^ BitConstants.ZobristLock[fromColorInt][fromKindInt][toIndex]);
 
         if (eatKind != PieceKind.NoKind)
         {
@@ -98,8 +116,8 @@ public class BitBoard
             pieces[toColorInt][eatKindInt] ^= toBoard;
             colorPieces[toColorInt] ^= toBoard;
 
-            HashKey ^= BitConstants.ZobristKey[toColorInt][eatKindInt][toIndex];
-            HashLock ^= BitConstants.ZobristLock[toColorInt][eatKindInt][toIndex];
+            hashkey ^= BitConstants.ZobristKey[toColorInt][eatKindInt][toIndex];
+            hashLock ^= BitConstants.ZobristLock[toColorInt][eatKindInt][toIndex];
 
             allPieces ^= fromBoard;
             rotatePieces ^= BitConstants.RotateMask[fromIndex];
@@ -112,6 +130,8 @@ public class BitBoard
 
         return eatKind;
     }
+
+    public List<int> GetToIndexs(int fromIndex) => BitConstants.GetNonZeroIndexs(GetMove(fromIndex));
 
     private BigInteger GetMove(int fromIndex)
     {
@@ -151,19 +171,26 @@ public class BitBoard
     private BigInteger GetColorMove(PieceColor fromColor)
         => BitConstants.MergeBitInt(Piece.PieceKinds.Select(fromKind => GetKindMove(fromColor, fromKind)));
 
-    private bool DoneNonKilled(int fromIndex, int toIndex)
+    private void DoneKilled(int fromIndex, int toIndex, MoveEffect effect)
     {
-        PieceColor color = colors[toIndex]; // 此时着法已执行
-        return (GetColorMove(Piece.GetOtherColor(color)) & pieces[(int)color][(int)PieceKind.King]).IsZero;
+        PieceColor color = colors[toIndex];
+        if (!(GetColorMove(Piece.GetOtherColor(color)) & pieces[(int)color][(int)PieceKind.King]).IsZero)
+            effect.score = -1;
+    }
+
+    private void DoneFrequency(int fromIndex, int toIndex, MoveEffect effect)
+    {
+        PieceColor color = colors[toIndex];
+        effect.frequency = HistoryRecord.GetFrequency(GetHashKey(color), GetHashLock(color));
     }
 
     // 执行某一着后的效果(委托函数可叠加)
-    private MoveEffect GetMoveEffect(int fromIndex, int toIndex, DoneState doneState)
+    private MoveEffect GetMoveEffect(int fromIndex, int toIndex, DoneMove doneMove)
     {
-        MoveEffect effect = new MoveEffect { fromIndex = fromIndex, toIndex = toIndex, score = 0 };
+        MoveEffect effect = new();
         PieceKind eatKind = DoMove(fromIndex, toIndex, false);
 
-        effect.score += doneState(fromIndex, toIndex) ? 1 : 0;
+        doneMove(fromIndex, toIndex, effect);
 
         DoMove(fromIndex, toIndex, true, eatKind);
         return effect;
@@ -171,7 +198,7 @@ public class BitBoard
 
     public override string ToString()
     {
-        List<BigInteger> moves = new();
+        List<BigInteger> moveBigInts = new();
         StringBuilder boardStr = new();
         boardStr.Append("－－－－－－－－－\n－－－－－－－－－\n－－－－－－－－－\n－－－－－－－－－\n－－－－－－－－－\n－－－－－－－－－\n－－－－－－－－－\n－－－－－－－－－\n－－－－－－－－－\n－－－－－－－－－\n");
         for (int color = 0; color < Piece.ColorCount; ++color)
@@ -185,14 +212,15 @@ public class BitBoard
                     boardStr[coord.Row * (Coord.ColCount + 1) + coord.Col] = Piece.GetPrintName((PieceColor)color, (PieceKind)kind);
 
                     // 计算可移动位置
-                    moves.Add(BitConstants.MergeBitInt(
-                        BitConstants.GetNonZeroIndexs(GetMove(fromIndex))
-                        .Where(toIndex => GetMoveEffect(fromIndex, toIndex, DoneNonKilled).score > 0)
+                    List<int> toIndexs = GetToIndexs(fromIndex);
+                    moveBigInts.Add(BitConstants.MergeBitInt(
+                        toIndexs.Where(toIndex => GetMoveEffect(fromIndex, toIndex, DoneKilled).score >= 0)
                         .Select(toIndex => BitConstants.Mask[toIndex])));
                 });
             }
         }
-        boardStr.Append(BitConstants.GetBigIntArrayString(moves.ToArray(), 8, true, false)).Append("\n");
+        boardStr.Append(BitConstants.GetBigIntArrayString(moveBigInts.ToArray(), 8, true, false)).Append("\n");
+        boardStr.Append($"historyRecord.Count: {HistoryRecord.historyDict.Count}");
 
         return boardStr.ToString();
     }

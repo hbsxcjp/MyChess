@@ -13,6 +13,40 @@ public class Database
     private static readonly string HistoryTableName = "history";
     private static readonly string DataFileName = "../../../data.db";
 
+
+    public static HistoryRecord GetHistoryRecord()
+    {
+        Dictionary<ulong, HistoryRecord.MoveRecord> historyDict = new();
+        using SqliteConnection connection = GetSqliteConnection();
+        SqliteCommand command = new($"SELECT key, lock, frequency FROM {HistoryTableName};", connection);
+        using SqliteDataReader reader = command.ExecuteReader();
+        while (reader.Read())
+            historyDict.Add((ulong)reader.GetInt64(0), new((ulong)reader.GetInt64(1), reader.GetInt32(2)));
+
+        return new(historyDict);
+    }
+
+    public static HistoryRecord GetHistoryRecordFromManuals()
+        => new(GetManuals(" id > 10 AND id <> 108590 AND id <> 108494 "));
+
+    public static void StorageHistoryRecord(HistoryRecord historyRecord)
+    {
+        if (historyRecord.historyDict.Count < 1)
+            return;
+
+        using SqliteConnection connection = GetSqliteConnection();
+        using SqliteTransaction transaction = connection.BeginTransaction();
+
+        SqliteCommand command = connection.CreateCommand();
+        foreach (var keyValue in historyRecord.historyDict)
+        {
+            command.CommandText = $"INSERT INTO {HistoryTableName} (key, lock, frequency) VALUES ({keyValue.Key}, {keyValue.Value.hashLock}, {keyValue.Value.frequency});";
+            command.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
+    }
+
     public static List<Manual> GetManuals(string condition = "1")
     {
         Dictionary<string, string> GetInfo(SqliteDataReader reader)

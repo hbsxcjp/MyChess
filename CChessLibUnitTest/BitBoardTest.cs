@@ -8,8 +8,8 @@ public class BitBoardTest
     [Fact]
     public void TestBitConstants()
     {
-        // using StreamWriter writer = File.CreateText("../../../TestBitConstants.txt");
-        // writer.Write(BitConstants.ToString());
+        using StreamWriter writer = File.CreateText("../../../TestBitConstants.txt");
+        writer.Write(BitConstants.ToString());
     }
 
     [Theory]
@@ -23,7 +23,7 @@ public class BitBoardTest
         BitBoard bitBoard = new(board);
 
         string fenFirstLine = fen.Split('/')[0];
-        using StreamWriter writer = File.CreateText($"TestBitBoard_{fenFirstLine}.txt");
+        using StreamWriter writer = File.CreateText($"../../../TestBitBoard_{fenFirstLine}.txt");
 
         writer.Write(bitBoard);
     }
@@ -31,8 +31,9 @@ public class BitBoardTest
     [Fact]
     public void TestHistoryDictionary()
     {
-        // HistoryRecord historyRec = new(Database.GetManuals(" id <> 108590 AND id <> 108494 "));
+        // HistoryRecord historyRec = Database.GetHistoryRecordFromManuals();
         // Console.WriteLine($"HistoryRecord:\n{historyRec}\n");
+        // Database.StorageHistoryRecord(historyRec);
     }
 
 }

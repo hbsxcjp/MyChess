@@ -7,12 +7,15 @@ namespace CChess;
 
 public class HistoryRecord
 {
-    private class MoveRecord
+    public class MoveRecord
     {
         public ulong hashLock;
         public int frequency;
 
-        public MoveRecord(ulong alock) { hashLock = alock; frequency = 1; }
+        public MoveRecord(ulong alock, int afre = 1)
+        {
+            hashLock = alock; frequency = afre;
+        }
 
         public override string? ToString()
         {
@@ -20,20 +23,23 @@ public class HistoryRecord
         }
     }
 
-    private Dictionary<ulong, MoveRecord> historyRec;
+    public Dictionary<ulong, MoveRecord> historyDict;
+
+    public HistoryRecord(Dictionary<ulong, MoveRecord> kvDict)
+    {
+        historyDict = kvDict;
+    }
 
     public HistoryRecord(List<Manual> manuals)
     {
-        historyRec = new();
-        Append(manuals);
+        historyDict = new();
+        manuals.ForEach(manual => Append(manual));
     }
-
-    public void Append(List<Manual> manuals) => manuals.ForEach(manual => Append(manual));
 
     public void Append(Manual manual)
     {
         BitBoard bitBoard = new(manual.ManualMove.RootBoard);
-        int player = (int)manual.ManualMove.StartColor;
+        PieceColor curColor = manual.ManualMove.StartColor;
         void AddAfter(Move move)
         {
             move.AfterMoves?.ForEach(aMove =>
@@ -44,13 +50,13 @@ public class HistoryRecord
                         toIndex = aMove.CoordPair.ToCoord.Index;
                     PieceKind eatKind = bitBoard.DoMove(fromIndex, toIndex, false);
 
-                    ulong hashKey = bitBoard.HashKey ^ BitConstants.ColorZobristKey[player];
-                    ulong hashLock = bitBoard.HashKey ^ BitConstants.ColorZobristLock[player];
-                    player = player == 0 ? 1 : 0;
+                    ulong hashKey = bitBoard.GetHashKey(curColor);
+                    ulong hashLock = bitBoard.GetHashLock(curColor);
+                    curColor = Piece.GetOtherColor(curColor);
 
                     MoveRecord? zobrist = GetMoveRecord(ref hashKey, hashLock);
                     if (zobrist == null)
-                        historyRec.Add(hashKey, new(hashLock));
+                        historyDict.Add(hashKey, new(hashLock));
                     else
                         zobrist.frequency++;
 
@@ -75,9 +81,9 @@ public class HistoryRecord
     private MoveRecord? GetMoveRecord(ref ulong hashKey, ulong hashLock)
     {
         int index = 0;
-        while (historyRec.ContainsKey(hashKey))
+        while (historyDict.ContainsKey(hashKey))
         {
-            MoveRecord zobrist = historyRec[hashKey];
+            MoveRecord zobrist = historyDict[hashKey];
             if (zobrist.hashLock == hashLock)
                 return zobrist;
 
@@ -96,8 +102,8 @@ public class HistoryRecord
 
     public override string? ToString()
     {
-        return string.Concat(historyRec.Where(keyValue => keyValue.Value.frequency > 600)
-                .Select(keyValue => $"Key: {keyValue.Key,16:X16}  Record: {keyValue.Value}\n")) + $"Count: {historyRec.Count}";
+        return string.Concat(historyDict.Where(keyValue => keyValue.Value.frequency > 900)
+                .Select(keyValue => $"Key: {keyValue.Key,16:X16}  Record: {keyValue.Value}\n")) + $"Count: {historyDict.Count}";
     }
 
 }
