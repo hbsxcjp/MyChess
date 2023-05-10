@@ -21,13 +21,13 @@ public static class BitConstants
     // 每次生成相同的随机数序列（但是，如果.Net版本不同，序列可能不同）
     private const int seedKey = 100;
     private const int seedLock = 200;
-    public static readonly ulong[][][] ZobristKey = CreateZobrist(seedKey);
-    public static readonly ulong[][][] ZobristLock = CreateZobrist(seedLock);
+    public static readonly long[][][] ZobristKey = CreateZobrist(seedKey);
+    public static readonly long[][][] ZobristLock = CreateZobrist(seedLock);
 
     // 走棋方设置(利用空闲键值)
-    public static readonly ulong[] ColorZobristKey = ZobristKey[0][0][0..2];
-    public static readonly ulong[] ColorZobristLock = ZobristLock[0][0][0..2];
-    public static readonly ulong[] CollideZobristKey = ZobristKey[1][0][0..3];
+    public static readonly long[] ColorZobristKey = ZobristKey[0][0][0..2];
+    public static readonly long[] ColorZobristLock = ZobristLock[0][0][0..2];
+    public static readonly long[] CollideZobristKey = ZobristKey[1][0][0..3];
 
     public static readonly BigInteger[] Mask = Coord.Coords.Select(
         coord => (BigInteger)1 << coord.Index).ToArray();
@@ -89,19 +89,19 @@ public static class BitConstants
     public static BigInteger MergeBitInt(IEnumerable<BigInteger> bigIntegers)
         => bigIntegers.Aggregate((BigInteger)0, (result, next) => result | next);
 
-    private static ulong[][][] CreateZobrist(int seed)
+    private static long[][][] CreateZobrist(int seed)
     {
-        ulong[][][] zobrist = new ulong[Piece.ColorCount][][];
+        long[][][] zobrist = new long[Piece.ColorCount][][];
         Random random = new Random(seed);
         for (int color = 0; color < Piece.ColorCount; ++color)
         {
-            ulong[][] colorZobrist = new ulong[Piece.KindCount][];
+            long[][] colorZobrist = new long[Piece.KindCount][];
             for (int kind = 0; kind < Piece.KindCount; ++kind)
             {
-                ulong[] kindZobrist = new ulong[Coord.Count];
+                long[] kindZobrist = new long[Coord.Count];
                 foreach (int index in Coord.Indexs)
                 {
-                    kindZobrist[index] = (ulong)random.NextInt64(long.MinValue, long.MaxValue);
+                    kindZobrist[index] = random.NextInt64(long.MinValue, long.MaxValue);
                 }
                 colorZobrist[kind] = kindZobrist;
             }

@@ -16,12 +16,12 @@ public class Database
 
     public static HistoryRecord GetHistoryRecord()
     {
-        Dictionary<ulong, HistoryRecord.MoveRecord> historyDict = new();
+        Dictionary<long, MoveRecord> historyDict = new();
         using SqliteConnection connection = GetSqliteConnection();
         SqliteCommand command = new($"SELECT key, lock, frequency FROM {HistoryTableName};", connection);
         using SqliteDataReader reader = command.ExecuteReader();
         while (reader.Read())
-            historyDict.Add((ulong)reader.GetInt64(0), new((ulong)reader.GetInt64(1), reader.GetInt32(2)));
+            historyDict.Add(reader.GetInt64(0), new(reader.GetInt64(1), reader.GetInt32(2)));
 
         return new(historyDict);
     }

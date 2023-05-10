@@ -34,6 +34,9 @@ public class BitBoardTest
         // HistoryRecord historyRec = Database.GetHistoryRecordFromManuals();
         // Console.WriteLine($"HistoryRecord:\n{historyRec}\n");
         // Database.StorageHistoryRecord(historyRec);
+
+        // HistoryRecord historyRecord = Database.GetHistoryRecord();
+        // Console.WriteLine($"historyRecord.Count: {historyRecord.historyDict.Count}"); // 815999
     }
 
 }

@@ -5,27 +5,27 @@ using System.Diagnostics;
 
 namespace CChess;
 
-public class HistoryRecord
+public class MoveRecord
 {
-    public class MoveRecord
+    public long hashLock;
+    public int frequency;
+
+    public MoveRecord(long alock, int afre = 1)
     {
-        public ulong hashLock;
-        public int frequency;
-
-        public MoveRecord(ulong alock, int afre = 1)
-        {
-            hashLock = alock; frequency = afre;
-        }
-
-        public override string? ToString()
-        {
-            return $"{hashLock,16:X16} {frequency}";
-        }
+        hashLock = alock; frequency = afre;
     }
 
-    public Dictionary<ulong, MoveRecord> historyDict;
+    public override string? ToString()
+    {
+        return $"{hashLock,16:X16} {frequency}";
+    }
+}
 
-    public HistoryRecord(Dictionary<ulong, MoveRecord> kvDict)
+public class HistoryRecord
+{
+    public Dictionary<long, MoveRecord> historyDict;
+
+    public HistoryRecord(Dictionary<long, MoveRecord> kvDict)
     {
         historyDict = kvDict;
     }
@@ -50,8 +50,8 @@ public class HistoryRecord
                         toIndex = aMove.CoordPair.ToCoord.Index;
                     PieceKind eatKind = bitBoard.DoMove(fromIndex, toIndex, false);
 
-                    ulong hashKey = bitBoard.GetHashKey(curColor);
-                    ulong hashLock = bitBoard.GetHashLock(curColor);
+                    long hashKey = bitBoard.GetHashKey(curColor);
+                    long hashLock = bitBoard.GetHashLock(curColor);
                     curColor = Piece.GetOtherColor(curColor);
 
                     MoveRecord? zobrist = GetMoveRecord(ref hashKey, hashLock);
@@ -75,10 +75,7 @@ public class HistoryRecord
         AddAfter(manual.ManualMove.RootMove);
     }
 
-    public int GetFrequency(ulong hashKey, ulong hashLock)
-        => GetMoveRecord(ref hashKey, hashLock)?.frequency ?? 0;
-
-    private MoveRecord? GetMoveRecord(ref ulong hashKey, ulong hashLock)
+    public MoveRecord? GetMoveRecord(ref long hashKey, long hashLock)
     {
         int index = 0;
         while (historyDict.ContainsKey(hashKey))
