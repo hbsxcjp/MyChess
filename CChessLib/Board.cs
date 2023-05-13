@@ -14,7 +14,7 @@ public class Board
 
     public Board(string fen = "")
     {
-        SeatPieces = Pieces.ThePieces.GetSeatPieces(FENToPieceChars(fen.Length == 0 ? FEN : fen));
+        SeatPieces = Pieces.GetSeatPieces(FENToPieceChars(fen.Length == 0 ? FEN : fen));
     }
 
     public Board(Board board)
@@ -45,7 +45,7 @@ public class Board
     public Board WithMove(Move? move)
     {
         Board board = new(this);
-        move?.UntilThis?.ForEach(move
+        move?.PrevMoves?.ForEach(move
             => board.MovePiece(move.CoordPair.FromCoord, move.CoordPair.ToCoord));
 
         return board;
@@ -135,8 +135,8 @@ public class Board
     public bool IsKilled(PieceColor color)
     {
         var otherColor = Piece.GetOtherColor(color);
-        Coord kingCoord = GetCoord(Pieces.ThePieces.GetKing(color)),
-            otherKingCoord = GetCoord(Pieces.ThePieces.GetKing(otherColor));
+        Coord kingCoord = GetCoord(Pieces.GetKing(color)),
+            otherKingCoord = GetCoord(Pieces.GetKing(otherColor));
 
         // 将帅是否对面
         int col = kingCoord.Col;

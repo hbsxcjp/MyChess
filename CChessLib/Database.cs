@@ -64,8 +64,17 @@ public class Database
         return manuals;
     }
 
-    public static void StorageManuals(IEnumerable<Manual> manuals)
-        => StorageInfos(manuals.Select(manual => manual.Info));
+    public static void StorageXqfManuals(IEnumerable<(string fileName, Manual manual)> fileNameManuals)
+    {
+        foreach ((string fileName, Manual manual) in fileNameManuals)
+        {
+            manual.SetInfoValue(InfoKey.source, fileName);
+            manual.SetInfoValue(InfoKey.rowCols, manual.ManualMove.GetFirstRowCols());
+            manual.SetInfoValue(InfoKey.moveString, manual.GetMoveString()); // 使用文本形式存储着法
+        }
+
+        StorageInfos(fileNameManuals.Select(fileNameManual => fileNameManual.manual.Info));
+    }
 
     private static void StorageInfos(IEnumerable<Dictionary<string, string>> infos)
     {

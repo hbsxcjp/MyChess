@@ -34,14 +34,15 @@ public class ManualTest
         }
     };
 
-    public static string GetXqfFileName(int index) => Manual.GetFileName(manualStrings[index, 0], FileExtType.xqf);
-    private static Manual GetManualFromIndex(int index) => Manual.GetManual(GetXqfFileName(index));
+    public static List<string> XqfFileNames
+        => Enumerable.Range(0, manualStrings.GetLength(0)).Select(index
+            => Manual.GetFileName(manualStrings[index, 0], FileExtType.xqf)).ToList();
     public static List<Manual> XqfManuals
-        => Enumerable.Range(0, manualStrings.GetLength(0)).Select(index => GetManualFromIndex(index)).ToList();
+        => XqfFileNames.Select(fileName => Manual.GetManual(fileName)).ToList();
 
     private Manual GetManual(int index, FileExtType fileExtType)
     {
-        Manual manual = GetManualFromIndex(index);
+        Manual manual = XqfManuals[index];
         return (fileExtType) switch
         {
             FileExtType.xqf => manual,

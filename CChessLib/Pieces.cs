@@ -1,11 +1,10 @@
 namespace CChess;
 
-public class Pieces
+public static class Pieces
 {
-    private Piece[][][] _pieces;
-    private static readonly Pieces pieces = new();
+    private static Piece[][][] pieceArray = GetPieceArray();
 
-    private Pieces()
+    private static Piece[][][] GetPieceArray()
     {
         int[] KindPieceNums = { 1, 2, 2, 2, 2, 2, 5 };
         List<Type> PieceType = new List<Type> {
@@ -31,16 +30,16 @@ public class Pieces
             return colorPieces;
         }
 
-        _pieces = new Piece[Piece.ColorCount][][];
+        Piece[][][] pieceArray = new Piece[Piece.ColorCount][][];
         for (int color = 0; color < Piece.ColorCount; color++)
-            _pieces[color] = getColorPieces((PieceColor)color);
+            pieceArray[color] = getColorPieces((PieceColor)color);
+
+        return pieceArray;
     }
 
-    public static Pieces ThePieces { get => pieces; }
+    public static Piece GetKing(PieceColor color) => pieceArray[(int)color][(int)PieceKind.King][0];
 
-    public Piece GetKing(PieceColor color) => _pieces[(int)color][(int)PieceKind.King][0];
-
-    public List<Piece> GetSeatPieces(string pieceChars)
+    public static List<Piece> GetSeatPieces(string pieceChars)
     {
         List<Piece> pieces = new(pieceChars.Length);
         foreach (char ch in pieceChars)
@@ -49,7 +48,7 @@ public class Pieces
                 pieces.Add(Piece.Null);
             else
             {
-                foreach (Piece piece in _pieces[(int)Piece.GetColor(ch)][(int)Piece.GetKind(ch)])
+                foreach (Piece piece in pieceArray[(int)Piece.GetColor(ch)][(int)Piece.GetKind(ch)])
                 {
                     if (!pieces.Contains(piece))
                     {
@@ -65,11 +64,11 @@ public class Pieces
 
     public static List<Piece> GetSeatPieces() => Coord.Coords.Select(coord => Piece.Null).ToList();
 
-    public List<Piece> GetPieces()
-        => _pieces.SelectMany(colorPieces => colorPieces)
+    public static List<Piece> GetAllPieces()
+        => pieceArray.SelectMany(colorPieces => colorPieces)
             .SelectMany(kindPieces => kindPieces)
             .ToList();
 
-    public override string ToString()
-       => string.Join(" ", GetPieces().Select(piece => $"{piece}{Coord.Null}"));
+    public new static string ToString()
+       => string.Join(" ", GetAllPieces().Select(piece => $"{piece}{Coord.Null}"));
 }
