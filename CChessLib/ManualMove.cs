@@ -196,8 +196,9 @@ public class ManualMove// : IEnumerable
         if (isOther)
             Back();
 
-        CoordPair coordPair = RootBoard.WithMove(CurMove).GetCoordPairFromZhStr(zhStr);
-        bool success = RootBoard.WithMove(CurMove).CanMove(coordPair);
+        Board board = RootBoard.WithMove(CurMove);
+        CoordPair coordPair = board.GetCoordPairFromZhStr(zhStr);
+        bool success = board.CanMove(coordPair);
         if (success)
             CurMove = CurMove.AddAfter(coordPair);
 

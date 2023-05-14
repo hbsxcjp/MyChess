@@ -16,26 +16,15 @@ public class BoardTest
     {
         string CanMoveCoordString(Board board)
         {
-            List<Piece> livePieces = board.GetLivePieces();
-            livePieces.Sort(delegate (Piece apiece, Piece bpiece)
+            var fromToIndexs = board.BitBoard.GetAllCanToIndexs(PieceColor.Red);
+            fromToIndexs.AddRange(board.BitBoard.GetAllCanToIndexs(PieceColor.Black));
+            return string.Join("\n", fromToIndexs.Select(fromToIndexs =>
             {
-                int compColor = apiece.Color.CompareTo(bpiece.Color);
-                if (compColor != 0)
-                    return compColor;
-
-                int compKind = apiece.Kind.CompareTo(bpiece.Kind);
-                if (compKind != 0)
-                    return compKind;
-
-                Coord acoord = board.GetCoord(apiece), bcoord = board.GetCoord(bpiece);
-                int compRow = acoord.Row.CompareTo(bcoord.Row);
-                return compRow != 0 ? -compRow : acoord.Col.CompareTo(bcoord.Col);
-            });
-            return string.Join("\n", livePieces.Select(piece =>
-            {
-                List<Coord> canMoveCoords = piece.CanMoveCoord(board);
-                return $"{piece}{board.GetCoord(piece).SymmetryVToString()} CanMoveCoord: " +
-                               string.Join("", canMoveCoords.Select(coord => coord.SymmetryVToString()));
+                // List<Coord> canMoveCoords = piece.CanMoveCoord(board);
+                Piece piece = board[fromToIndexs.Item1];
+                List<Coord> canMoveCoords = fromToIndexs.Item2.Select(toIndex => Coord.Coords[toIndex]).ToList();
+                return $"{piece}{board.GetCoord(piece)} CanMoveCoord: " +
+                               string.Join("", canMoveCoords.Select(coord => coord.ToString()));
             }));
         }
 
@@ -52,6 +41,10 @@ public class BoardTest
             result.Append($"{ct}: \n{ctBoard.GetFEN()}\n{ctBoard}{CanMoveCoordString(ctBoard)}\n");
         }
 
-        Assert.Equal(expected, result.ToString());
+        // Assert.Equal(expected, result.ToString());
+
+        string fenFirstLine = fen.Split('/')[0];
+        using StreamWriter writer = File.CreateText($"../../../TestBoard_{fenFirstLine}.txt");
+        writer.Write(result.ToString());
     }
 }

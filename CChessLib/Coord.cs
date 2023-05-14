@@ -26,7 +26,6 @@ public class Coord
     public string SymmetryVRowCol { get => $"{SymmetryRow(Row)}{Col}"; }
     public bool IsBottom { get => (Row << 1) > RowCount - 1; }
 
-    public static Coord Get(int index) => Coords[index];
     public static Coord Get(int row, int col) => Coords[row * ColCount + col];
 
     public static string GetRowCol(string rowCol, ChangeType ct)

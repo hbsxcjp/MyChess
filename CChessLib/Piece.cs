@@ -46,11 +46,14 @@ public abstract class Piece
         => RuleMoveCoord(board).Where(coord => board[coord].Color != Color).ToList();
     abstract protected List<Coord> RuleMoveCoord(Board board);
 
-    public List<Coord> CanMoveCoord(Board board)
-    {
-        Coord fromCoord = board.GetCoord(this);
-        return MoveCoord(board).Where(toCoord => board.CanMove(fromCoord, toCoord)).ToList();
-    }
+    // public List<Coord> CanMoveCoord(Board board)
+    // {
+    //     // Coord fromCoord = board.GetCoord(this);
+    //     // return MoveCoord(board).Where(toCoord => board.CanMove(fromCoord, toCoord)).ToList();
+
+    //     return board.BitBoard.GetCanToIndexs(board.GetCoord(this).Index)
+    //             .Select(toIndex => Coord.Coords[toIndex]).ToList();
+    // }
 
     public static PieceColor GetOtherColor(PieceColor color) => color == PieceColor.Red ? PieceColor.Black : PieceColor.Red;
     public static PieceColor GetColor(char ch) => char.IsUpper(ch) ? PieceColor.Red : PieceColor.Black;

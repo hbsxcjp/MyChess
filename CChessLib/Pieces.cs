@@ -62,13 +62,11 @@ public static class Pieces
         return pieces;
     }
 
-    public static List<Piece> GetSeatPieces() => Coord.Coords.Select(coord => Piece.Null).ToList();
-
-    public static List<Piece> GetAllPieces()
+    public static List<Piece> GetAllPiece()
         => pieceArray.SelectMany(colorPieces => colorPieces)
             .SelectMany(kindPieces => kindPieces)
             .ToList();
 
     public new static string ToString()
-       => string.Join(" ", GetAllPieces().Select(piece => $"{piece}{Coord.Null}"));
+       => string.Join(" ", GetAllPiece().Select(piece => $"{piece}{Coord.Null}"));
 }

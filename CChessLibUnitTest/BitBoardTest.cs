@@ -20,7 +20,7 @@ public class BitBoardTest
     public void TestBitBoard(string fen)
     {
         Board board = new(fen);
-        BitBoard bitBoard = new(board);
+        BitBoard bitBoard = board.BitBoard;
 
         string fenFirstLine = fen.Split('/')[0];
         using StreamWriter writer = File.CreateText($"../../../TestBitBoard_{fenFirstLine}.txt");

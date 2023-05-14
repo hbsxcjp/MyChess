@@ -12,50 +12,60 @@ public class Board
     private const string PositionChars = "前中后";
     private const string MoveChars = "退平进";
 
-    public Board(string fen = "")
+    public Board(List<Piece> seatPieces)
     {
-        SeatPieces = Pieces.GetSeatPieces(FENToPieceChars(fen.Length == 0 ? FEN : fen));
+        SeatPieces = seatPieces;
+        BitBoard = new(seatPieces);
     }
 
-    public Board(Board board)
+    public Board(string fen = "") : this(Pieces.GetSeatPieces(FENToPieceChars(fen.Length == 0 ? FEN : fen)))
     {
-        SeatPieces = new(board.SeatPieces);
     }
 
     public Piece this[int index] => SeatPieces[index];
     public Piece this[Coord coord] => SeatPieces[coord.Index];
 
     private List<Piece> SeatPieces { get; }
-    public PieceColor BottomColor
-    {
-        get => SeatPieces.FindLast(piece => piece.Kind == PieceKind.King)?.Color ?? PieceColor.Red;
-    }
+    public BitBoard BitBoard { get; }
 
-    public bool IsBottom(PieceColor color) => BottomColor == color;
+    public bool IsBottom(PieceColor color) => BitBoard.BottomColor == color;
     public bool IsNull(int row, int col) => this[Coord.Get(row, col)] == Piece.Null;
 
-    public Board WithMove(Coord fromCoord, Coord toCoord)
-    {
-        Board board = new(this);
-        board.MovePiece(fromCoord, toCoord);
+    // public Board WithMove(Coord fromCoord, Coord toCoord)
+    // {
+    //     Board board = new(this);
+    //     board.MovePiece(fromCoord, toCoord);
 
-        return board;
-    }
+    //     return board;
+    // }
 
     public Board WithMove(Move? move)
     {
-        Board board = new(this);
-        move?.PrevMoves?.ForEach(move
-            => board.MovePiece(move.CoordPair.FromCoord, move.CoordPair.ToCoord));
+        // Board board = new(SeatPieces);
+        // move?.PrevMoves?.ForEach(move => board.MovePiece(move.CoordPair.FromCoord, move.CoordPair.ToCoord));
 
-        return board;
+        // return board;
+
+        List<Piece> seatPieces = new(SeatPieces);
+        move?.PrevMoves?.ForEach(move =>
+        {
+            int fromIndex = move.CoordPair.FromCoord.Index,
+                toIndex = move.CoordPair.ToCoord.Index;
+            seatPieces[toIndex] = seatPieces[fromIndex];
+            seatPieces[fromIndex] = Piece.Null;
+        });
+
+        return new(seatPieces);
     }
 
-    private void MovePiece(Coord fromCoord, Coord toCoord)
-    {
-        SeatPieces[toCoord.Index] = SeatPieces[fromCoord.Index];
-        SeatPieces[fromCoord.Index] = Piece.Null;
-    }
+    // private void MovePiece(Coord fromCoord, Coord toCoord)
+    // {
+    //     int fromIndex = fromCoord.Index, toIndex = toCoord.Index;
+    //     SeatPieces[toIndex] = SeatPieces[fromIndex];
+    //     SeatPieces[fromIndex] = Piece.Null;
+
+    //     BitBoard.DoMove(fromIndex, toIndex);
+    // }
 
     public string GetFEN() => PieceCharsToFEN(GetPieceChars());
 
@@ -99,7 +109,7 @@ public class Board
     public Coord GetCoord(Piece piece)
     {
         int index = SeatPieces.IndexOf(piece);
-        return index == -1 ? Coord.Null : Coord.Get(index);
+        return index < 0 ? Coord.Null : Coord.Coords[index];
     }
 
     public List<Piece> GetLivePieces()
@@ -114,47 +124,49 @@ public class Board
     private List<Piece> GetLivePieces(PieceColor color, PieceKind kind, int col)
         => GetLivePieces(color, kind).Where(piece => GetCoord(piece).Col == col).ToList();
 
-    public bool CanMove(Coord fromCoord, Coord toCoord)
-    {
-        if (fromCoord == Coord.Null || toCoord == Coord.Null)
-            return false;
+    // public bool CanMove(Coord fromCoord, Coord toCoord)
+    // {
+    //     if (fromCoord == Coord.Null || toCoord == Coord.Null)
+    //         return false;
 
-        Piece piece = this[fromCoord];
-        if (piece == Piece.Null)
-            return false;
+    //     Piece piece = this[fromCoord];
+    //     if (piece == Piece.Null)
+    //         return false;
 
-        // 如是对方将帅的位置则直接可走，不用判断是否被将军（如加以判断，则会直接走棋吃将帅）
-        if (this[toCoord].Kind == PieceKind.King)
-            return true;
+    //     // 如是对方将帅的位置则直接可走，不用判断是否被将军（如加以判断，则会直接走棋吃将帅）
+    //     if (this[toCoord].Kind == PieceKind.King)
+    //         return true;
 
-        return !WithMove(fromCoord, toCoord).IsKilled(piece.Color);
-    }
+    //     return !WithMove(fromCoord, toCoord).IsKilled(piece.Color);
+    // }
 
-    public bool CanMove(CoordPair coordPair) => CanMove(coordPair.FromCoord, coordPair.ToCoord);
+    // public bool CanMove(CoordPair coordPair) => CanMove(coordPair.FromCoord, coordPair.ToCoord);
+    public bool CanMove(CoordPair coordPair)
+        => BitBoard.GetCanToIndexs(coordPair.FromCoord.Index).Contains(coordPair.ToCoord.Index);
 
-    public bool IsKilled(PieceColor color)
-    {
-        var otherColor = Piece.GetOtherColor(color);
-        Coord kingCoord = GetCoord(Pieces.GetKing(color)),
-            otherKingCoord = GetCoord(Pieces.GetKing(otherColor));
+    // public bool IsKilled(PieceColor color)
+    // {
+    //     var otherColor = Piece.GetOtherColor(color);
+    //     Coord kingCoord = GetCoord(Pieces.GetKing(color)),
+    //         otherKingCoord = GetCoord(Pieces.GetKing(otherColor));
 
-        // 将帅是否对面
-        int col = kingCoord.Col;
-        if (col == otherKingCoord.Col)
-        {
-            int thisRow = kingCoord.Row, otherRow = otherKingCoord.Row,
-                lowRow = Math.Min(thisRow, otherRow) + 1, count = Math.Abs(thisRow - otherRow) - 1;
-            if (Enumerable.Range(lowRow, count).All(row => IsNull(row, col)))
-                return true;
-        }
+    //     // 将帅是否对面
+    //     int col = kingCoord.Col;
+    //     if (col == otherKingCoord.Col)
+    //     {
+    //         int thisRow = kingCoord.Row, otherRow = otherKingCoord.Row,
+    //             lowRow = Math.Min(thisRow, otherRow) + 1, count = Math.Abs(thisRow - otherRow) - 1;
+    //         if (Enumerable.Range(lowRow, count).All(row => IsNull(row, col)))
+    //             return true;
+    //     }
 
-        // 是否正被将军
-        return GetLivePieces(otherColor).Any(
-            piece => piece.MoveCoord(this).Contains(kingCoord));
-    }
+    //     // 是否正被将军
+    //     return GetLivePieces(otherColor).Any(
+    //         piece => piece.MoveCoord(this).Contains(kingCoord));
+    // }
 
-    public bool IsFailed(PieceColor color)
-        => GetLivePieces(color).All(piece => piece.CanMoveCoord(this).Count == 0);
+    // public bool IsFailed(PieceColor color)
+    // => GetLivePieces(color).All(piece => piece.CanMoveCoord(this).Count == 0);
 
     public string GetZhStrFromCoordPair(CoordPair coordPair)
     {

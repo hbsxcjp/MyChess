@@ -8,13 +8,12 @@ namespace CChess;
 public class BitBoard
 {
     // 基本数据
-    private PieceColor[] colors;
-    private PieceKind[] kinds;
-    private BigInteger[][] pieces;
+    private PieceColor[] colors; // [index]
+    private PieceKind[] kinds; // [index]
+    private BigInteger[][] pieces; // [color][kind]
 
     // 计算中间存储数据(基本局面改动时更新)
-    private PieceColor bottomColor;
-    private BigInteger[] colorPieces;
+    private BigInteger[] colorPieces; // [color]
     private BigInteger allPieces;
     private BigInteger rotatePieces;
 
@@ -24,7 +23,7 @@ public class BitBoard
 
     private static HistoryRecord? historyRecord;
 
-    public BitBoard(Board board)
+    public BitBoard(List<Piece> SeatPieces)
     {
         colors = new PieceColor[Coord.Count];
         kinds = new PieceKind[Coord.Count];
@@ -32,14 +31,14 @@ public class BitBoard
         for (int color = 0; color < Piece.ColorCount; ++color)
             pieces[color] = new BigInteger[Piece.KindCount];
 
-        bottomColor = board.BottomColor;
+        BottomColor = SeatPieces.FindLast(piece => piece.Kind == PieceKind.King)?.Color ?? PieceColor.Red;
         colorPieces = new BigInteger[Piece.ColorCount];
         allPieces = 0;
         rotatePieces = 0;
 
         foreach (int index in Coord.Indexs)
         {
-            Piece piece = board[index];
+            Piece piece = SeatPieces[index];
             if (piece == Piece.Null)
             {
                 colors[index] = PieceColor.NoColor;
@@ -62,6 +61,8 @@ public class BitBoard
         }
     }
 
+    public PieceColor BottomColor { get; }
+
     public static HistoryRecord HistoryRecord
     {
         get
@@ -75,14 +76,14 @@ public class BitBoard
 
 
     // 着法执行后的效果设置
-    delegate void DoneMove(int fromIndex, int toIndex, MoveEffect effect);
+    delegate void DoneMove(int fromIndex, int toIndex, PieceKind eatKind, MoveEffect effect);
 
     public PieceColor GetColor(int index) => colors[index];
 
     public long GetHashKey(PieceColor color) => hashkey ^ BitConstants.ColorZobristKey[(int)color];
     public long GetHashLock(PieceColor color) => hashLock ^ BitConstants.ColorZobristLock[(int)color];
 
-    public PieceKind DoMove(int fromIndex, int toIndex, bool isBack, PieceKind eatKind = PieceKind.NoKind)
+    public PieceKind DoMove(int fromIndex, int toIndex, bool isBack = false, PieceKind eatKind = PieceKind.NoKind)
     {
         int startIndex = isBack ? toIndex : fromIndex, endIndex = isBack ? fromIndex : toIndex;
         PieceColor fromColor = colors[startIndex];
@@ -131,7 +132,15 @@ public class BitBoard
         return eatKind;
     }
 
-    public List<int> GetToIndexs(int fromIndex) => BitConstants.GetNonZeroIndexs(GetMove(fromIndex));
+    public List<int> GetCanToIndexs(int fromIndex)
+        => BitConstants.GetNonZeroIndexs(GetMove(fromIndex))
+            .Where(toIndex => GetMoveEffect(fromIndex, toIndex, DoneKilled).score >= 0).ToList();
+
+    public List<(int, List<int>)> GetAllCanToIndexs(PieceColor color)
+        => BitConstants.GetNonZeroIndexs(colorPieces[(int)color])
+            .Select(fromIndex => (fromIndex, GetCanToIndexs(fromIndex))).ToList();
+
+    public bool IsFailed(PieceColor fromColor) => GetColorMove(fromColor).IsZero;
 
     private BigInteger GetMove(int fromIndex)
     {
@@ -153,7 +162,7 @@ public class BitBoard
                 bitMove = BitConstants.GetKnightMove(fromIndex, allPieces);
                 break;
             case PieceKind.Pawn:
-                bitMove = BitConstants.PawnMove[bottomColor == fromColor ? 1 : 0][fromIndex];
+                bitMove = BitConstants.PawnMove[BottomColor == fromColor ? 1 : 0][fromIndex];
                 break;
             default: // PieceKind.Rook PieceKind.Cannon
                 bitMove = BitConstants.GetRookCannonMove(fromKind == PieceKind.Cannon, fromIndex, allPieces, rotatePieces);
@@ -180,10 +189,31 @@ public class BitBoard
     public int GetFrequency(PieceColor color)
         => GetMoveRecord(color)?.frequency ?? 0;
 
-    private void DoneKilled(int fromIndex, int toIndex, MoveEffect effect)
+    private void DoneKilled(int fromIndex, int toIndex, PieceKind eatKind, MoveEffect effect)
     {
-        PieceColor color = colors[toIndex];
-        if (!(GetColorMove(Piece.GetOtherColor(color)) & pieces[(int)color][(int)PieceKind.King]).IsZero)
+        // 如是对方将帅的位置则直接可走，不用判断是否被将军（如加以判断，则会直接走棋吃将帅）
+        if (eatKind == PieceKind.King)
+            return;
+
+        PieceColor color = colors[toIndex], otherColor = Piece.GetOtherColor(color);
+        int fromColorInt = (int)color, kingInt = (int)PieceKind.King;
+        bool kingFace()
+        {
+            int kingIndex = BitConstants.GetNonZeroIndexs(pieces[fromColorInt][kingInt])[0],
+                otherKingIndex = BitConstants.GetNonZeroIndexs(pieces[(int)otherColor][kingInt])[0];
+            int minKingIndex = Math.Min(kingIndex, otherKingIndex),
+                maxKingIndex = Math.Max(kingIndex, otherKingIndex);
+            if ((maxKingIndex - minKingIndex) % Coord.ColCount != 0)
+                return false;
+
+            for (int index = minKingIndex + Coord.ColCount; index < maxKingIndex; index += Coord.ColCount)
+                if (!(allPieces & BitConstants.Mask[index]).IsZero)
+                    return false;
+
+            return true;
+        }
+
+        if (kingFace() || !(GetColorMove(otherColor) & pieces[fromColorInt][kingInt]).IsZero)
             effect.score = -1;
     }
 
@@ -194,9 +224,9 @@ public class BitBoard
     private MoveEffect GetMoveEffect(int fromIndex, int toIndex, DoneMove doneMove)
     {
         MoveEffect effect = new();
-        PieceKind eatKind = DoMove(fromIndex, toIndex, false);
+        PieceKind eatKind = DoMove(fromIndex, toIndex);
 
-        doneMove(fromIndex, toIndex, effect);
+        doneMove(fromIndex, toIndex, eatKind, effect);
 
         DoMove(fromIndex, toIndex, true, eatKind);
         return effect;
@@ -218,10 +248,8 @@ public class BitBoard
                     boardStr[coord.Row * (Coord.ColCount + 1) + coord.Col] = Piece.GetPrintName((PieceColor)color, (PieceKind)kind);
 
                     // 计算可移动位置
-                    List<int> toIndexs = GetToIndexs(fromIndex);
                     moveBigInts.Add(BitConstants.MergeBitInt(
-                        toIndexs.Where(toIndex => GetMoveEffect(fromIndex, toIndex, DoneKilled).score >= 0)
-                        .Select(toIndex => BitConstants.Mask[toIndex])));
+                        GetCanToIndexs(fromIndex).Select(toIndex => BitConstants.Mask[toIndex])));
                 });
             }
         }

@@ -38,7 +38,7 @@ public class HistoryRecord
 
     public void Append(Manual manual)
     {
-        BitBoard bitBoard = new(manual.ManualMove.RootBoard);
+        BitBoard bitBoard = manual.ManualMove.RootBoard.BitBoard;
         PieceColor curColor = manual.ManualMove.StartColor;
         void AddAfter(Move move)
         {
@@ -48,7 +48,7 @@ public class HistoryRecord
                 {
                     int fromIndex = aMove.CoordPair.FromCoord.Index,
                         toIndex = aMove.CoordPair.ToCoord.Index;
-                    PieceKind eatKind = bitBoard.DoMove(fromIndex, toIndex, false);
+                    PieceKind eatKind = bitBoard.DoMove(fromIndex, toIndex);
 
                     long hashKey = bitBoard.GetHashKey(curColor);
                     long hashLock = bitBoard.GetHashLock(curColor);

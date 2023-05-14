@@ -50,10 +50,10 @@ public static class BitConstants
     private static readonly List<BigInteger[]> KnightMove = CreateKnightMove();
 
     // 车炮根据每行和每列的位置状态选取可移动位棋盘[state:0-0x1F,0X3F][index:0-89]
-    private static readonly List<BigInteger[]> RookRowMove = CreateRookRowMove();
-    private static readonly List<BigInteger[]> RookColMove = CreateRookColMove();
-    private static readonly List<BigInteger[]> CannonRowMove = CreateCannonRowMove();
-    private static readonly List<BigInteger[]> CannonColMove = CreateCannonColMove();
+    private static readonly List<BigInteger[]> RookRowMove = CreateRookCannonMove(PieceKind.Rook, false);
+    private static readonly List<BigInteger[]> RookColMove = CreateRookCannonMove(PieceKind.Rook, true);
+    private static readonly List<BigInteger[]> CannonRowMove = CreateRookCannonMove(PieceKind.Cannon, false);
+    private static readonly List<BigInteger[]> CannonColMove = CreateRookCannonMove(PieceKind.Cannon, true);
 
     // 兵根据本方处于上或下的二个位置状态选取可移动位棋盘[isBottom:0-1][index:0-89]
     public static readonly List<BigInteger[]> PawnMove = CreatePawnMove();
@@ -63,13 +63,18 @@ public static class BitConstants
     {
         int count = 0;
         ulong value = (ulong)(bigInt & 0XFFFFFFFFFFFFFFFFUL);// 00-63 位
+        // int count = 89;
+        // ulong value = (ulong)(bigInt >> 64);// 64-89 位
         if (value == 0)
         {
             value = (ulong)(bigInt >> 64); // 64-89 位
             count = 64;
+            // value = (ulong)(bigInt & 0XFFFFFFFFFFFFFFFFUL);// 00-63 位
+            // count = 63;
         }
 
         return count + BitOperations.TrailingZeroCount(value);
+        // return count - BitOperations.LeadingZeroCount(value);
     }
 
     public static List<int> GetNonZeroIndexs(BigInteger bigInt)
@@ -186,10 +191,11 @@ public static class BitConstants
                 match |= Mask[index - 1];
             if (col < 5)
                 match |= Mask[index + 1];
-            if (row == 0 || row == 1 || row == 7 || row == 8)
-                match |= Mask[index + Coord.ColCount];
+
             if (row == 1 || row == 2 || row == 8 || row == 9)
                 match |= Mask[index - Coord.ColCount];
+            if (row == 0 || row == 1 || row == 7 || row == 8)
+                match |= Mask[index + Coord.ColCount];
 
             kingMove[index] = match;
         }
@@ -322,7 +328,7 @@ public static class BitConstants
         return knightMove;
     }
 
-    private static void InitRookCannonMove(List<BigInteger[]> rookCanonRowColMove, PieceKind kind, bool isCol)
+    private static List<BigInteger[]> CreateRookCannonMove(PieceKind kind, bool isCol)
     {
         static int getMatch(int state, int rowColIndex, bool isCannon, bool isRotate)
         {
@@ -363,6 +369,7 @@ public static class BitConstants
             return match;
         }
 
+        List<BigInteger[]> rookCanonRowColMove = new();
         bool isCannon = kind == PieceKind.Cannon;
         int bitLength = isCol ? Coord.RowCount : Coord.ColCount,
             stateTotal = 1 << bitLength;
@@ -396,38 +403,8 @@ public static class BitConstants
 
             rookCanonRowColMove.Add(allStateMove);
         }
-    }
 
-    private static List<BigInteger[]> CreateRookRowMove()
-    {
-        List<BigInteger[]> rookRowMove = new();
-        InitRookCannonMove(rookRowMove, PieceKind.Rook, false);
-
-        return rookRowMove;
-    }
-
-    private static List<BigInteger[]> CreateRookColMove()
-    {
-        List<BigInteger[]> rookColMove = new();
-        InitRookCannonMove(rookColMove, PieceKind.Rook, true);
-
-        return rookColMove;
-    }
-
-    private static List<BigInteger[]> CreateCannonRowMove()
-    {
-        List<BigInteger[]> cannonRowMove = new();
-        InitRookCannonMove(cannonRowMove, PieceKind.Cannon, false);
-
-        return cannonRowMove;
-    }
-
-    private static List<BigInteger[]> CreateCannonColMove()
-    {
-        List<BigInteger[]> cannonColMove = new();
-        InitRookCannonMove(cannonColMove, PieceKind.Cannon, true);
-
-        return cannonColMove;
+        return rookCanonRowColMove;
     }
 
     private static List<BigInteger[]> CreatePawnMove()
@@ -508,14 +485,14 @@ public static class BitConstants
     {
         static string GetRowColString(int rowInt, int colNum)
         {
-            string result = string.Empty;
+            StringBuilder result = new();
             for (int bitCol = 0; bitCol < colNum; ++bitCol)
             {
-                result += (rowInt & (1 << bitCol)) == 0 ? '-' : '1';
+                result.Append((rowInt & (1 << bitCol)) == 0 ? '-' : '1');
             }
-            result += " ";
+            result.Append(' ');
 
-            return result;
+            return result.ToString();
         }
 
         int rowNum = isRotate ? Coord.ColCount : Coord.RowCount;
