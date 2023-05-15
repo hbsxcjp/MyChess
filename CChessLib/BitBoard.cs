@@ -23,7 +23,7 @@ public class BitBoard
 
     private static HistoryRecord? historyRecord;
 
-    public BitBoard(List<Piece> SeatPieces)
+    public BitBoard(Board board)
     {
         colors = new PieceColor[Coord.Count];
         kinds = new PieceKind[Coord.Count];
@@ -31,14 +31,14 @@ public class BitBoard
         for (int color = 0; color < Piece.ColorCount; ++color)
             pieces[color] = new BigInteger[Piece.KindCount];
 
-        BottomColor = SeatPieces.FindLast(piece => piece.Kind == PieceKind.King)?.Color ?? PieceColor.Red;
+        BottomColor = board.BottomColor;
         colorPieces = new BigInteger[Piece.ColorCount];
         allPieces = 0;
         rotatePieces = 0;
 
         foreach (int index in Coord.Indexs)
         {
-            Piece piece = SeatPieces[index];
+            Piece piece = board[index];
             if (piece == Piece.Null)
             {
                 colors[index] = PieceColor.NoColor;
@@ -140,7 +140,30 @@ public class BitBoard
         => BitConstants.GetNonZeroIndexs(colorPieces[(int)color])
             .Select(fromIndex => (fromIndex, GetCanToIndexs(fromIndex))).ToList();
 
-    public bool IsFailed(PieceColor fromColor) => GetColorMove(fromColor).IsZero;
+    public bool IsKilled(PieceColor color)
+    {
+        PieceColor otherColor = Piece.GetOtherColor(color);
+        int fromColorInt = (int)color, kingInt = (int)PieceKind.King;
+        bool kingFace()
+        {
+            int kingIndex = BitConstants.GetNonZeroIndexs(pieces[fromColorInt][kingInt])[0],
+                otherKingIndex = BitConstants.GetNonZeroIndexs(pieces[(int)otherColor][kingInt])[0];
+            int minKingIndex = Math.Min(kingIndex, otherKingIndex),
+                maxKingIndex = Math.Max(kingIndex, otherKingIndex);
+            if ((maxKingIndex - minKingIndex) % Coord.ColCount != 0)
+                return false;
+
+            for (int index = minKingIndex + Coord.ColCount; index < maxKingIndex; index += Coord.ColCount)
+                if (!(allPieces & BitConstants.Mask[index]).IsZero)
+                    return false;
+
+            return true;
+        }
+
+        return kingFace() || !(GetColorMove(otherColor) & pieces[fromColorInt][kingInt]).IsZero;
+    }
+
+    public bool IsFailed(PieceColor color) => GetColorMove(color).IsZero;
 
     private BigInteger GetMove(int fromIndex)
     {
@@ -192,28 +215,7 @@ public class BitBoard
     private void DoneKilled(int fromIndex, int toIndex, PieceKind eatKind, MoveEffect effect)
     {
         // 如是对方将帅的位置则直接可走，不用判断是否被将军（如加以判断，则会直接走棋吃将帅）
-        if (eatKind == PieceKind.King)
-            return;
-
-        PieceColor color = colors[toIndex], otherColor = Piece.GetOtherColor(color);
-        int fromColorInt = (int)color, kingInt = (int)PieceKind.King;
-        bool kingFace()
-        {
-            int kingIndex = BitConstants.GetNonZeroIndexs(pieces[fromColorInt][kingInt])[0],
-                otherKingIndex = BitConstants.GetNonZeroIndexs(pieces[(int)otherColor][kingInt])[0];
-            int minKingIndex = Math.Min(kingIndex, otherKingIndex),
-                maxKingIndex = Math.Max(kingIndex, otherKingIndex);
-            if ((maxKingIndex - minKingIndex) % Coord.ColCount != 0)
-                return false;
-
-            for (int index = minKingIndex + Coord.ColCount; index < maxKingIndex; index += Coord.ColCount)
-                if (!(allPieces & BitConstants.Mask[index]).IsZero)
-                    return false;
-
-            return true;
-        }
-
-        if (kingFace() || !(GetColorMove(otherColor) & pieces[fromColorInt][kingInt]).IsZero)
+        if (eatKind != PieceKind.King && IsKilled(colors[toIndex]))
             effect.score = -1;
     }
 

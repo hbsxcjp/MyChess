@@ -35,11 +35,11 @@ public static class BitConstants
         coord => (BigInteger)1 << coord.Col * Coord.RowCount + coord.Row).ToArray();
 
     // 根据所处的位置选取可放置的位置[isBottom:0-1]
-    private static readonly BigInteger[] KingPut = CreateKingPut();
-    private static readonly BigInteger[] AdvisorPut = CreateAdvisorPut();
-    private static readonly BigInteger[] BishopPut = CreateBishopPut();
-    private static readonly BigInteger KnightRookCannonPut = ((BigInteger)(0X3FFFFFFUL) << 64) | 0XFFFFFFFFFFFFFFFFUL;
-    private static readonly BigInteger[] PawnPut = CreatePawnPut();
+    public static readonly BigInteger[] KingPut = CreateKingPut();
+    public static readonly BigInteger[] AdvisorPut = CreateAdvisorPut();
+    public static readonly BigInteger[] BishopPut = CreateBishopPut();
+    public static readonly BigInteger KnightRookCannonPut = ((BigInteger)(0X3FFFFFFUL) << 64) | 0XFFFFFFFFFFFFFFFFUL;
+    public static readonly BigInteger[] PawnPut = CreatePawnPut();
 
     // 帅仕根据所处的位置选取可移动位棋盘[index:0-89]
     public static readonly BigInteger[] KingMove = CreateKingMove();

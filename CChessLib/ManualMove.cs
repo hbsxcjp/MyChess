@@ -118,11 +118,11 @@ public class ManualMove// : IEnumerable
             }
         }
 
-        List<Move> allMoves = RootMove.AllAfterMoves;
-        allMoves.Insert(0, RootMove);
-        allMoves.ForEach(move
-            => move.AfterMoves?.RemoveAll(move
-                => !RootBoard.WithMove(move.Before).CanMove(move.CoordPair)));
+        // List<Move> allMoves = RootMove.AllAfterMoves;
+        // allMoves.Insert(0, RootMove);
+        // allMoves.ForEach(move
+        //     => move.AfterMoves?.RemoveAll(move
+        //         => !GetBoardWithMove(move.Before).CanMove(move.CoordPair)));
     }
 
     public ManualMove(string fen, byte[] bytes) : this(fen)
@@ -196,7 +196,7 @@ public class ManualMove// : IEnumerable
         if (isOther)
             Back();
 
-        Board board = RootBoard.WithMove(CurMove);
+        Board board = GetBoardWithMove(CurMove);
         CoordPair coordPair = board.GetCoordPairFromZhStr(zhStr);
         bool success = board.CanMove(coordPair);
         if (success)
@@ -285,7 +285,7 @@ public class ManualMove// : IEnumerable
                 FileExtType.pgniccs => move.CoordPair.Iccs,
                 FileExtType.pgnrc => ct == ChangeType.Symmetry_V ? move.CoordPair.SymmetryVRowCol : move.CoordPair.RowCol,
                 _ => move.Before == null ? string.Empty
-                    : RootBoard.WithMove(move.Before).GetZhStrFromCoordPair(move.CoordPair),
+                    : GetBoardWithMove(move.Before).GetZhStrFromCoordPair(move.CoordPair),
             };
 
         return ((RootMove.Remark != null && RootMove.Remark.Length > 0) ? $"{{{RootMove.Remark}}}\n" : "") +
@@ -340,7 +340,7 @@ public class ManualMove// : IEnumerable
         List<(string fen, string rowCol)> aspects = new();
         string UniversalFEN(Move before)
         {
-            Board board = RootBoard.WithMove(before);
+            Board board = GetBoardWithMove(before);
             return Board.GetFEN(board.GetFEN(), board.IsBottom(PieceColor.Red)
                 ? ChangeType.NoChange : ChangeType.Exchange);
         }
@@ -416,9 +416,23 @@ public class ManualMove// : IEnumerable
             bool visible = match.Groups[3].Value.Length == 0;
             string? remark = match.Groups[4].Success ? match.Groups[4].Value : null;
 
-            Board board = RootBoard.WithMove(allMoves[id]);
+            Board board = GetBoardWithMove(allMoves[id]);
             allMoves.Add(allMoves[id].AddAfter(GetCoordPair(board, pgnText, fileExtType), remark, visible));
         }
+    }
+
+    private Board GetBoardWithMove(Move? move)
+    {
+        List<Piece> seatPieces = new(RootBoard.SeatPieces);
+        move?.PrevMoves?.ForEach(move =>
+        {
+            int fromIndex = move.CoordPair.FromCoord.Index,
+                toIndex = move.CoordPair.ToCoord.Index;
+            seatPieces[toIndex] = seatPieces[fromIndex];
+            seatPieces[fromIndex] = Piece.Null;
+        });
+
+        return new(seatPieces);
     }
 
     public string ToString(bool showMove = false, bool isOrder = false, ChangeType ct = ChangeType.NoChange)
