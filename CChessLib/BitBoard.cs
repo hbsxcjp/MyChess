@@ -75,8 +75,8 @@ public class BitBoard
     }
 
 
-    // 着法执行后的效果设置
-    delegate void DoneMove(int fromIndex, int toIndex, PieceKind eatKind, MoveEffect effect);
+    // 返回着法执行后的状态效果
+    delegate MoveEffect GetEffect(int fromIndex, int toIndex, PieceKind eatKind);
 
     public PieceColor GetColor(int index) => colors[index];
 
@@ -132,9 +132,12 @@ public class BitBoard
         return eatKind;
     }
 
+    public bool CanMove(CoordPair coordPair)
+        => GetCanToIndexs(coordPair.FromCoord.Index).Contains(coordPair.ToCoord.Index);
+
     public List<int> GetCanToIndexs(int fromIndex)
         => BitConstants.GetNonZeroIndexs(GetMove(fromIndex))
-            .Where(toIndex => GetMoveEffect(fromIndex, toIndex, DoneKilled).score >= 0).ToList();
+            .Where(toIndex => GetMoveEffect(fromIndex, toIndex, GetKilled).score >= 0).ToList();
 
     public List<(int, List<int>)> GetAllCanToIndexs(PieceColor color)
         => BitConstants.GetNonZeroIndexs(colorPieces[(int)color])
@@ -212,23 +215,19 @@ public class BitBoard
     public int GetFrequency(PieceColor color)
         => GetMoveRecord(color)?.frequency ?? 0;
 
-    private void DoneKilled(int fromIndex, int toIndex, PieceKind eatKind, MoveEffect effect)
+    private MoveEffect GetKilled(int fromIndex, int toIndex, PieceKind eatKind)
     {
         // 如是对方将帅的位置则直接可走，不用判断是否被将军（如加以判断，则会直接走棋吃将帅）
-        if (eatKind != PieceKind.King && IsKilled(colors[toIndex]))
-            effect.score = -1;
+        return new(eatKind != PieceKind.King && IsKilled(colors[toIndex]) ? -1 : 0, 0);
     }
 
-    private void DoneFrequency(int fromIndex, int toIndex, MoveEffect effect)
-        => effect.frequency = GetFrequency(colors[toIndex]);
-
     // 执行某一着后的效果(委托函数可叠加)
-    private MoveEffect GetMoveEffect(int fromIndex, int toIndex, DoneMove doneMove)
+    private MoveEffect GetMoveEffect(int fromIndex, int toIndex, GetEffect getEffect)
     {
-        MoveEffect effect = new();
+
         PieceKind eatKind = DoMove(fromIndex, toIndex);
 
-        doneMove(fromIndex, toIndex, eatKind, effect);
+        MoveEffect effect = getEffect(fromIndex, toIndex, eatKind);
 
         DoMove(fromIndex, toIndex, true, eatKind);
         return effect;

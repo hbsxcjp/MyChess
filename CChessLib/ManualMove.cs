@@ -196,9 +196,9 @@ public class ManualMove// : IEnumerable
         if (isOther)
             Back();
 
-        Board board = GetBoardWithMove(CurMove);
+        Board board = GetBoardWith(CurMove);
         CoordPair coordPair = board.GetCoordPairFromZhStr(zhStr);
-        bool success = board.CanMove(coordPair);
+        bool success = board.BitBoard.CanMove(coordPair);
         if (success)
             CurMove = CurMove.AddAfter(coordPair);
 
@@ -285,7 +285,7 @@ public class ManualMove// : IEnumerable
                 FileExtType.pgniccs => move.CoordPair.Iccs,
                 FileExtType.pgnrc => ct == ChangeType.Symmetry_V ? move.CoordPair.SymmetryVRowCol : move.CoordPair.RowCol,
                 _ => move.Before == null ? string.Empty
-                    : GetBoardWithMove(move.Before).GetZhStrFromCoordPair(move.CoordPair),
+                    : GetBoardWith(move.Before).GetZhStrFromCoordPair(move.CoordPair),
             };
 
         return ((RootMove.Remark != null && RootMove.Remark.Length > 0) ? $"{{{RootMove.Remark}}}\n" : "") +
@@ -340,7 +340,7 @@ public class ManualMove// : IEnumerable
         List<(string fen, string rowCol)> aspects = new();
         string UniversalFEN(Move before)
         {
-            Board board = GetBoardWithMove(before);
+            Board board = GetBoardWith(before);
             return Board.GetFEN(board.GetFEN(), board.IsBottom(PieceColor.Red)
                 ? ChangeType.NoChange : ChangeType.Exchange);
         }
@@ -416,12 +416,12 @@ public class ManualMove// : IEnumerable
             bool visible = match.Groups[3].Value.Length == 0;
             string? remark = match.Groups[4].Success ? match.Groups[4].Value : null;
 
-            Board board = GetBoardWithMove(allMoves[id]);
+            Board board = GetBoardWith(allMoves[id]);
             allMoves.Add(allMoves[id].AddAfter(GetCoordPair(board, pgnText, fileExtType), remark, visible));
         }
     }
 
-    private Board GetBoardWithMove(Move? move)
+    private Board GetBoardWith(Move? move)
     {
         List<Piece> seatPieces = new(RootBoard.SeatPieces);
         move?.PrevMoves?.ForEach(move =>

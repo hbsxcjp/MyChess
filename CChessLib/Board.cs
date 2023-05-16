@@ -100,9 +100,6 @@ public class Board
     private List<Piece> GetLivePieces(PieceColor color, PieceKind kind, int col)
         => GetLivePieces(color, kind).Where(piece => GetCoord(piece).Col == col).ToList();
 
-    public bool CanMove(CoordPair coordPair)
-        => BitBoard.GetCanToIndexs(coordPair.FromCoord.Index).Contains(coordPair.ToCoord.Index);
-
     public string GetZhStrFromCoordPair(CoordPair coordPair)
     {
         Coord fromCoord = coordPair.FromCoord, toCoord = coordPair.ToCoord;

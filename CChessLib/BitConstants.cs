@@ -10,7 +10,7 @@ public class MoveEffect : IComparable
     public int score;
     public int frequency;
 
-    public MoveEffect() { score = 0; frequency = 1; }
+    public MoveEffect(int sco, int fre) { score = sco; frequency = fre; }
 
     private int CompareTo(MoveEffect otherEffect) => -score.CompareTo(otherEffect.score);
     public int CompareTo(object? obj) => obj == null ? -1 : this.CompareTo((MoveEffect)obj);

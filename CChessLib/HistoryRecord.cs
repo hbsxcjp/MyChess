@@ -80,9 +80,9 @@ public class HistoryRecord
         int index = 0;
         while (historyDict.ContainsKey(hashKey))
         {
-            MoveRecord zobrist = historyDict[hashKey];
-            if (zobrist.hashLock == hashLock)
-                return zobrist;
+            MoveRecord moveRecord = historyDict[hashKey];
+            if (moveRecord.hashLock == hashLock)
+                return moveRecord;
 
             if (index > 2)
             {
