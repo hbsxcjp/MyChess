@@ -8,7 +8,7 @@ public enum PieceKind { King, Advisor, Bishop, Knight, Rook, Cannon, Pawn, NoKin
 public class Piece
 {
     public static readonly Piece Null = new(PieceColor.NoColor, PieceKind.NoKind);
-    private static Piece[][][] PieceArray = CreatePieceArray();
+    public static Piece[][][] PieceArray = CreatePieceArray();
 
     public const int ColorCount = 2;
     public const int KindCount = 7;
@@ -98,30 +98,7 @@ public class Piece
             pieceArray[color] = getColorPieces((PieceColor)color);
 
         return pieceArray;
-    }
-
-    public static List<Piece> GetSeatPieces(string pieceChars)
-    {
-        List<Piece> pieces = new(pieceChars.Length);
-        foreach (char ch in pieceChars)
-        {
-            if (ch == Piece.NullCh)
-                pieces.Add(Piece.Null);
-            else
-            {
-                foreach (Piece piece in PieceArray[(int)Piece.GetColor(ch)][(int)Piece.GetKind(ch)])
-                {
-                    if (!pieces.Contains(piece))
-                    {
-                        pieces.Add(piece);
-                        break;
-                    }
-                }
-            }
-        }
-
-        return pieces;
-    }
+    }   
 
     public static List<Piece> GetAllPiece()
         => PieceArray.SelectMany(colorPieces => colorPieces)

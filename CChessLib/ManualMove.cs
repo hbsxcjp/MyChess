@@ -122,7 +122,7 @@ public class ManualMove// : IEnumerable
         // allMoves.Insert(0, RootMove);
         // allMoves.ForEach(move
         //     => move.AfterMoves?.RemoveAll(move
-        //         => !GetBoardWithMove(move.Before).CanMove(move.CoordPair)));
+        //         => !GetBoardWith(move.Before).BitBoard.CanMove(move.CoordPair)));
     }
 
     public ManualMove(string fen, byte[] bytes) : this(fen)

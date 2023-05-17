@@ -31,11 +31,7 @@ public class BitBoard
         for (int color = 0; color < Piece.ColorCount; ++color)
             pieces[color] = new BigInteger[Piece.KindCount];
 
-        BottomColor = board.BottomColor;
         colorPieces = new BigInteger[Piece.ColorCount];
-        allPieces = 0;
-        rotatePieces = 0;
-
         foreach (int index in Coord.Indexs)
         {
             Piece piece = board[index];
@@ -59,9 +55,9 @@ public class BitBoard
             hashkey ^= BitConstants.ZobristKey[color][kind][index];
             hashLock ^= BitConstants.ZobristLock[color][kind][index];
         }
-    }
 
-    public PieceColor BottomColor { get; }
+        BottomColor = board.BottomColor;
+    }
 
     public static HistoryRecord HistoryRecord
     {
@@ -74,6 +70,7 @@ public class BitBoard
         }
     }
 
+    public PieceColor BottomColor { get; }
 
     // 返回着法执行后的状态效果
     delegate MoveEffect GetEffect(int fromIndex, int toIndex, PieceKind eatKind);

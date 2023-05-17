@@ -12,15 +12,15 @@ public class Board
     private const string PositionChars = "前中后";
     private const string MoveChars = "退平进";
 
-    private BitBoard? bitBoard;
-
     public Board(List<Piece> seatPieces)
     {
         SeatPieces = seatPieces;
-        BottomColor = seatPieces.FindLast(piece => piece.Kind == PieceKind.King)?.Color ?? PieceColor.Red;
+        BottomColor = SeatPieces.FindLast(piece => piece.Kind == PieceKind.King)?.Color ?? PieceColor.Red;
+
+        BitBoard = new(this);
     }
 
-    public Board(string fen = "") : this(Piece.GetSeatPieces(FENToPieceChars(fen.Length == 0 ? FEN : fen)))
+    public Board(string fen = "") : this(GetSeatPieces(fen.Length == 0 ? FEN : fen))
     {
     }
 
@@ -29,16 +29,7 @@ public class Board
 
     public List<Piece> SeatPieces { get; }
     public PieceColor BottomColor { get; }
-    public BitBoard BitBoard
-    {
-        get
-        {
-            if (bitBoard == null)
-                bitBoard = new(this);
-
-            return bitBoard;
-        }
-    }
+    public BitBoard BitBoard { get; }
 
     public bool IsBottom(PieceColor color) => BottomColor == color;
     public bool IsNull(int row, int col) => this[Coord.Get(row, col)] == Piece.Null;
@@ -255,6 +246,29 @@ public class Board
 
     public static string PGNZHCharsPattern(PieceColor color)
         => @$"(?:[{Piece.NameChars[(int)color]}{NumChars[(int)color]}{PositionChars}]{{2}}[{MoveChars}][{NumChars[(int)color]}])";
+
+    private static List<Piece> GetSeatPieces(string fen)
+    {
+        List<Piece> seatPieces = new(Coord.Count);
+        foreach (char ch in FENToPieceChars(fen))
+        {
+            if (ch == Piece.NullCh)
+            {
+                seatPieces.Add(Piece.Null);
+            }
+            else
+            {
+                foreach (Piece piece in Piece.PieceArray[(int)Piece.GetColor(ch)][(int)Piece.GetKind(ch)])
+                    if (!seatPieces.Contains(piece))
+                    {
+                        seatPieces.Add(piece);
+                        break;
+                    }
+            }
+        }
+
+        return seatPieces;
+    }
 
     public override string ToString()
     {
