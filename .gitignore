@@ -6,6 +6,7 @@
 # 
 *.xqf
 *.db
+.config/
 
 # User-specific files
 *.rsuser
@@ -368,3 +369,4 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+.config/dotnet-tools.json
